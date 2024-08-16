@@ -16,12 +16,14 @@ class FormRenderer
   
 }
 
+
+
 // Extended class for specific form rendering methods
 class CustomFormRenderer extends FormRenderer {
   renderField(type, name, label, validate, attributes, bindingSyntax, options) {
     switch (type) {
       case 'text':
-        return this.renderTextField(name, label, validate, attributes, bindingSyntax);
+        return this.renderTextField(type, name, label, validate, attributes, bindingSyntax);
       case 'email':
         return this.renderEmailField(name, label, validate, attributes, bindingSyntax);
       case 'number':
@@ -99,7 +101,7 @@ class CustomFormRenderer extends FormRenderer {
 
     return `
       <label for="${name}">${label}</label>
-      <input type="text"${bindingDirective} ${validationAttrs}
+      <input type="text" name="${name}" ${bindingDirective}  ${validationAttrs} 
         ${attributes.id ? `id="${attributes.id}"` : ''}
         ${attributes.class ? `class="${attributes.class}"` : ''}
         ${attributes.style ? `style="${attributes.style}"` : ''}
