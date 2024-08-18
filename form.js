@@ -94,13 +94,22 @@ class CustomFormRenderer extends FormRenderer {
       });
     }
 
+    let id; 
+    if ('id' in attributes) {
+    id = attributes.id; 
+
+    } else {
+      id = name; 
+    }
+
+
     let bindingDirective = '';
     if (bindingSyntax === 'bind:value') {
       bindingDirective = ` bind:value="${name}"`;
     }
 
     return `
-      <label for="${name}">${label}</label>
+      <label for="${id}">${label}</label>
       <input type="text" name="${name}" ${bindingDirective}  ${validationAttrs} 
         ${attributes.id ? `id="${attributes.id}"` : ''}
         ${attributes.class ? `class="${attributes.class}"` : ''}
