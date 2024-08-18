@@ -1,3 +1,7 @@
+import prettier from "prettier";
+
+
+
 // Base class for form rendering
 class FormRenderer 
 {
@@ -6,12 +10,14 @@ class FormRenderer
   }
 
   // Main renderForm method
-  renderForm(schema) {
-    return schema.map(field => {
-      const [type, name, label, validate, attributes = {}, bindingSyntax] = field;
-      return this.renderField(type, name, label, validate, attributes, bindingSyntax);
-    }).join('');
-  }
+  async renderForm(schema) {
+  const promises = schema.map(field => {
+    const [type, name, label, validate, attributes = {}, bindingSyntax] = field;
+    return this.renderField(type, name, label, validate, attributes, bindingSyntax);
+  });
+  const formHTML = await Promise.all(promises);
+  return formHTML.join('');
+}
 
   
 }
@@ -30,8 +36,7 @@ class Formique extends FormRenderer {
 
     if (this.formParams) {
       //console.log(formParams);
-    const formElement = this.renderFormElement(); 
-    console.log(formElement);
+      const formElement = this.renderFormElement(); 
 
 
     }
@@ -95,7 +100,7 @@ class Formique extends FormRenderer {
   }
 
 
-  renderFormElement() {
+  async renderFormElement() {
   //console.log(this.formParams);
   let formHTML = '<form ';
 
@@ -120,12 +125,26 @@ class Formique extends FormRenderer {
 
   // Close the <form> tag
   formHTML += '>';
-  return formHTML;
+
+   // Format the HTML string
+      const formattedHTML = await prettier.format(formHTML, {
+        parser: "html",
+        tabWidth: 2,        // Number of spaces per indentation level
+        useTabs: false,     // Indent lines with tabs instead of spaces
+        printWidth: 80,     // Specify the line length that Prettier will wrap on
+        htmlWhitespaceSensitivity: "ignore",
+      });
+
+    const finalHTML = formattedHTML.replace(/<\/form>/g, '');
+     console.log(finalHTML);
+  //return formHTML;
 }
 
 
- renderTextField(type, name, label, validate, attributes, bindingSyntax) {
-  const textInputAttributes = new Set([
+ // Specific rendering methods for each field type
+async renderTextField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid attributes for different input types
+  const textInputAttributes = [
     'required',
     'minlength',
     'maxlength',
@@ -138,17 +157,25 @@ class Formique extends FormRenderer {
     'spellcheck',
     'inputmode',
     'title',
-  ]);
+  ];
 
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (textInputAttributes.has(key)) {
-        if (typeof value === 'boolean' && value) {
+      if (textInputAttributes.includes(key)) {
+        if (typeof value === 'boolean') {
           validationAttrs += `${key}\n`;
         } else {
-          validationAttrs += `${key}="${value}"\n`;
+          switch (key) {
+            case 'minlength':
+            case 'maxlength':
+              validationAttrs += `${key}="${value}"\n`;
+              break;
+            default:
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'text'.\x1b[0m`);
+              break;
+          }
         }
       } else {
         console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'text'.\x1b[0m`);
@@ -169,7 +196,7 @@ class Formique extends FormRenderer {
   let id = attributes.id || name;
 
   // Determine if semantiq is true based on formParams
-  const semantq = this.formParams?.semantq || false;
+  const semantiq = this.formParams?.semantiq || false;
 
   // Construct additional attributes dynamically
   let additionalAttrs = '';
@@ -177,12 +204,10 @@ class Formique extends FormRenderer {
     if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
-        if (semantq) {
-  // Remove "()" if the value ends with it
-  const eventHandler = value.endsWith('()') ? value.slice(0, -2) : value;
-  additionalAttrs += `@${key.replace(/^on/, '')}={${eventHandler}}\n`;
-}
- else {
+        if (semantiq) {
+          const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+          additionalAttrs += `@${key.replace(/^on/, '')}={${eventValue}}\n`;
+        } else {
           // Add parentheses if not present
           const eventValue = value.endsWith('()') ? value : `${value}()`;
           additionalAttrs += `${key}="${eventValue}"\n`;
@@ -192,26 +217,38 @@ class Formique extends FormRenderer {
         if (value === true) {
           additionalAttrs += `${key.replace(/_/g, '-')}\n`;
         } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
           additionalAttrs += `${key.replace(/_/g, '-')}="${value}"\n`;
         }
       }
     }
   }
 
-  // Return the final HTML for the text field
-  return `
+  // Construct the final HTML string
+  let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
       <input 
-        type="${type}"\n
-        name="${name}"\n
+        type="${type}"
+        name="${name}"
         ${bindingDirective}
-        id="${id}"\n
+        id="${id}"
         ${additionalAttrs}
         ${validationAttrs}
       />
     </div>
   `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the HTML string using Prettier
+  const formattedHTML = prettier.format(formHTML, {
+    parser: "html",
+    tabWidth: 2,
+    useTabs: false,
+    printWidth: 80,
+    htmlWhitespaceSensitivity: "ignore",
+  });
+
+  return formattedHTML;
 }
 
 
@@ -1137,7 +1174,7 @@ renderSubmitButton(name, label, attributes) {
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { min: 2, max: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, 'bind:value'],
+  ['text', 'firstName', 'First Name', { minlength: 2, maxlength: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, 'bind:value'],
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
 
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
@@ -1257,9 +1294,25 @@ style: "width: 100%; font-size: 14px;"
 //accept_charset: 'UTF-8', 
   };
 
+/*
 const form = new Formique(formParams);
 const formHTML = form.renderForm(formSchema);
 console.log(formHTML);
+*/
+
+  // Example usage
+// Example usage
+(async () => {
+  try {
+    const form = new Formique(formParams);
+    const formHTML = await form.renderForm(formSchema);
+    console.log(formHTML);
+  } catch (error) {
+    console.error('Error generating form HTML:', error);
+  }
+})();
+
+
 
 
 
