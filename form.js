@@ -110,7 +110,11 @@ class CustomFormRenderer extends FormRenderer {
 
     return `
       <label for="${id}">${label}</label>
-      <input type="text" name="${name}" ${bindingDirective}  ${validationAttrs} 
+      <input 
+        type="text" 
+        name="${name}" 
+       ${bindingDirective}  
+        ${validationAttrs} 
         ${attributes.id ? `id="${attributes.id}"` : ''}
         ${attributes.class ? `class="${attributes.class}"` : ''}
         ${attributes.style ? `style="${attributes.style}"` : ''}
