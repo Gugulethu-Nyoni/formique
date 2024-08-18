@@ -26,7 +26,6 @@ class CustomFormRenderer extends FormRenderer {
     super();
     this.divClass='input-block';
     this.inputClass='form-input';
-    this.semantiq=false;
     this.formParams=formParams;
 
     if (this.formParams) {
@@ -1240,7 +1239,7 @@ nonvalidate: true,
 accept_charset: 'UTF-8', 
 id: 'myForm', 
 class: 'form',
-semantiq: false,
+semantiq: true,
 style: "width: 100%; font-size: 14px;"
   };
 
