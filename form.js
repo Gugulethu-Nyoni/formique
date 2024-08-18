@@ -72,6 +72,10 @@ class CustomFormRenderer extends FormRenderer {
         console.warn(`Unsupported field type '${type}' encountered.`);
         return ''; // or handle gracefully
     }
+
+
+    this.divClass='input-block';
+    this.inputClass='form-input';
   }
 
   // Specific rendering methods for each field type
@@ -113,10 +117,18 @@ class CustomFormRenderer extends FormRenderer {
       return; 
     }
 
+    let inputClass;
+
+    if ('class' in attributes) {
+      inputClass = attributes.class;
+    } else {
+      inputClass = this.inputClass;
+    }
+
 
 
     return `
-      <div class="input-block"> 
+      <div class="${this.divClass}"> 
         <label for="${id}">${label}</label>
         <input 
           type="text" 
@@ -124,7 +136,7 @@ class CustomFormRenderer extends FormRenderer {
          ${bindingDirective}  
           ${validationAttrs} 
           ${attributes.id ? `id="${attributes.id}"` : ''}
-          ${attributes.class ? `class="${attributes.class}"` : ''}
+          ${attributes.class ? `class="${inputClass}"` : ''}
           ${attributes.style ? `style="${attributes.style}"` : ''}
         />
       </div>
@@ -1013,7 +1025,7 @@ renderSubmitButton(name, label, attributes) {
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
+  ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', style: 'width: 100%;' }, 'bind:value'],
   /*
   ['email', 'email', 'Email', { required: true, email: true }, { class: 'form-control', style: 'width: 100%;' }, '::emailValue'],
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12', class: 'form-control' }, '::age'],
