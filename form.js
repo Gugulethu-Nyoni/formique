@@ -25,47 +25,47 @@ class CustomFormRenderer extends FormRenderer {
       case 'text':
         return this.renderTextField(type, name, label, validate, attributes, bindingSyntax);
       case 'email':
-        return this.renderEmailField(name, label, validate, attributes, bindingSyntax);
+        return this.renderEmailField(type, name, label, validate, attributes, bindingSyntax);
       case 'number':
-        return this.renderNumberField(name, label, validate, attributes, bindingSyntax);
+        return this.renderNumberField(type, name, label, validate, attributes, bindingSyntax);
       case 'password':
-        return this.renderPasswordField(name, label, validate, attributes, bindingSyntax);
+        return this.renderPasswordField(type, name, label, validate, attributes, bindingSyntax);
       case 'tel': // New case for tel field
-        return this.renderTelField(name, label, validate, attributes, bindingSyntax);
+        return this.renderTelField(type, name, label, validate, attributes, bindingSyntax);
       case 'date':
-        return this.renderDateField(name, label, validate, attributes, bindingSyntax);
+        return this.renderDateField(type, name, label, validate, attributes, bindingSyntax);
       case 'time':
-        return this.renderTimeField(name, label, validate, attributes, bindingSyntax);
+        return this.renderTimeField(type, name, label, validate, attributes, bindingSyntax);
       case 'datetime':
-        return this.renderDateTimeField(name, label, validate, attributes, bindingSyntax);
+        return this.renderDateTimeField(type, name, label, validate, attributes, bindingSyntax);
       case 'month':
-        return this.renderMonthField(name, label, validate, attributes, bindingSyntax);
+        return this.renderMonthField(type, name, label, validate, attributes, bindingSyntax);
       case 'week':
-        return this.renderWeekField(name, label, validate, attributes, bindingSyntax);
+        return this.renderWeekField(type, name, label, validate, attributes, bindingSyntax);
       case 'url':
-        return this.renderUrlField(name, label, validate, attributes, bindingSyntax);
+        return this.renderUrlField(type, name, label, validate, attributes, bindingSyntax);
       case 'search':
-        return this.renderSearchField(name, label, validate, attributes, bindingSyntax);
+        return this.renderSearchField(type, name, label, validate, attributes, bindingSyntax);
       case 'color':
-      return this.renderColorField(name, label, validate, attributes, bindingSyntax);
+      return this.renderColorField(type, name, label, validate, attributes, bindingSyntax);
       case 'checkbox':
       return this.renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'radio':
-      return this.renderRadioField(name, label, validate, attributes, bindingSyntax);
+      return this.renderRadioField(type, name, label, validate, attributes, bindingSyntax);
       case 'file':
-      return this.renderFileField(name, label, validate, attributes, bindingSyntax);
+      return this.renderFileField(type, name, label, validate, attributes, bindingSyntax);
       case 'hidden':
-      return this.renderHiddenField(name, label, validate, attributes, bindingSyntax);
+      return this.renderHiddenField(type, name, label, validate, attributes, bindingSyntax);
       case 'image':
-      return this.renderImageField(name, label, validate, attributes, bindingSyntax);
+      return this.renderImageField(type, name, label, validate, attributes, bindingSyntax);
       case 'textarea':
-      return this.renderTextareaField(name, label, validate, attributes, bindingSyntax);
+      return this.renderTextareaField(type, name, label, validate, attributes, bindingSyntax);
       case 'singleSelect':
       return this.renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'multipleSelect':
       return this.renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'submit':
-        return this.renderSubmitButton(name, label, attributes);
+        return this.renderSubmitButton(type, name, label, attributes);
 
 
       default:
@@ -109,7 +109,7 @@ class CustomFormRenderer extends FormRenderer {
     `;
   }
 
-  renderEmailField(name, label, validate, attributes, bindingSyntax) {
+  renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
     let validationAttrs = '';
     if (validate) {
       Object.entries(validate).forEach(([key, value]) => {
@@ -134,7 +134,7 @@ class CustomFormRenderer extends FormRenderer {
 
     return `
       <label for="${name}">${label}</label>
-      <input type="email"${bindingDirective} ${validationAttrs}
+      <input type="${type}" name="${name}" ${bindingDirective} ${validationAttrs}
         ${attributes.id ? `id="${attributes.id}"` : ''}
         ${attributes.class ? `class="${attributes.class}"` : ''}
         ${attributes.style ? `style="${attributes.style}"` : ''}
@@ -992,6 +992,7 @@ renderSubmitButton(name, label, attributes) {
 
 const formSchema = [
   ['text', 'firstName', 'First Name', { required: true, minLength: 2 }, { id: 'firstNameInput', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
+  /*
   ['email', 'email', 'Email', { required: true, email: true }, { class: 'form-control', style: 'width: 100%;' }, '::emailValue'],
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12', class: 'form-control' }, '::age'],
   ['password', 'password', 'Password', { required: true, minLength: 8 }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
@@ -1087,6 +1088,7 @@ const formSchema = [
     { id: 'submitBtn', class: 'form-submit-btn', style: 'margin-top: 1rem;' }
   ],
 
+*/
 
 
 
