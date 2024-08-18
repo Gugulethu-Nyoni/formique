@@ -140,7 +140,7 @@ class CustomFormRenderer extends FormRenderer {
           ${attributes.style ? `style="${attributes.style}"` : ''}
         />
       </div>
-    `;
+    `.replace(/^\s*\n/gm, '').trim();
   }
 
   renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
