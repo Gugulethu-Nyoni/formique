@@ -20,6 +20,15 @@ class FormRenderer
 
 // Extended class for specific form rendering methods
 class CustomFormRenderer extends FormRenderer {
+
+
+ constructor () {
+    super();
+    this.divClass='input-block';
+    this.inputClass='form-input';
+ }
+
+
   renderField(type, name, label, validate, attributes, bindingSyntax, options) {
     switch (type) {
       case 'text':
@@ -74,8 +83,6 @@ class CustomFormRenderer extends FormRenderer {
     }
 
 
-    this.divClass='input-block';
-    this.inputClass='form-input';
   }
 
   // Specific rendering methods for each field type
@@ -1025,7 +1032,7 @@ renderSubmitButton(name, label, attributes) {
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', style: 'width: 100%;' }, 'bind:value'],
+  ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;' }, 'bind:value'],
   /*
   ['email', 'email', 'Email', { required: true, email: true }, { class: 'form-control', style: 'width: 100%;' }, '::emailValue'],
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12', class: 'form-control' }, '::age'],
