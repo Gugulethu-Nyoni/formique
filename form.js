@@ -123,23 +123,34 @@ class CustomFormRenderer extends FormRenderer {
 }
 
 
- // Specific rendering methods for each field type
-renderTextField(type, name, label, validate, attributes, bindingSyntax) {
+ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
+  const textInputAttributes = new Set([
+    'required',
+    'minlength',
+    'maxlength',
+    'pattern',
+    'placeholder',
+    'readonly',
+    'disabled',
+    'size',
+    'autocomplete',
+    'spellcheck',
+    'inputmode',
+    'title',
+  ]);
+
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
+      if (textInputAttributes.has(key)) {
+        if (typeof value === 'boolean' && value) {
           validationAttrs += `${key}\n`;
-          break;
-        case 'minLength':
-        case 'maxLength':
+        } else {
           validationAttrs += `${key}="${value}"\n`;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'text'.`);
-          break;
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'text'.\x1b[0m`);
       }
     });
   }
@@ -177,7 +188,6 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
         if (value === true) {
           additionalAttrs += `${key.replace(/_/g, '-')}\n`;
         } else if (value !== false) {
-          // Convert underscores to hyphens and set the attribute
           additionalAttrs += `${key.replace(/_/g, '-')}="${value}"\n`;
         }
       }
@@ -1123,7 +1133,7 @@ renderSubmitButton(name, label, attributes) {
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer"  }, 'bind:value'],
+  ['text', 'firstName', 'First Name', { minlength: 2, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer"}, 'bind:value'],
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
 
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
