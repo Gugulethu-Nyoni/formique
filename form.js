@@ -104,21 +104,30 @@ class CustomFormRenderer extends FormRenderer {
 
 
     let bindingDirective = '';
-    if (bindingSyntax === 'bind:value') {
+    if (bindingSyntax === 'bind:value' && name) {
       bindingDirective = ` bind:value="${name}"`;
+    } 
+
+    if (bindingSyntax === 'bind:value' && !name) {
+      console.log('\x1b[31m%s\x1b[0m', 'You can not set binding value when there is no name attribute defined.');
+      return; 
     }
 
+
+
     return `
-      <label for="${id}">${label}</label>
-      <input 
-        type="text" 
-        name="${name}" 
-       ${bindingDirective}  
-        ${validationAttrs} 
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-      />
+      <div class="input-block"> 
+        <label for="${id}">${label}</label>
+        <input 
+          type="text" 
+          name="${name}" 
+         ${bindingDirective}  
+          ${validationAttrs} 
+          ${attributes.id ? `id="${attributes.id}"` : ''}
+          ${attributes.class ? `class="${attributes.class}"` : ''}
+          ${attributes.style ? `style="${attributes.style}"` : ''}
+        />
+      </div>
     `;
   }
 
