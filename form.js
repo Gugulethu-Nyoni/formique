@@ -1,5 +1,3 @@
-import prettier from "prettier";
-
 
 
 // Base class for form rendering
@@ -10,14 +8,16 @@ class FormRenderer
   }
 
   // Main renderForm method
-  async renderForm(schema) {
-  const promises = schema.map(field => {
-    const [type, name, label, validate, attributes = {}, bindingSyntax] = field;
-    return this.renderField(type, name, label, validate, attributes, bindingSyntax);
-  });
-  const formHTML = await Promise.all(promises);
-  return formHTML.join('');
+renderForm(schema) {
+    // Process each field synchronously
+    const formHTML = schema.map(field => {
+        const [type, name, label, validate, attributes = {}, bindingSyntax] = field;
+        return this.renderField(type, name, label, validate, attributes, bindingSyntax);
+    }).join('');
+    
+    return formHTML;
 }
+
 
   
 }
@@ -33,10 +33,13 @@ class Formique extends FormRenderer {
     this.divClass='input-block';
     this.inputClass='form-input';
     this.formParams=formParams;
+    this.formMarkUp='';
 
     if (this.formParams) {
       //console.log(formParams);
       const formElement = this.renderFormElement(); 
+      //console.log(formElement);
+
 
 
     }
@@ -100,9 +103,9 @@ class Formique extends FormRenderer {
   }
 
 
-  async renderFormElement() {
-  //console.log(this.formParams);
-  let formHTML = '<form ';
+ // renderFormElement method
+renderFormElement() {
+  let formHTML = '<form\n';
 
   // Use this.formParams directly
   const paramsToUse = this.formParams || {};
@@ -113,36 +116,31 @@ class Formique extends FormRenderer {
       // Handle boolean attributes
       if (typeof value === 'boolean') {
         if (value) {
-          formHTML += `${key} `;
+          formHTML += `  ${key}\n`;
         }
       } else {
         // Handle other attributes
         const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
-        formHTML += `${formattedKey}="${value}" `;
+        formHTML += `  ${formattedKey}="${value}"\n`;
       }
     }
   }
 
   // Close the <form> tag
-  formHTML += '>';
+  formHTML += '>\n';
 
-   // Format the HTML string
-      const formattedHTML = await prettier.format(formHTML, {
-        parser: "html",
-        tabWidth: 2,        // Number of spaces per indentation level
-        useTabs: false,     // Indent lines with tabs instead of spaces
-        printWidth: 80,     // Specify the line length that Prettier will wrap on
-        htmlWhitespaceSensitivity: "ignore",
-      });
+  // Manually ensure vertical formatting of the HTML string
+  formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
 
-    const finalHTML = formattedHTML.replace(/<\/form>/g, '');
-     console.log(finalHTML);
-  //return formHTML;
+  //console.log("HR", formHTML);
+
+  this.formMarkUp += formHTML;
+  return this.formMarkUp;
 }
 
 
- // Specific rendering methods for each field type
-async renderTextField(type, name, label, validate, attributes, bindingSyntax) {
+// Specific rendering methods for each field type
+renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   // Define valid attributes for different input types
   const textInputAttributes = [
     'required',
@@ -165,12 +163,12 @@ async renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     Object.entries(validate).forEach(([key, value]) => {
       if (textInputAttributes.includes(key)) {
         if (typeof value === 'boolean') {
-          validationAttrs += `${key}\n`;
+          validationAttrs += `  ${key}\n`;
         } else {
           switch (key) {
             case 'minlength':
             case 'maxlength':
-              validationAttrs += `${key}="${value}"\n`;
+              validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'text'.\x1b[0m`);
@@ -186,7 +184,7 @@ async renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
+    bindingDirective = `  bind:value="${name}"\n`;
   } else if (bindingSyntax === 'bind:value' && !name) {
     console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
     return;
@@ -196,7 +194,7 @@ async renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   let id = attributes.id || name;
 
   // Determine if semantiq is true based on formParams
-  const semantiq = this.formParams?.semantiq || false;
+  const semantq = this.formParams?.semantq || false;
 
   // Construct additional attributes dynamically
   let additionalAttrs = '';
@@ -204,21 +202,21 @@ async renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
-        if (semantiq) {
+        if (semantq) {
           const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-          additionalAttrs += `@${key.replace(/^on/, '')}={${eventValue}}\n`;
+          additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
         } else {
           // Add parentheses if not present
           const eventValue = value.endsWith('()') ? value : `${value}()`;
-          additionalAttrs += `${key}="${eventValue}"\n`;
+          additionalAttrs += `  ${key}="${eventValue}"\n`;
         }
       } else {
         // Handle boolean attributes
         if (value === true) {
-          additionalAttrs += `${key.replace(/_/g, '-')}\n`;
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
         } else if (value !== false) {
           // Convert underscores to hyphens and set the attribute
-          additionalAttrs += `${key.replace(/_/g, '-')}="${value}"\n`;
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
         }
       }
     }
@@ -229,27 +227,26 @@ async renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
       <input 
-        type="${type}"
-        name="${name}"
-        ${bindingDirective}
-        id="${id}"
-        ${additionalAttrs}
-        ${validationAttrs}
+                  type="${type}"
+                  name="${name}"
+                  ${bindingDirective}
+                  id="${id}"
+                  ${additionalAttrs}
+                  ${validationAttrs}
       />
     </div>
   `.replace(/^\s*\n/gm, '').trim();
 
-  // Format the HTML string using Prettier
-  const formattedHTML = prettier.format(formHTML, {
-    parser: "html",
-    tabWidth: 2,
-    useTabs: false,
-    printWidth: 80,
-    htmlWhitespaceSensitivity: "ignore",
+  // Apply vertical layout to the <input> element only
+  formHTML = formHTML.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
   });
 
-  return formattedHTML;
+  this.formMarkUp += formHTML;
+  return this.formMarkUp;
 }
+
 
 
 
@@ -1294,14 +1291,15 @@ style: "width: 100%; font-size: 14px;"
 //accept_charset: 'UTF-8', 
   };
 
-/*
+
 const form = new Formique(formParams);
 const formHTML = form.renderForm(formSchema);
 console.log(formHTML);
-*/
+
 
   // Example usage
 // Example usage
+  /*
 (async () => {
   try {
     const form = new Formique(formParams);
@@ -1311,7 +1309,7 @@ console.log(formHTML);
     console.error('Error generating form HTML:', error);
   }
 })();
-
+*/
 
 
 
