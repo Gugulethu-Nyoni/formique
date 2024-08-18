@@ -169,7 +169,7 @@ class Formique extends FormRenderer {
   let id = attributes.id || name;
 
   // Determine if semantiq is true based on formParams
-  const semantiq = this.formParams?.semantiq || false;
+  const semantq = this.formParams?.semantq || false;
 
   // Construct additional attributes dynamically
   let additionalAttrs = '';
@@ -177,9 +177,12 @@ class Formique extends FormRenderer {
     if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
-        if (semantiq) {
-          additionalAttrs += `@${key.replace(/^on/, '')}={${value}}\n`;
-        } else {
+        if (semantq) {
+  // Remove "()" if the value ends with it
+  const eventHandler = value.endsWith('()') ? value.slice(0, -2) : value;
+  additionalAttrs += `@${key.replace(/^on/, '')}={${eventHandler}}\n`;
+}
+ else {
           // Add parentheses if not present
           const eventValue = value.endsWith('()') ? value : `${value}()`;
           additionalAttrs += `${key}="${eventValue}"\n`;
@@ -1134,7 +1137,7 @@ renderSubmitButton(name, label, attributes) {
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { min: 2, max: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer"}, 'bind:value'],
+  ['text', 'firstName', 'First Name', { min: 2, max: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, 'bind:value'],
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
 
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
@@ -1246,7 +1249,7 @@ method: 'post',
 action: 'submit.js', 
 id: 'myForm', 
 class: 'form',
-semantiq: false,
+semantq: true,
 style: "width: 100%; font-size: 14px;"
 //enctype: 'multipart/form-data', 
 //target: '_blank', 
