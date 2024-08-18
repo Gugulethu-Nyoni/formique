@@ -75,7 +75,7 @@ class CustomFormRenderer extends FormRenderer {
   }
 
   // Specific rendering methods for each field type
-  renderTextField(name, label, validate, attributes, bindingSyntax) {
+  renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     let validationAttrs = '';
     if (validate) {
       Object.entries(validate).forEach(([key, value]) => {
@@ -991,7 +991,7 @@ renderSubmitButton(name, label, attributes) {
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { required: true, minLength: 2 }, { id: 'firstNameInput', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
+  ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
   /*
   ['email', 'email', 'Email', { required: true, email: true }, { class: 'form-control', style: 'width: 100%;' }, '::emailValue'],
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12', class: 'form-control' }, '::age'],
