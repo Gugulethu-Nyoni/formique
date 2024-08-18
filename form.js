@@ -124,58 +124,82 @@ class CustomFormRenderer extends FormRenderer {
 }
 
 
-
-
-
-  // Specific rendering methods for each field type
-  renderTextField(type, name, label, validate, attributes, bindingSyntax) {
-    let validationAttrs = '';
-    if (validate) {
-      Object.entries(validate).forEach(([key, value]) => {
-        switch (key) {
-          case 'required':
-            validationAttrs += `${key} `;
-            break;
-          case 'minLength':
-          case 'maxLength':
-            validationAttrs += `${key}="${value}" `;
-            break;
-          default:
-            console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'text'.`);
-            break;
-        }
-      });
-    }
-
-    let id = attributes.id || name;
-    let bindingDirective = '';
-    if (bindingSyntax === 'bind:value' && name) {
-      bindingDirective = ` bind:value="${name}"`;
-    } 
-
-    if (bindingSyntax === 'bind:value' && !name) {
-      console.log('\x1b[31m%s\x1b[0m', 'You can not set binding value when there is no name attribute defined.');
-      return; 
-    }
-
-    
-    let inputClass = attributes.class || this.inputClass;
-    return `
-      <div class="${this.divClass}"> 
-        <label for="${id}">${label}</label>
-        <input 
-          type="text" 
-          name="${name}" 
-         ${bindingDirective}  
-          id="${id}"
-          ${attributes.class ? `class="${inputClass}"` : ''}
-          ${attributes.style ? `style="${attributes.style}"` : ''}
-          ${validationAttrs} 
-
-        />
-      </div>
-    `.replace(/^\s*\n/gm, '').trim();
+ // Specific rendering methods for each field type
+renderTextField(type, name, label, validate, attributes, bindingSyntax) {
+  // Construct validation attributes
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      switch (key) {
+        case 'required':
+          validationAttrs += `${key}\n`;
+          break;
+        case 'minLength':
+        case 'maxLength':
+          validationAttrs += `${key}="${value}"\n`;
+          break;
+        default:
+          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'text'.`);
+          break;
+      }
+    });
   }
+
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value' && name) {
+    bindingDirective = `bind:value="${name}"\n`;
+  } else if (bindingSyntax === 'bind:value' && !name) {
+    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+    return;
+  }
+
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
+
+  // Determine if semantiq is true based on formParams
+  const semantiq = this.formParams?.semantiq || false;
+
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        if (semantiq) {
+          additionalAttrs += `@${key.replace(/^on/, '')}={${value}}\n`;
+        } else {
+          // Add parentheses if not present
+          const eventValue = value.endsWith('()') ? value : `${value}()`;
+          additionalAttrs += `${key}="${eventValue}"\n`;
+        }
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Return the final HTML for the text field
+  return `
+    <div class="${this.divClass}"> 
+      <label for="${id}">${label}</label>
+      <input 
+        type="${type}"\n
+        name="${name}"\n
+        ${bindingDirective}
+        id="${id}"\n
+        ${additionalAttrs}
+        ${validationAttrs}
+      />
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+}
 
 
 
@@ -1100,8 +1124,8 @@ renderSubmitButton(name, label, attributes) {
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;' }, 'bind:value'],
-  ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;' }, '::emailValue'],
+  ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer"  }, 'bind:value'],
+  ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
 
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
  
@@ -1216,7 +1240,8 @@ nonvalidate: true,
 accept_charset: 'UTF-8', 
 id: 'myForm', 
 class: 'form',
-semantiq: true,
+semantiq: false,
+style: "width: 100%; font-size: 14px;"
   };
 
 const customFormRenderer = new CustomFormRenderer(formParams);
