@@ -19,7 +19,7 @@ class FormRenderer
 
 
 // Extended class for specific form rendering methods
-class CustomFormRenderer extends FormRenderer {
+class Formique extends FormRenderer {
 
 
  constructor (formParams = {}) {
@@ -30,7 +30,9 @@ class CustomFormRenderer extends FormRenderer {
 
     if (this.formParams) {
       //console.log(formParams);
-    this.renderFormElement(); 
+    const formElement = this.renderFormElement(); 
+    console.log(formElement);
+
 
     }
 
@@ -118,7 +120,6 @@ class CustomFormRenderer extends FormRenderer {
 
   // Close the <form> tag
   formHTML += '>';
-  console.log(formHTML);
   return formHTML;
 }
 
@@ -1133,7 +1134,7 @@ renderSubmitButton(name, label, attributes) {
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { minlength: 2, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer"}, 'bind:value'],
+  ['text', 'firstName', 'First Name', { min: 2, max: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer"}, 'bind:value'],
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
 
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
@@ -1243,18 +1244,18 @@ const formSchema = [
 const formParams= {
 method: 'post', 
 action: 'submit.js', 
-enctype: 'multipart/form-data', 
-target: '_blank', 
-nonvalidate: true, 
-accept_charset: 'UTF-8', 
 id: 'myForm', 
 class: 'form',
-semantiq: true,
+semantiq: false,
 style: "width: 100%; font-size: 14px;"
+//enctype: 'multipart/form-data', 
+//target: '_blank', 
+//nonvalidate: true, 
+//accept_charset: 'UTF-8', 
   };
 
-const customFormRenderer = new CustomFormRenderer(formParams);
-const formHTML = customFormRenderer.renderForm(formSchema);
+const form = new Formique(formParams);
+const formHTML = form.renderForm(formSchema);
 console.log(formHTML);
 
 
