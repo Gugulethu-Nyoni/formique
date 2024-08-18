@@ -26,6 +26,7 @@ class CustomFormRenderer extends FormRenderer {
     super();
     this.divClass='input-block';
     this.inputClass='form-input';
+    this.semantiq=false;
  }
 
 
@@ -85,6 +86,7 @@ class CustomFormRenderer extends FormRenderer {
 
   }
 
+
   // Specific rendering methods for each field type
   renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     let validationAttrs = '';
@@ -105,15 +107,8 @@ class CustomFormRenderer extends FormRenderer {
       });
     }
 
-    let id; 
-    if ('id' in attributes) {
-    id = attributes.id; 
-
-    } else {
-      id = name; 
-    }
-
-
+    
+    let id = attributes.id || name;
     let bindingDirective = '';
     if (bindingSyntax === 'bind:value' && name) {
       bindingDirective = ` bind:value="${name}"`;
@@ -124,16 +119,8 @@ class CustomFormRenderer extends FormRenderer {
       return; 
     }
 
-    let inputClass;
-
-    if ('class' in attributes) {
-      inputClass = attributes.class;
-    } else {
-      inputClass = this.inputClass;
-    }
-
-
-
+    
+    let inputClass = attributes.class || this.inputClass;
     return `
       <div class="${this.divClass}"> 
         <label for="${id}">${label}</label>
@@ -141,82 +128,124 @@ class CustomFormRenderer extends FormRenderer {
           type="text" 
           name="${name}" 
          ${bindingDirective}  
-          ${validationAttrs} 
-          ${attributes.id ? `id="${attributes.id}"` : ''}
+          id="${id}"
           ${attributes.class ? `class="${inputClass}"` : ''}
           ${attributes.style ? `style="${attributes.style}"` : ''}
+          ${validationAttrs} 
+
         />
       </div>
     `.replace(/^\s*\n/gm, '').trim();
   }
 
+
+
   renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
-    let validationAttrs = '';
-    if (validate) {
-      Object.entries(validate).forEach(([key, value]) => {
-        switch (key) {
-          case 'required':
-            validationAttrs += `${key} `;
-            break;
-          case 'email':
-            validationAttrs += `${key} `;
-            break;
-          default:
-            console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'email'.`);
-            break;
-        }
-      });
-    }
-
-    let bindingDirective = '';
-    if (bindingSyntax === `::${name}`) {
-      bindingDirective = ` bind:value="${name}"`;
-    }
-
-    return `
-      <label for="${name}">${label}</label>
-      <input type="${type}" name="${name}" ${bindingDirective} ${validationAttrs}
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-      />
-    `;
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      switch (key) {
+        case 'required':
+          validationAttrs += `${key} `;
+          break;
+        case 'email':
+          // Email validation is typically handled by the input type itself,
+          // but if you need a custom validation, you can handle it here.
+          validationAttrs += `${key}="${value}" `;
+          break;
+        default:
+          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'email'.`);
+          break;
+      }
+    });
   }
 
-  renderNumberField(name, label, validate, attributes, bindingSyntax) {
-    let validationAttrs = '';
-    if (validate) {
-      Object.entries(validate).forEach(([key, value]) => {
-        switch (key) {
-          case 'required':
-            validationAttrs += `${key} `;
-            break;
-          case 'min':
-          case 'max':
-            validationAttrs += `${key}=${value} `;
-            break;
-          default:
-            console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'number'.`);
-            break;
-        }
-      });
-    }
-
-    let bindingDirective = '';
-    if (bindingSyntax === '::age') {
-      bindingDirective = ` bind:value="${name}"`;
-    }
-
-    return `
-      <label for="${name}">${label}</label>
-      <input type="number"${bindingDirective} ${validationAttrs}
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-      />
-    `;
+  let id = attributes.id || name;
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value' && name) {
+    bindingDirective = ` bind:value="${name}"`;
   } 
 
+  if (bindingSyntax === 'bind:value' && !name) {
+    console.log('\x1b[31m%s\x1b[0m', 'You can not set binding value when there is no name attribute defined.');
+    return; 
+  }
+
+  let inputClass = attributes.class || this.inputClass;
+
+  return `
+    <div class="${this.divClass}"> 
+      <label for="${id}">${label}</label>
+      <input 
+        type="${type}" 
+        name="${name}" 
+        ${bindingDirective}  
+        id="${id}"
+        ${attributes.class ? `class="${inputClass}"` : ''}
+        ${attributes.style ? `style="${attributes.style}"` : ''}
+        ${validationAttrs} 
+
+      />
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+}
+
+
+
+renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
+  // Initialize validation attributes string
+  let validationAttrs = '';
+  
+  // Add validation attributes based on the 'validate' object
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      switch (key) {
+        case 'required':
+          validationAttrs += `${key} `;
+          break;
+        case 'min':
+        case 'max':
+          validationAttrs += `${key}="${value}" `;
+          break;
+        default:
+          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'number'.`);
+          break;
+      }
+    });
+  }
+
+  // Determine the ID attribute (fallback to the name attribute if ID is not present)
+  let id = attributes.id || name;
+
+  // Set the binding directive if applicable
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value' && name) {
+    bindingDirective = ` bind:value="${name}"`;
+  } else if (bindingSyntax === 'bind:value' && !name) {
+    console.log('\x1b[31m%s\x1b[0m', 'You can not set binding value when there is no name attribute defined.');
+    return;
+  }
+
+  // Set the input class, defaulting to this.inputClass if not provided
+  let inputClass = attributes.class || this.inputClass;
+
+  // Return the formatted HTML string
+  return `
+    <div class="${this.divClass}"> 
+      <label for="${id}">${label}</label>
+      <input 
+        type="${type}" 
+        name="${name}" 
+        ${bindingDirective}  
+        id="${id}"
+        ${attributes.class ? `class="${inputClass}"` : ''}
+        ${attributes.style ? `style="${attributes.style}"` : ''}
+        ${validationAttrs} 
+
+      />
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+}
 
 
 
@@ -1033,9 +1062,14 @@ renderSubmitButton(name, label, attributes) {
 
 const formSchema = [
   ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;' }, 'bind:value'],
+  ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;' }, '::emailValue'],
+
+
+  ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
+ 
   /*
-  ['email', 'email', 'Email', { required: true, email: true }, { class: 'form-control', style: 'width: 100%;' }, '::emailValue'],
-  ['number', 'age', 'Your Age', { required: false }, { id: 'age12', class: 'form-control' }, '::age'],
+
+
   ['password', 'password', 'Password', { required: true, minLength: 8 }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
   ['tel', 'phoneNumber', 'Phone Number', { required: true }, { class: 'form-control', style: 'width: 100%;' }, '::telValue'],
   ['date', 'birthdate', 'Birthdate', { required: true }, { id: 'birthdateInput', class: 'form-control', style: 'width: 100%;' }, '::date'],
