@@ -22,11 +22,20 @@ class FormRenderer
 class CustomFormRenderer extends FormRenderer {
 
 
- constructor () {
+ constructor (formParams = {}) {
     super();
     this.divClass='input-block';
     this.inputClass='form-input';
     this.semantiq=false;
+    this.formParams=formParams;
+
+    if (this.formParams) {
+      //console.log(formParams);
+    this.renderFormElement(); 
+
+    }
+
+
  }
 
 
@@ -57,27 +66,25 @@ class CustomFormRenderer extends FormRenderer {
       case 'search':
         return this.renderSearchField(type, name, label, validate, attributes, bindingSyntax);
       case 'color':
-      return this.renderColorField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderColorField(type, name, label, validate, attributes, bindingSyntax);
       case 'checkbox':
-      return this.renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options);
+       return this.renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'radio':
-      return this.renderRadioField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderRadioField(type, name, label, validate, attributes, bindingSyntax);
       case 'file':
-      return this.renderFileField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderFileField(type, name, label, validate, attributes, bindingSyntax);
       case 'hidden':
-      return this.renderHiddenField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderHiddenField(type, name, label, validate, attributes, bindingSyntax);
       case 'image':
-      return this.renderImageField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderImageField(type, name, label, validate, attributes, bindingSyntax);
       case 'textarea':
-      return this.renderTextareaField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderTextareaField(type, name, label, validate, attributes, bindingSyntax);
       case 'singleSelect':
-      return this.renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
+        return this.renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'multipleSelect':
-      return this.renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
+        return this.renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'submit':
         return this.renderSubmitButton(type, name, label, attributes);
-
-
       default:
         console.warn(`Unsupported field type '${type}' encountered.`);
         return ''; // or handle gracefully
@@ -85,6 +92,39 @@ class CustomFormRenderer extends FormRenderer {
 
 
   }
+
+
+  renderFormElement() {
+  //console.log(this.formParams);
+  let formHTML = '<form ';
+
+  // Use this.formParams directly
+  const paramsToUse = this.formParams || {};
+
+  // Dynamically add attributes if they are present in the parameters
+  for (const [key, value] of Object.entries(paramsToUse)) {
+    if (value !== undefined && value !== null) {
+      // Handle boolean attributes
+      if (typeof value === 'boolean') {
+        if (value) {
+          formHTML += `${key} `;
+        }
+      } else {
+        // Handle other attributes
+        const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
+        formHTML += `${formattedKey}="${value}" `;
+      }
+    }
+  }
+
+  // Close the <form> tag
+  formHTML += '>';
+  console.log(formHTML);
+  return formHTML;
+}
+
+
+
 
 
   // Specific rendering methods for each field type
@@ -107,7 +147,6 @@ class CustomFormRenderer extends FormRenderer {
       });
     }
 
-    
     let id = attributes.id || name;
     let bindingDirective = '';
     if (bindingSyntax === 'bind:value' && name) {
@@ -1064,7 +1103,6 @@ const formSchema = [
   ['text', 'firstName', 'First Name', { minLength: 2, required: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;' }, 'bind:value'],
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;' }, '::emailValue'],
 
-
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
  
   /*
@@ -1166,9 +1204,26 @@ const formSchema = [
 */
 
 
-
 ];
 
-const customFormRenderer = new CustomFormRenderer();
+
+const formParams= {
+method: 'post', 
+action: 'submit.js', 
+enctype: 'multipart/form-data', 
+target: '_blank', 
+nonvalidate: true, 
+accept_charset: 'UTF-8', 
+id: 'myForm', 
+class: 'form',
+semantiq: true,
+  };
+
+const customFormRenderer = new CustomFormRenderer(formParams);
 const formHTML = customFormRenderer.renderForm(formSchema);
 console.log(formHTML);
+
+
+
+
+
