@@ -2679,7 +2679,9 @@ renderSubmitButton(type, name, label, attributes) {
  renderFormHTML () {
 
 this.formMarkUp+= '</form>'; 
-return this.formMarkUp;
+const formContainer = document.getElementById('formique');
+formContainer.innerHTML = this.formMarkUp;
+//return this.formMarkUp;
 
 
  }

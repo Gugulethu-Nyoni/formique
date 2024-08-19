@@ -1,0 +1,208 @@
+/* Formique CSS */
+
+
+/* Dark Theme */
+
+:root {
+    --background-dark: #1e1e1e;
+    --background-light: #2e2e2e;
+    --text-light: #e0e0e0;
+    --border-color: #444;
+    --input-background: #333;
+    --input-background-disabled: #444;
+    --label-color: #b0b0b0;
+    --radio-checkbox-accent: #b0b0b0;
+    --button-background: #b0b0b0;
+    --button-background-hover: #9e9e9e;
+}
+
+/* Pink Theme  
+:root {
+    --background-dark: #2c2c2c;
+    --background-light: #3d3d3d;
+    --text-light: #f1f1f1;
+    --border-color: #555;
+    --input-background: #444;
+    --input-background-disabled: #666;
+    --label-color: #ff4081;
+    --radio-checkbox-accent: #ff4081;
+    --button-background: #ff4081;
+    --button-background-hover: #e91e63;
+}
+
+/* Indigo Theme 
+:root {
+    --background-dark: #2c2c2c;
+    --background-light: #3d3d3d;
+    --text-light: #e0e0e0;
+    --border-color: #444;
+    --input-background: #333;
+    --input-background-disabled: #555;
+    --label-color: #3f51b5;
+    --radio-checkbox-accent: #3f51b5;
+    --button-background: #3f51b5;
+    --button-background-hover: #303f9f;
+}
+
+/* Blue Theme 
+:root {
+    --background-dark: #0a0a0a;
+    --background-light: #1a1a1a;
+    --text-light: #e0e0e0;
+    --border-color: #333;
+    --input-background: #222;
+    --input-background-disabled: #444;
+    --label-color: #2196f3;
+    --radio-checkbox-accent: #2196f3;
+    --button-background: #2196f3;
+    --button-background-hover: #1976d2;
+}
+
+
+
+/* Dark and Orange 
+
+:root {
+    --background-dark: #121212;
+    --background-light: #1e1e1e;
+    --text-light: #e0e0e0;
+    --border-color: #333;
+    --input-background: #333;
+    --input-background-disabled: #444;
+    --label-color: #ff9800;
+    --radio-checkbox-accent: #ff9800;
+    --button-background: #ff9800;
+    --button-background-hover: #e68900;
+}
+
+
+*/
+
+
+
+
+#formique {
+    max-width: 600px; /* Limit the width for better mobile view */
+    margin: auto;
+    padding: 1rem;
+    background-color: var(--background-light); /* Slightly lighter dark background */
+    border-radius: 8px;
+    color: var(--text-light); /* Light text color for readability */
+    font-family: Arial, sans-serif; /* Font for the form */
+}
+
+/* Input Block Styling */
+#formique .input-block {
+    margin-bottom: 1rem;
+}
+
+#formique .input-block label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--label-color); /* Orange color for labels */
+}
+
+#formique .input-block .form-input,
+#formique .input-block .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-background); /* Background for inputs */
+    color: var(--text-light);
+    box-sizing: border-box;
+}
+
+#formique .input-block .form-input:disabled {
+    background-color: var(--input-background-disabled); /* Background for disabled inputs */
+    cursor: not-allowed;
+}
+
+/* Radio Group Styling */
+#formique .radio-group {
+    margin-bottom: 1rem;
+}
+
+#formique .radio-group legend {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--label-color); /* Orange color for legend */
+}
+
+#formique .radio-group div {
+    margin-bottom: 0.5rem;
+}
+
+#formique .radio-group .form-radio-input {
+    margin-right: 0.5rem;
+    accent-color: var(--radio-checkbox-accent); /* Orange color for radio buttons */
+}
+
+/* Checkbox Group Styling */
+#formique .checkbox-group {
+    margin-bottom: 1rem;
+}
+
+#formique .checkbox-group legend {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--label-color); /* Orange color for legend */
+}
+
+#formique .checkbox-group div {
+    margin-bottom: 0.5rem;
+}
+
+#formique .checkbox-group .form-checkbox-input {
+    margin-right: 0.5rem;
+    accent-color: var(--radio-checkbox-accent); /* Orange color for checkboxes */
+}
+
+/* Select Styling */
+#formique .form-select {
+    margin-bottom: 1rem;
+}
+
+#formique .form-select label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--label-color); /* Orange color for labels */
+}
+
+#formique .form-select .form-select-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-background); /* Background for selects */
+    color: var(--text-light);
+    box-sizing: border-box;
+}
+
+/* Submit Button Styling */
+#formique .form-submit-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--button-background); /* Orange background */
+    color: var(--background-dark); /* Dark text color for contrast */
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#formique .form-submit-btn:hover {
+    background-color: var(--button-background-hover); /* Darker orange on hover */
+}
+
+/* General Styles */
+
+body {
+    background-color: var(--background-dark); /* Dark background for the page */
+    color: var(--text-light); /* Light text color for readability */
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+
