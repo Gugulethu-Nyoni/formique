@@ -25,27 +25,28 @@ Formique: A lightweight, declarative JavaScript library for generating forms. Su
 
 ## Form Input Types Covered
 
-   - Text: <input type="text">
-   - Email: <input type="email">
-   - Number: <input type="number">
-   - Password: <input type="password">
-   - Telephone: <input type="tel">
-   - Date: <input type="date">
-   - Time: <input type="time">
-   - Datetime-local: <input type="datetime-local">
-   - Month: <input type="month">
-   - Week: <input type="week">
-   - URL: <input type="url">
-   - Search: <input type="search">
-   - Color: <input type="color">
-   - File: <input type="file">
-   - Hidden: <input type="hidden">
-   - Image: <input type="image">
-   - Textarea: <textarea>
-   - Radio: <input type="radio">
-   - Checkbox: <input type="checkbox">
-   - Select (Single & Multiple): <select>
-   - Submit: <input type="submit">
+- Text: ```html <input type="text"> ```
+- Email: ```html <input type="email"> ```
+- Number: ```html <input type="number"> ```
+- Password: ```html <input type="password"> ```
+- Telephone: ```html <input type="tel"> ```
+- Date: ```html <input type="date"> ```
+- Time: ```html <input type="time"> ```
+- Datetime-local: ```html <input type="datetime-local"> ```
+- Month: ```html <input type="month"> ```
+- Week: ```html <input type="week"> ```
+- URL: ```html <input type="url"> ```
+- Search: ```html <input type="search"> ```
+- Color: ```html <input type="color"> ```
+- File: ```html <input type="file"> ```
+- Hidden: ```html <input type="hidden"> ```
+- Image: ```html <input type="image"> ```
+- Textarea: ```html <textarea> ```
+- Radio: ```html <input type="radio"> ```
+- Checkbox: ```html <input type="checkbox"> ```
+- Select (Single & Multiple): ```html <select> ```
+- Submit: ```html <input type="submit"> ```
+
 
 
 
