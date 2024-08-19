@@ -3,3 +3,6 @@ formatHTML.js
 
 # Ignore archive directory
 archive/
+
+# Ingore node serv
+server/

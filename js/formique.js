@@ -2695,6 +2695,9 @@ formContainer.innerHTML = this.formMarkUp;
 
 
 
+export default Formique;
+
+
 
 
 
