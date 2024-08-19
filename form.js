@@ -66,16 +66,12 @@ class Formique extends FormBuilder {
 
     // Manually ensure vertical formatting of the HTML string
     formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
-     //this.formMarkUp += formHTML;
-     //console.log("watch",this.formMarkUp);
     return formHTML;
   }
 
 
   // Main renderForm method
 renderForm() {
-
-  //console.log(this.formSchema);
     // Process each field synchronously
     const formHTML = this.formSchema.map(field => {
         const [type, name, label, validate, attributes = {}, bindingSyntax] = field;
@@ -88,8 +84,6 @@ renderForm() {
     this.formMarkUp += formHTML; 
     //console.log("here", this.formMarkUp);
 }
-
-
 
 
   renderField(type, name, label, validate, attributes, bindingSyntax) {
@@ -277,6 +271,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   });
   */
+  
 
   //this.formMarkUp += formattedHtml;
   //console.log("HR",this.formMarkUp);
@@ -393,12 +388,12 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   });
 
   // Ensure the <div> block starts on a new line and remove extra blank lines
-  /*
+  
   formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
     // Ensure <div> starts on a new line
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
-  */
+  
 
   //this.formMarkUp += formattedHtml;
 
