@@ -1417,9 +1417,9 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::') && name) {
+  } if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax && !name) {
+  } if (bindingSyntax && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1530,9 +1530,9 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::') && name) {
+  } if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax && !name) {
+  } if (bindingSyntax && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1746,7 +1746,7 @@ renderFileField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value') {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::') && name) {
+  } if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
   if (bindingSyntax && !name) {
@@ -1781,6 +1781,114 @@ renderFileField(type, name, label, validate, attributes, bindingSyntax) {
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
+      <input 
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
+        id="${id}"
+        ${additionalAttrs}
+        ${validationAttrs}
+      />
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> element only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
+}
+
+
+
+
+
+renderHiddenField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid attributes for the hidden input type
+  const validAttributes = [
+    'type',
+    'name',
+    'value',
+    'id',
+    'class',
+    'style',
+    'required',
+    'readonly',
+    'disabled',
+    'tabindex',
+  ];
+
+  // Construct validation attributes
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (validAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
+      }
+    });
+  }
+
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value') {
+    bindingDirective = `  bind:value="${name}"\n`;
+  } if (bindingSyntax.startsWith('::') && name) {
+    bindingDirective = `  bind:value="${name}"\n`;
+  }
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+    return;
+  }
+
+
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
+
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}">
       <input 
         type="${type}"
         name="${name}"
@@ -1911,39 +2019,6 @@ renderCheckboxField(name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderHiddenField(name, label, validate, attributes, bindingSyntax) {
-  let validationAttrs = '';
-  if (validate) {
-    Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
-          validationAttrs += `${key} `;
-          break;
-        case 'hidden': // Handle 'hidden' validation
-          validationAttrs += `${key} `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'hidden'.`);
-          break;
-      }
-    });
-  }
-
-  let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
-    bindingDirective = ` bind:value="${name}"`;
-  } else if (bindingSyntax.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}"`;
-  }
-
-  return `
-    <input type="hidden"${bindingDirective} ${validationAttrs}
-      ${attributes.id ? `id="${attributes.id}"` : ''}
-      ${attributes.class ? `class="${attributes.class}"` : ''}
-      ${attributes.style ? `style="${attributes.style}"` : ''}
-    />
-  `;
-}
 
 
 
@@ -2234,7 +2309,7 @@ return this.formMarkUp;
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { minlength: 2, maxlength: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, '::firstName'],
+  ['text', 'firstName', 'First Name', { minlength: 2, maxlength: 5, required: true, disabled: true}, { value: "John", id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, '::firstName'],
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
   ['number', 'age', 'Your Age', {required: false}, { id: 'age12'}, '::age'],
   ['password', 'password', 'Password', { minlength: 8, required: true }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
@@ -2248,15 +2323,15 @@ const formSchema = [
   ['search', 'searchQuery', 'Search', { required: true }, { id: 'searchQueryInput', class: 'form-control', style: 'width: 100%;' }, '::searchQuery'],
   ['color', 'colorPicker', 'Pick a Color', { required: true }, { id: 'colorPickerInput', class: 'form-control', style: 'width: 100%;' }, '::colorValue'],
   ['file', 'terms', 'Upload File', { required: true }, { id: 'my-file', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
-
-  
-  /*
-
   ['hidden', 'user_id', '', { required: true }, {}, '::user_id'],
+
+
 
   ['image','profilePicture','Profile Picture', { required: true, accept: 'image/*' }, 
   { id: 'profilePictureInput', class: 'form-control', style: 'width: 100%;' }, 
   'bind:value'],
+
+  /*
 
   ['textarea', 'comments', 'Comments', 
   { required: true, minLength: 10, maxLength: 200, rows: 4, cols: 50 }, 
