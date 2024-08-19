@@ -3,21 +3,13 @@ import pretty from 'pretty';
 // Base class for form rendering
 class FormBuilder 
 {
-  renderField(type, name, label, validate, attributes, bindingSyntax,options) {
+
+
+  renderField(type, name, label, validate, attributes, bindingSyntax) {
     throw new Error('Method renderField must be implemented');
   }
 
-   // Main renderForm method
-renderForm(schema) {
-    // Process each field synchronously
-    const formHTML = schema.map(field => {
-        const [type, name, label, validate, attributes = {}, bindingSyntax] = field;
-        return this.renderField(type, name, label, validate, attributes, bindingSyntax);
-    }).join('');
-    
-    return formHTML;
-}
-
+ 
 
   
 }
@@ -27,34 +19,80 @@ renderForm(schema) {
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
 
-
- constructor (formParams = {}) {
+ constructor (formParams = {}, formSchema) {
     super();
+    this.formSchema=formSchema;
     this.divClass='input-block';
     this.inputClass='form-input';
     this.formParams=formParams;
     this.formMarkUp='';
-    //this.formElementInstance = 0;
-
-    //this.renderedElements = new Set();
 
     if (this.formParams) {
-      console.log(formParams);
       this.formMarkUp += this.renderFormElement(); 
-      //this.formElementInstance ++;
-      //this.formMarkUp += this.renderFormElement();
-      //console.log(formElement);
-      //this.formMarkUp += formElement;
-
-
-
     }
+
+    this.renderForm();
 
 
  }
 
 
-  renderField(type, name, label, validate, attributes, bindingSyntax, options) {
+ 
+
+// renderFormElement method
+  renderFormElement() {
+    let formHTML = '<form\n';
+    // Use this.formParams directly
+    const paramsToUse = this.formParams || {};
+
+    // Dynamically add attributes if they are present in the parameters
+    for (const [key, value] of Object.entries(paramsToUse)) {
+      if (value !== undefined && value !== null) {
+        // Handle boolean attributes
+        if (typeof value === 'boolean') {
+          if (value) {
+            formHTML += `  ${key}\n`;
+          }
+        } else {
+          // Handle other attributes
+          const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
+          formHTML += `  ${formattedKey}="${value}"\n`;
+        }
+      }
+    }
+
+    // Close the <form> tag
+    formHTML += '>\n';
+
+    // Manually ensure vertical formatting of the HTML string
+    formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
+     //this.formMarkUp += formHTML;
+     //console.log("watch",this.formMarkUp);
+    return formHTML;
+  }
+
+
+  // Main renderForm method
+renderForm() {
+
+  //console.log(this.formSchema);
+    // Process each field synchronously
+    const formHTML = this.formSchema.map(field => {
+        const [type, name, label, validate, attributes = {}, bindingSyntax] = field;
+        return this.renderField(type, name, label, validate, attributes, bindingSyntax);
+    }).join('');
+    
+  //return formHTML;
+  //return this.formMarkUp;
+
+    this.formMarkUp += formHTML; 
+    //console.log("here", this.formMarkUp);
+}
+
+
+
+
+  renderField(type, name, label, validate, attributes, bindingSyntax) {
     switch (type) {
       case 'text':
         return this.renderTextField(type, name, label, validate, attributes, bindingSyntax);
@@ -106,57 +144,22 @@ class Formique extends FormBuilder {
     }
 
 
+    //return this.formMarkUp;
+    //this.renderForm();
+
+
 
 
   }
 
 
- // renderFormElement method
-  renderFormElement() {
-
-console.log("MU",this.formMarkUp);
-
-// Check if the form element is already included
-  if (this.formMarkUp !== '') {
-    // Return empty string if the <form> element is already in the markup
-    console.log("there");
-    return '';
-  }
-
-    let formHTML = '<form\n';
-
-    // Use this.formParams directly
-    const paramsToUse = this.formParams || {};
-
-    // Dynamically add attributes if they are present in the parameters
-    for (const [key, value] of Object.entries(paramsToUse)) {
-      if (value !== undefined && value !== null) {
-        // Handle boolean attributes
-        if (typeof value === 'boolean') {
-          if (value) {
-            formHTML += `  ${key}\n`;
-          }
-        } else {
-          // Handle other attributes
-          const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
-          formHTML += `  ${formattedKey}="${value}"\n`;
-        }
-      }
-    }
-
-    // Close the <form> tag
-    formHTML += '>\n';
-
-    // Manually ensure vertical formatting of the HTML string
-    formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
-
-    return formHTML;
-  }
-
+ 
 
 
 // Specific rendering methods for each field type
 renderTextField(type, name, label, validate, attributes, bindingSyntax) {
+
+  //console.log("here");
   // Define valid attributes for different input types
   const textInputAttributes = [
     'required',
@@ -275,8 +278,9 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   });
   */
 
-  this.formMarkUp += formattedHtml;
-  //return this.formMarkUp;
+  //this.formMarkUp += formattedHtml;
+  //console.log("HR",this.formMarkUp);
+  return formattedHtml;
 }
 
 
@@ -396,7 +400,9 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
   */
 
-  this.formMarkUp += formattedHtml;
+  //this.formMarkUp += formattedHtml;
+
+  return formattedHtml;
   //return this.formMarkUp;
   //console.log(this.formMarkUp);
 }
@@ -1248,6 +1254,13 @@ renderSubmitButton(name, label, attributes) {
 
 
 
+ renderFormHTML () {
+
+return this.formMarkUp;
+
+
+ }
+
 
 
 
@@ -1273,11 +1286,15 @@ renderSubmitButton(name, label, attributes) {
 
 const formSchema = [
   ['text', 'firstName', 'First Name', { minlength: 2, maxlength: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, 'bind:value'],
+  
+
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
+
+/*
 
   ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
  
-  /*
+  
 
 
   ['password', 'password', 'Password', { required: true, minLength: 8 }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
@@ -1384,7 +1401,7 @@ method: 'post',
 action: 'submit.js', 
 id: 'myForm', 
 class: 'form',
-semantq: false,
+semantq: true,
 style: 'width: 100%; font-size: 14px;',
 //enctype: 'multipart/form-data', 
 //target: '_blank', 
@@ -1392,25 +1409,22 @@ style: 'width: 100%; font-size: 14px;',
 //accept_charset: 'UTF-8', 
   };
 
-
-const form = new Formique(formParams);
+/*
+const form = new Formique(formParams,formSchema);
 const formHTML = form.renderForm(formSchema);
 console.log(formHTML);
-
-
-  // Example usage
-// Example usage
-  /*
-(async () => {
-  try {
-    const form = new Formique(formParams);
-    const formHTML = await form.renderForm(formSchema);
-    console.log(formHTML);
-  } catch (error) {
-    console.error('Error generating form HTML:', error);
-  }
-})();
 */
+
+// Instantiate the form
+const form = new Formique(formParams, formSchema);
+const formHTML = form.renderFormHTML();
+console.log(formHTML);
+
+// Generate the form HTML
+//const formHTML = form.renderFormElement();
+//console.log(pretty(form));
+
+
 
 
 
