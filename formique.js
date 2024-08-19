@@ -2678,6 +2678,7 @@ renderSubmitButton(type, name, label, attributes) {
 
  renderFormHTML () {
 
+this.formMarkUp+= '</form>'; 
 return this.formMarkUp;
 
 
