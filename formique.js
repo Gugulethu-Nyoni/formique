@@ -2631,7 +2631,7 @@ renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax
 
 renderSubmitButton(type, name, label, attributes) {
   // Define id attribute or fallback to name
-  let id = attributes.id || name;
+  const id = attributes.id || name;
 
   // Handle additional attributes
   let additionalAttrs = '';
@@ -2640,22 +2640,22 @@ renderSubmitButton(type, name, label, attributes) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-        additionalAttrs += ` ${key.replace(/^on/, 'on')}"="${eventValue}`;
+        additionalAttrs += ` ${key}="${eventValue}"`;
       } else {
         // Handle boolean attributes
         if (value === true) {
           additionalAttrs += ` ${key.replace(/_/g, '-')}`;
         } else if (value !== false) {
           // Convert underscores to hyphens and set the attribute
-          additionalAttrs += ` ${key.replace(/_/g, '-')}"="${value}`;
+          additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"`;
         }
       }
     }
   }
 
   // Construct the final HTML string
-  let formHTML = `
-    <input type="${type}" 
+  const formHTML = `
+    <input type="${type}"
       id="${id}"
       value="${label}"
       ${additionalAttrs}
@@ -2663,7 +2663,7 @@ renderSubmitButton(type, name, label, attributes) {
   `.replace(/^\s*\n/gm, '').trim();
 
   // Format the entire HTML using pretty
-  let formattedHtml = pretty(formHTML, {
+  const formattedHtml = pretty(formHTML, {
     indent_size: 2,
     wrap_line_length: 0,
     preserve_newlines: true, // Preserve existing newlines
