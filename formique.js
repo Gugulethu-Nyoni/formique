@@ -1459,44 +1459,95 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
 }
 
 
+renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid attributes for the search input type
+  const searchInputAttributes = [
+    'required',
+    'pattern',
+    'placeholder',
+    'readonly',
+    'disabled',
+    'size',
+    'autocomplete',
+    'spellcheck',
+    'inputmode',
+    'title',
+  ];
 
-renderSearchField(name, label, validate, attributes, bindingSyntax) {
+  // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
-          validationAttrs += `${key} `;
-          break;
-        case 'search':
-          validationAttrs += `${key} `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'search'.`);
-          break;
+      if (searchInputAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          switch (key) {
+            case 'pattern':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            default:
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'search'.\x1b[0m`);
+              break;
+          }
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'search'.\x1b[0m`);
       }
     });
   }
 
+  // Handle the binding syntax
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value') {
     bindingDirective = ` bind:value="${name}"`;
-  } else if (bindingSyntax === `::${name}`) {
+  } else if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = ` bind:value="${name}"`;
   }
+  if (bindingSyntax === 'bind:value' || (bindingSyntax.startsWith('::') && !name)) {
+    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+    return;
+  }
 
-  return `
-    <label for="${name}">${label}</label>
-    <input type="search"${bindingDirective} ${validationAttrs}
-      ${attributes.id ? `id="${attributes.id}"` : ''}
-      ${attributes.class ? `class="${attributes.class}"` : ''}
-      ${attributes.style ? `style="${attributes.style}"` : ''}
-    />
-  `;
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}"> 
+      <label for="${name}">${label}</label>
+      <input 
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
+        ${attributes.id ? `id="${attributes.id}"` : ''}
+        ${attributes.class ? `class="${attributes.class}"` : ''}
+        ${attributes.style ? `style="${attributes.style}"` : ''}
+        ${validationAttrs}
+
+      />
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> element only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
 }
-
-
-
 
 
 renderColorField(name, label, validate, attributes, bindingSyntax) {
@@ -2008,10 +2059,13 @@ const formSchema = [
   ['week', 'eventWeek', 'Event Week', { required: true }, { id: 'eventWeekInput', class: 'form-control', style: 'width: 100%;' }, '::eventWeek'],
   ['url', 'websiteUrl', 'Website URL', { required: true}, { id: 'websiteUrlInput', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
  
-  /*
 
 
   ['search', 'searchQuery', 'Search', { required: true }, { id: 'searchQueryInput', class: 'form-control', style: 'width: 100%;' }, '::searchQuery'],
+ 
+   /*
+
+
   ['color', 'colorPicker', 'Pick a Color', { required: true }, { id: 'colorPickerInput', class: 'form-control', style: 'width: 100%;' }, '::colorValue'],
   ['file', 'terms', 'Upload File', { required: true }, { id: 'my-file', class: 'form-control', style: 'width: 100%;' }, '::terms'],
 
