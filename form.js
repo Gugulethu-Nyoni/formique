@@ -138,12 +138,7 @@ renderForm() {
     }
 
 
-    //return this.formMarkUp;
-    //this.renderForm();
-
-
-
-
+  
   }
 
 
@@ -200,10 +195,15 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax === 'bind:value' && !name) {
+  }
+  if (bindingSyntax.startsWith('::') && name) {
+   bindingDirective = `  bind:value="${name}"\n`;
+  }
+  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
     console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
     return;
   }
+
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -334,7 +334,11 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax === 'bind:value' && !name) {
+  }
+  if (bindingSyntax.startsWith('::') && name) {
+   bindingDirective = `  bind:value="${name}"\n`;
+  }
+  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
     console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
     return;
   }
@@ -457,10 +461,15 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax === 'bind:value' && !name) {
+  }
+  if (bindingSyntax.startsWith('::') && name) {
+   bindingDirective = `  bind:value="${name}"\n`;
+  }
+  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
     console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
     return;
   }
+
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -574,7 +583,11 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax === 'bind:value' && !name) {
+  }
+  if (bindingSyntax.startsWith('::') && name) {
+   bindingDirective = `  bind:value="${name}"\n`;
+  }
+  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
     console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
     return;
   }
@@ -1425,10 +1438,10 @@ return this.formMarkUp;
 
 
 const formSchema = [
-  ['text', 'firstName', 'First Name', { minlength: 2, maxlength: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, 'bind:value'],
+  ['text', 'firstName', 'First Name', { minlength: 2, maxlength: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, '::firstName'],
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
   ['number', 'age', 'Your Age', {required: false}, { id: 'age12'}, '::age'],
-   ['password', 'password', 'Password', { required: true, minlength: 8 }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
+  ['password', 'password', 'Password', { minlength: 8, required: true }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
 
 /*
 
