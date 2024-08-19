@@ -199,8 +199,8 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   if (bindingSyntax.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -338,8 +338,8 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   if (bindingSyntax.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -465,8 +465,8 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
   if (bindingSyntax.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -587,8 +587,8 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
   if (bindingSyntax.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -710,8 +710,8 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
   if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -829,8 +829,8 @@ renderDateField(type, name, label, validate, attributes, bindingSyntax) {
   if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -947,8 +947,8 @@ renderTimeField(type, name, label, validate, attributes, bindingSyntax) {
   if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -1062,11 +1062,11 @@ renderDateTimeField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::') && name) {
+  } if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -1169,7 +1169,9 @@ renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
+               if (monthInputAttributes.includes(key)) {
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'month'.\x1b[0m`);
+               }
               break;
           }
         }
@@ -1183,10 +1185,10 @@ renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::') && name) {
+  } if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax === 'bind:value' || (bindingSyntax.startsWith('::') && !name)) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  } if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -1285,7 +1287,9 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
+              if (weekInputAttributes.includes(key)) {
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'week'.\x1b[0m`);
+               }
               break;
           }
         }
@@ -1299,10 +1303,10 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::') && name) {
+  } if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax === 'bind:value' || (bindingSyntax.startsWith('::') && !name)) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  } if (bindingSyntax  && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -1397,40 +1401,63 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
-              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'url'.\x1b[0m`);
+              if (!urlInputAttributes.includes(key)) {
+                console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
+              }
               break;
           }
         }
       } else {
-        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'url'.\x1b[0m`);
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
       }
     });
   }
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
-    bindingDirective = ` bind:value="${name}"`;
+  if (bindingSyntax === 'bind:value' && name) {
+    bindingDirective = `  bind:value="${name}"\n`;
   } else if (bindingSyntax.startsWith('::') && name) {
-    bindingDirective = ` bind:value="${name}"`;
-  }
-  if (bindingSyntax === 'bind:value' || (bindingSyntax.startsWith('::') && !name)) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+    bindingDirective = `  bind:value="${name}"\n`;
+  } else if (bindingSyntax && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
+  }
+
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
+
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
   }
 
   // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}"> 
-      <label for="${name}">${label}</label>
+    <div class="${this.divClass}">
+      <label for="${id}">${label}</label>
       <input 
         type="${type}"
         name="${name}"
         ${bindingDirective}
+        id="${id}"
+        ${additionalAttrs}
         ${validationAttrs}
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
       />
     </div>
   `.replace(/^\s*\n/gm, '').trim();
@@ -1487,7 +1514,9 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
+              if (!searchInputAttributes.includes(key)) {
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'search'.\x1b[0m`);
+               }
               break;
           }
         }
@@ -1504,8 +1533,8 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
   } else if (bindingSyntax.startsWith('::') && name) {
     bindingDirective = ` bind:value="${name}"`;
   }
-  if (bindingSyntax === 'bind:value' || (bindingSyntax.startsWith('::') && !name)) {
-    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
 
@@ -2052,18 +2081,23 @@ const formSchema = [
   ['number', 'age', 'Your Age', {required: false}, { id: 'age12'}, '::age'],
   ['password', 'password', 'Password', { minlength: 8, required: true }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
   ['tel', 'phoneNumber', 'Phone Number', { required: true }, { class: 'form-control', style: 'width: 100%;' }, '::telValue'],
+
   ['date', 'birthdate', 'Birth Date', { required: true }, { id: 'birthdateInput', class: 'form-control', style: 'width: 100%;' }, '::date'],
   ['time', 'meetingTime', 'Meeting Time', { required: true }, { id: 'meetingTimeInput', class: 'form-control', style: 'width: 100%;' }, '::time'],
   ['datetime-local', 'meetingDateTime', 'Meeting Date & Time', { required: true }, { id: 'meetingDateTimeInput', class: 'form-control', style: 'width: 100%;' }, '::meetingDateTime'],
   ['month', 'eventMonth', 'Event Month', { required: true }, { id: 'eventMonthInput', class: 'form-control', style: 'width: 100%;' }, '::eventMonth'],
+      
+
   ['week', 'eventWeek', 'Event Week', { required: true }, { id: 'eventWeekInput', class: 'form-control', style: 'width: 100%;' }, '::eventWeek'],
+
   ['url', 'websiteUrl', 'Website URL', { required: true}, { id: 'websiteUrlInput', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
  
+   /*
 
 
   ['search', 'searchQuery', 'Search', { required: true }, { id: 'searchQueryInput', class: 'form-control', style: 'width: 100%;' }, '::searchQuery'],
  
-   /*
+   
 
 
   ['color', 'colorPicker', 'Pick a Color', { required: true }, { id: 'colorPickerInput', class: 'form-control', style: 'width: 100%;' }, '::colorValue'],
