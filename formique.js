@@ -2704,7 +2704,7 @@ return this.formMarkUp;
 
 
 
-
+/*
 
 
 const formSchema = [
@@ -2807,6 +2807,102 @@ const formSchema = [
 
 
 ];
+
+
+*/
+
+const formSchema = [
+  // Text Input Field
+  [
+    'text', 
+    'firstName', 
+    'First Name', 
+    { minlength: 2, maxlength: 5, required: true, disabled: true }, // Validation options
+    { value: "John", id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()" }, // Attributes
+    '::firstName' // Binding syntax
+  ],
+
+  // URL Input Field
+  [
+    'url', 
+    'websiteUrl', 
+    'Website URL', 
+    { required: true }, // Validation options
+    { id: 'websiteUrlInput', class: 'form-control', style: 'width: 100%;' }, // Attributes
+    'bind:value' // Binding syntax
+  ],
+
+  // Radio Input Field
+  [
+    'radio', 
+    'gender', 
+    'Gender', 
+    { required: true }, // Validation options
+    { id: 'genderRadio', class: 'form-radio-input', style: 'margin-left: 1rem;', onchange: 'actioner()' }, // Attributes
+    '::gender', // Binding syntax
+    [
+      { value: 'male', label: 'Male' }, // Options
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' }
+    ]
+  ],
+
+  // Checkbox Input Field
+  [
+    'checkbox', 
+    'preferences', 
+    'Preferences', 
+    { required: true }, // Validation options
+    { id: 'preferencesCheckbox', class: 'form-checkbox-input', style: 'margin-left: 1rem;', onchange: 'submit' }, // Attributes
+    '::preferences', // Binding syntax
+    [
+      { value: 'news', label: 'Newsletter' }, // Options
+      { value: 'updates', label: 'Product Updates' },
+      { value: 'offers', label: 'Special Offers' }
+    ]
+  ],
+
+  // Single Select Input Field
+  [
+    'singleSelect', 
+    'colors', 
+    'Colors', 
+    { required: true }, // Validation options
+    { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'trigger' }, // Attributes
+    '::colors', // Binding syntax
+    [
+      { value: 'red', label: 'Red' }, // Options
+      { value: 'green', label: 'Green' },
+      { value: 'blue', label: 'Blue', selected: true }
+    ]
+  ],
+
+  // Multiple Select Input Field
+  [
+    'multipleSelect', // Type of field
+    'colors', // Name/identifier of the field
+    'Colors', // Label of the field
+    { required: true, min: 2, max: 3 }, // Validation options
+    { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'alerter' }, // Attributes
+    '::colors', // Binding syntax
+    [
+      { value: 'red', label: 'Red' }, // Options
+      { value: 'green', label: 'Green' },
+      { value: 'blue', label: 'Blue' },
+      { value: 'yellow', label: 'Yellow' }
+    ]
+  ],
+
+  // Submit Button
+  [
+    'submit',
+    'submitButton',
+    'Submit',
+    { required: true }, // Validation options
+    { id: 'submitBtn', class: 'form-submit-btn', style: 'margin-top: 1rem;' } // Attributes
+  ]
+];
+
 
 
 const formParams= {

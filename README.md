@@ -312,11 +312,208 @@ By customizing these parameters, you can control various aspects of the form's b
 
 ## HTML 
 
+In your html, place this markup as placegolder for where the form will be rendered.
+
 ```html
 
 <div id="formique"></div>
 
 ```
+
+## Example HTML Output
+
+```html
+<div id="formique">
+<form
+  method="post"
+  action="submit.js"
+  id="myForm"
+  class="form"
+  semantq
+  style="width: 100%; font-size: 14px;"
+>
+  <div class="input-block">
+    <label for="firstNameInput">First Name</label>
+    <input
+      type="text"
+      name="firstName"
+      bind:value="firstName"
+      id="firstNameInput"
+      value="John"
+      class="form-input"
+      style="width: 100%;"
+      @input={incrementer}
+      minlength="2"
+      maxlength="5"
+      required
+      disabled
+    />
+  </div>
+  <div class="input-block">
+    <label for="websiteUrlInput">Website URL</label>
+    <input
+      type="url"
+      name="websiteUrl"
+      bind:value="websiteUrl"
+      id="websiteUrlInput"
+      class="form-control"
+      style="width: 100%;"
+      required
+    />
+  </div>
+  <fieldset class="radio-group">
+    <legend>Gender</legend>
+    <div>
+      <input
+        type="radio"
+        name="gender"
+        value="male"
+        bind:value="gender"
+        class="form-radio-input"
+        style="margin-left: 1rem;"
+        @change={actioner}
+        id="genderRadio-male"
+      />
+      <label for="genderRadio-male">Male</label>
+    </div>
+    <div>
+      <input
+        type="radio"
+        name="gender"
+        value="female"
+        bind:value="gender"
+        class="form-radio-input"
+        style="margin-left: 1rem;"
+        @change={actioner}
+        id="genderRadio-female"
+      />
+      <label for="genderRadio-female">Female</label>
+    </div>
+    <div>
+      <input
+        type="radio"
+        name="gender"
+        value="other"
+        bind:value="gender"
+        class="form-radio-input"
+        style="margin-left: 1rem;"
+        @change={actioner}
+        id="genderRadio-other"
+      />
+      <label for="genderRadio-other">Other</label>
+    </div>
+  </fieldset>
+  <fieldset class="checkbox-group">
+    <legend>Preferences</legend>
+    <div>
+      <input
+        type="checkbox"
+        name="preferences"
+        value="news"
+        bind:checked="preferences"
+        class="form-checkbox-input"
+        style="margin-left: 1rem;"
+        @change={submit}
+        id="preferencesCheckbox-news"
+      />
+      <label for="preferencesCheckbox-news">Newsletter</label>
+    </div>
+    <div>
+      <input
+        type="checkbox"
+        name="preferences"
+        value="updates"
+        bind:checked="preferences"
+        class="form-checkbox-input"
+        style="margin-left: 1rem;"
+        @change={submit}
+        id="preferencesCheckbox-updates"
+      />
+      <label for="preferencesCheckbox-updates">Product Updates</label>
+    </div>
+    <div>
+      <input
+        type="checkbox"
+        name="preferences"
+        value="offers"
+        bind:checked="preferences"
+        class="form-checkbox-input"
+        style="margin-left: 1rem;"
+        @change={submit}
+        id="preferencesCheckbox-offers"
+      />
+      <label for="preferencesCheckbox-offers">Special Offers</label>
+    </div>
+  </fieldset>
+  <fieldset class="form-select">
+    <label for="colorsSelect">Colors</label>
+    <select
+      name="colors"
+      bind:value="colors"
+      id="colorsSelect"
+      class="form-select-input"
+      style="margin-left: 1rem;"
+      @change={trigger}
+      required
+    >
+      <option value="">Choose an option</option>
+      <option value="red">Red</option>
+      <option value="green">Green</option>
+      <option value="blue" selected>Blue</option>
+    </select>
+  </fieldset>
+  <fieldset class="form-select">
+    <label for="colorsSelect">Colors</label>
+    <select
+      name="colors"
+      bind:value="colors"
+      id="colorsSelect"
+      class="form-select-input"
+      style="margin-left: 1rem;"
+      @change={alerter}
+      required
+      multiple
+    >
+      <option value="red">Red</option>
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+      <option value="yellow">Yellow</option>
+    </select>
+  </fieldset>
+  <input
+    type="submit"
+    id="submitBtn"
+    value="Submit"
+    class="form-submit-btn"
+    style="margin-top: 1rem;"
+  />
+</form>
+</div>
+```
+
+## Styling the Form
+
+Formique provides a set of CSS classes to facilitate the styling of various form elements. The default class names for different form components are as follows:
+
+- **Wrapper for Input Elements:** `input-block`
+- **Input Fields:** `form-input`
+- **Radio Button Groups:** `radio-group`
+- **Checkbox Groups:** `checkbox-group`
+- **Select Dropdowns:** `form-select`
+
+These classes are predefined in the `formique.css` stylesheet. Developers can either use this stylesheet for consistent styling or create their own custom CSS based on these class names to suit their design preferences.
+
+### Customizing Styles
+
+1. **Using Default Styles:** Apply the `formique.css` stylesheet to leverage the default styling provided by Formique.
+2. **Custom CSS:** If you prefer custom styling, you can override the default styles by defining your own CSS rules for the above class names.
+
+### Inline Styling
+
+In addition to external stylesheets, individual form elements can be styled directly via attributes specified in the form schema. This allows for precise control over the appearance of each element without needing additional CSS files.
+
+By utilizing these options, you can easily adapt the look and feel of your form to meet your project's design requirements.
+
 
 ## Contribute
 
