@@ -2822,20 +2822,12 @@ style: 'width: 100%; font-size: 14px;',
 //accept_charset: 'UTF-8', 
   };
 
-/*
-const form = new Formique(formParams,formSchema);
-const formHTML = form.renderForm(formSchema);
-console.log(formHTML);
-*/
 
 // Instantiate the form
 const form = new Formique(formParams, formSchema);
 const formHTML = form.renderFormHTML();
 console.log(formHTML);
 
-// Generate the form HTML
-//const formHTML = form.renderFormElement();
-//console.log(pretty(form));
 
 
 
