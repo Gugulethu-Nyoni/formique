@@ -690,7 +690,7 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
-              if (telInputAttributes.includes(key)) {
+              if (!telInputAttributes.includes(key)) {
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'tel'.\x1b[0m`);
                }
               break;
