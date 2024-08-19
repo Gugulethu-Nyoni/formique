@@ -26,6 +26,7 @@ class Formique extends FormBuilder {
     this.inputClass='form-input';
     this.radioGroupClass='radio-group';
     this.checkboxGroupClass='checkbox-group';
+    this.selectGroupClass='form-select';
     this.formParams=formParams;
     this.formMarkUp='';
 
@@ -2245,18 +2246,39 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
     bindingDirective = ` bind:value="${name}"\n`;
   }
 
+  // Define attributes for the radio inputs
+  let id = attributes.id || name;
+
+  // Handle additional attributes
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
   // Construct radio button HTML based on options
   let optionsHTML = '';
   if (options && options.length) {
     optionsHTML = options.map((option) => {
       return `
         <div>
-          <input type="radio" name="${name}" value="${option.value}"${bindingDirective} ${validationAttrs}
-            ${attributes.id ? `id="${attributes.id}-${option.value}"` : ''}
-            ${attributes.class ? `class="${attributes.class}"` : ''}
-            ${attributes.style ? `style="${attributes.style}"` : ''}
+          <input type="radio" name="${name}" value="${option.value}"${bindingDirective} ${additionalAttrs}
+            ${attributes.id ? `id="${id}-${option.value}"` : `id="${id}-${option.value}"`}
           />
-          <label for="${attributes.id ? `${attributes.id}-${option.value}` : option.value}">${option.label}</label>
+          <label for="${attributes.id ? `${id}-${option.value}` : `${id}-${option.value}`}">${option.label}</label>
         </div>
       `;
     }).join('');
@@ -2294,7 +2316,6 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
 }
 
 
-
 renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options) {
   // Define valid validation attributes for checkbox fields
   const checkboxValidationAttributes = ['required'];
@@ -2321,19 +2342,40 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
     bindingDirective = ` bind:checked="${name}"\n`;
   }
 
+  // Define attributes for the checkbox inputs
+  let id = attributes.id || name;
+
+  // Handle additional attributes
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
   // Construct checkbox HTML based on options
   let optionsHTML = '';
   if (Array.isArray(options)) {
     optionsHTML = options.map((option) => {
-      const optionId = `${name}-${option.value}`;
+      const optionId = `${id}-${option.value}`;
       return `
         <div>
-          <input type="checkbox" name="${name}" value="${option.value}"${bindingDirective} ${validationAttrs}
-            ${attributes.id ? `id="${attributes.id}-${option.value}"` : `id="${optionId}"`}
-            ${attributes.class ? `class="${attributes.class}"` : ''}
-            ${attributes.style ? `style="${attributes.style}"` : ''}
+          <input type="checkbox" name="${name}" value="${option.value}"${bindingDirective} ${additionalAttrs}
+            ${attributes.id ? `id="${optionId}"` : `id="${optionId}"`}
           />
-          <label for="${attributes.id ? `${attributes.id}-${option.value}` : optionId}">${option.label}</label>
+          <label for="${optionId}">${option.label}</label>
         </div>
       `;
     }).join('');
@@ -2372,146 +2414,264 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
 
 
 
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
- 
-
- 
-
-
-
-
-
-
-
-
-
-// Function to render a single select field
 renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options) {
+  // Define valid validation attributes for select fields
+  const selectValidationAttributes = ['required'];
+
+  // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
+      if (selectValidationAttributes.includes(key)) {
+        if (key === 'required') {
           validationAttrs += `${key} `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'select'.`);
-          break;
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
       }
     });
   }
 
+  // Handle the binding syntax
   let bindingDirective = '';
   if (typeof bindingSyntax === 'string' && bindingSyntax.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}"`;
+    bindingDirective = ` bind:value="${name}" `;
   }
 
+  // Define attributes for the select field
+  let id = attributes.id || name;
+  let dimensionAttrs = ''; // No dimension attributes applicable for select fields
+
+  // Handle additional attributes
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct select options HTML based on options
   let selectHTML = '';
   if (Array.isArray(options)) {
-    selectHTML = options.map((option) => {
+    // Add a default option
+    selectHTML += `
+      <option value="">Choose an option</option>
+    `;
+
+    // Add the provided options
+    selectHTML += options.map((option) => {
+      const isSelected = option.selected ? ' selected' : '';
       return `
-        <option value="${option.value}">${option.label}</option>
+        <option value="${option.value}"${isSelected}>${option.label}</option>
       `;
     }).join('');
   }
 
-  return `
-    <fieldset>
-      <legend>${label}</legend>
-      <select name="${name}"${bindingDirective} ${validationAttrs}
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
+  // Construct the final HTML string
+  let formHTML = `
+    <fieldset class="${this.selectGroupClass}">
+      <label for="${id}">${label}</label>
+      <select name="${name}"
+        ${bindingDirective}
+        ${dimensionAttrs}
+        id="${id}"
+        ${additionalAttrs}
+        ${validationAttrs}
       >
         ${selectHTML}
       </select>
     </fieldset>
-  `;
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <select> element and its children
+  formattedHtml = formattedHtml.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
+  });
+
+  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+    // Ensure <fieldset> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
 }
 
 
 
 
+renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax, options) {
+  // Define valid validation attributes for multiple select fields
+  const selectValidationAttributes = ['required', 'minlength', 'maxlength'];
 
-// Function to render a multiple select field
- renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax, options) {
+  // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
+      if (selectValidationAttributes.includes(key)) {
+        if (key === 'required') {
           validationAttrs += `${key} `;
-          break;
-        case 'min':
-          validationAttrs += `min="${value}" `;
-          break;
-        case 'max':
-          validationAttrs += `max="${value}" `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'select'.`);
-          break;
+        } else if (key === 'minlength') {
+          validationAttrs += `minlength="${value}" `;
+        } else if (key === 'maxlength') {
+          validationAttrs += `maxlength="${value}" `;
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
       }
     });
   }
 
+  // Handle the binding syntax
   let bindingDirective = '';
   if (typeof bindingSyntax === 'string' && bindingSyntax.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}"`;
+    bindingDirective = ` bind:value="${name}" `;
   }
 
+  // Define attributes for the select field
+  let id = attributes.id || name;
+  let dimensionAttrs = ''; // No dimension attributes applicable for select fields
+
+  // Handle additional attributes
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct select options HTML based on options
   let selectHTML = '';
   if (Array.isArray(options)) {
     selectHTML = options.map((option) => {
+      const isSelected = option.selected ? ' selected' : '';
       return `
-        <option value="${option.value}">${option.label}</option>
+        <option value="${option.value}"${isSelected}>${option.label}</option>
       `;
     }).join('');
   }
 
+  // Define multiple attribute for multi-select
   const multipleAttr = 'multiple';
 
-  return `
-    <fieldset>
-      <legend>${label}</legend>
-      <select name="${name}"${bindingDirective} ${validationAttrs} ${multipleAttr}
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
+  // Construct the final HTML string
+  let formHTML = `
+    <fieldset class="${this.selectGroupClass}">
+      <label for="${id}">${label}</label>
+      <select name="${name}"
+        ${bindingDirective}
+        ${dimensionAttrs}
+        id="${id}"
+        ${additionalAttrs}
+        ${validationAttrs}
+        ${multipleAttr}
       >
         ${selectHTML}
       </select>
     </fieldset>
-  `;
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <select> element and its children
+  formattedHtml = formattedHtml.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
+  });
+
+  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+    // Ensure <fieldset> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
 }
 
 
 
+renderSubmitButton(type, name, label, attributes) {
+  // Define id attribute or fallback to name
+  let id = attributes.id || name;
 
-renderSubmitButton(name, label, attributes) {
-    return `
-      <button type="submit"
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-      >
-        ${label}
-      </button>
-    `;
+  // Handle additional attributes
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += ` ${key.replace(/^on/, 'on')}"="${eventValue}`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += ` ${key.replace(/_/g, '-')}`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += ` ${key.replace(/_/g, '-')}"="${value}`;
+        }
+      }
+    }
   }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <input type="${type}" 
+      id="${id}"
+      value="${label}"
+      ${additionalAttrs}
+    />
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  return formattedHtml;
+}
+
 
 
 
@@ -2576,7 +2736,7 @@ const formSchema = [
   'gender', 
   'Gender', 
   { required: true }, 
-  { id: 'genderRadio', class: 'form-radio-input', style: 'margin-left: 1rem;' }, 
+  { id: 'genderRadio', class: 'form-radio-input', style: 'margin-left: 1rem;', onchange: 'actioner()' }, 
   '::gender', 
   [
     { value: 'male', label: 'Male' },
@@ -2591,7 +2751,7 @@ const formSchema = [
   'preferences', 
   'Preferences', 
   { required: true }, 
-  { id: 'preferencesCheckbox', class: 'form-checkbox-input', style: 'margin-left: 1rem;' }, 
+  { id: 'preferencesCheckbox', class: 'form-checkbox-input', style: 'margin-left: 1rem;', onchange: 'submit' }, 
   '::preferences', 
   [
     { value: 'news', label: 'Newsletter' },
@@ -2600,19 +2760,19 @@ const formSchema = [
   ]
 ],
 
-/*
+
 
 [
   'singleSelect', 
   'colors', 
   'Colors', 
   { required: true }, // Validation options
-  { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;' }, // Attributes
+  { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'trigger' }, // Attributes
   '::colors', // Binding syntax
   [
-    { value: 'red', label: 'Red' },
-    { value: 'green', label: 'Green' },
-    { value: 'blue', label: 'Blue' },
+    { value: 'red', label: 'Red', selected: false },
+    { value: 'green', label: 'Green'},
+    { value: 'blue', label: 'Blue', selected: true},
   ] // Options
 ],
 
@@ -2623,13 +2783,13 @@ const formSchema = [
   'colors', // Name/identifier of the field
   'Colors', // Label of the field
   { required: true, min: 2, max: 3 }, // Validation options
-  { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;' }, // Attributes
+  { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'alerter' }, // Attributes
   '::colors', // Binding syntax
   [
     { value: 'red', label: 'Red' },
     { value: 'green', label: 'Green' },
-    { value: 'blue', label: 'Blue' },
-    { value: 'yellow', label: 'Yellow' },
+    { value: 'blue', label: 'Blue', selected: false },
+    { value: 'yellow', label: 'Yellow', selected: false },
   ] // Options
 ],
 
@@ -2642,7 +2802,7 @@ const formSchema = [
     { id: 'submitBtn', class: 'form-submit-btn', style: 'margin-top: 1rem;' }
   ],
 
-*/
+
 
 
 ];
