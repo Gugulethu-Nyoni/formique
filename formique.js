@@ -25,6 +25,7 @@ class Formique extends FormBuilder {
     this.divClass='input-block';
     this.inputClass='form-input';
     this.radioGroupClass='radio-group';
+    this.checkboxGroupClass='checkbox-group';
     this.formParams=formParams;
     this.formMarkUp='';
 
@@ -118,7 +119,6 @@ renderForm() {
       case 'checkbox':
        return this.renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'radio':
-        console.log("HRRR",options);
         return this.renderRadioField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'file':
         return this.renderFileField(type, name, label, validate, attributes, bindingSyntax);
@@ -2221,7 +2221,6 @@ renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
 
 renderRadioField(type, name, label, validate, attributes, bindingSyntax, options) {
   // Define valid validation attributes for radio fields
-  console.log("Options",options);
   const radioValidationAttributes = ['required'];
 
   // Construct validation attributes
@@ -2296,84 +2295,33 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
 
 
 
-/*
-renderCheckboxField(name, label, validate, attributes, bindingSyntax) {
-  let validationAttrs = '';
-  if (validate) {
-    Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
-          validationAttrs += `${key} `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'checkbox'.`);
-          break;
-      }
-    });
-  }
-
-  let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
-    bindingDirective = ` bind:value="${name}"`;
-  } else if (bindingSyntax === `::${name}`) {
-    bindingDirective = ` bind:value="${name}"`;
-  }
-
-  return `
-    <label for="${name}">${label}</label>
-    <input type="checkbox"${bindingDirective} ${validationAttrs}
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-    />
-  `;
-}
-
-*/
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
- 
-
- 
-
-
-
-
-
-
 renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options) {
-  let validationAttrs = '';
+  // Define valid validation attributes for checkbox fields
+  const checkboxValidationAttributes = ['required'];
 
+  // Construct validation attributes
+  let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
-          validationAttrs += `${key} `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'checkbox'.`);
-          break;
+      if (checkboxValidationAttributes.includes(key)) {
+        if (key === 'required') {
+          validationAttrs += `${key}\n`;
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
       }
     });
   }
 
+  // Handle the binding syntax
   let bindingDirective = '';
-  if (typeof bindingSyntax === 'string' && bindingSyntax.startsWith('::')) {
-    bindingDirective = ` bind:checked="${name}"`;
+  if (bindingSyntax === 'bind:checked') {
+    bindingDirective = ` bind:checked="${name}"\n`;
+  } else if (bindingSyntax.startsWith('::')) {
+    bindingDirective = ` bind:checked="${name}"\n`;
   }
 
+  // Construct checkbox HTML based on options
   let optionsHTML = '';
   if (Array.isArray(options)) {
     optionsHTML = options.map((option) => {
@@ -2381,23 +2329,72 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
       return `
         <div>
           <input type="checkbox" name="${name}" value="${option.value}"${bindingDirective} ${validationAttrs}
-            id="${optionId}"
+            ${attributes.id ? `id="${attributes.id}-${option.value}"` : `id="${optionId}"`}
             ${attributes.class ? `class="${attributes.class}"` : ''}
             ${attributes.style ? `style="${attributes.style}"` : ''}
-          >
-          <label for="${optionId}">${option.label}</label>
+          />
+          <label for="${attributes.id ? `${attributes.id}-${option.value}` : optionId}">${option.label}</label>
         </div>
       `;
     }).join('');
   }
 
-  return `
-    <fieldset>
+  // Construct the final HTML string
+  let formHTML = `
+    <fieldset class="${this.checkboxGroupClass}">
       <legend>${label}</legend>
       ${optionsHTML}
     </fieldset>
-  `;
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> elements only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/g, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+    // Ensure <fieldset> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
 }
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+ 
+
+
+
+
+
+
 
 
 
@@ -2588,7 +2585,6 @@ const formSchema = [
   ]
 ],
 
-/*
 
 [
   'checkbox', 
@@ -2604,6 +2600,7 @@ const formSchema = [
   ]
 ],
 
+/*
 
 [
   'singleSelect', 
