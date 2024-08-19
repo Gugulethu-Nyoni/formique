@@ -1369,42 +1369,94 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderUrlField(name, label, validate, attributes, bindingSyntax) {
-    let validationAttrs = '';
-    if (validate) {
-      Object.entries(validate).forEach(([key, value]) => {
-        switch (key) {
-          case 'required':
-            validationAttrs += `${key} `;
-            break;
-          case 'url':
-            validationAttrs += `${key} `;
-            break;
-          default:
-            console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'url'.`);
-            break;
+renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid attributes for the URL input type
+  const urlInputAttributes = [
+    'required',
+    'pattern',
+    'placeholder',
+    'readonly',
+    'disabled',
+    'size',
+    'autocomplete',
+    'spellcheck',
+    'inputmode',
+    'title',
+  ];
+
+  // Construct validation attributes
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (urlInputAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          switch (key) {
+            case 'pattern':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            default:
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'url'.\x1b[0m`);
+              break;
+          }
         }
-      });
-    }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'url'.\x1b[0m`);
+      }
+    });
+  }
 
-    let bindingDirective = '';
-    if (bindingSyntax === 'bind:value') {
-      bindingDirective = ` bind:value="${name}"`;
-    } else if (bindingSyntax === `::${name}`) {
-      bindingDirective = ` bind:value="${name}"`;
-    }
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value') {
+    bindingDirective = ` bind:value="${name}"`;
+  } else if (bindingSyntax.startsWith('::') && name) {
+    bindingDirective = ` bind:value="${name}"`;
+  }
+  if (bindingSyntax === 'bind:value' || (bindingSyntax.startsWith('::') && !name)) {
+    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+    return;
+  }
 
-    return `
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}"> 
       <label for="${name}">${label}</label>
-      <input type="url"${bindingDirective} ${validationAttrs}
+      <input 
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
+        ${validationAttrs}
         ${attributes.id ? `id="${attributes.id}"` : ''}
         ${attributes.class ? `class="${attributes.class}"` : ''}
         ${attributes.style ? `style="${attributes.style}"` : ''}
       />
-    `;
-  }
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
 
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
 
+  // Apply vertical layout to the <input> element only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
+}
 
 
 
