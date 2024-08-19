@@ -1,13 +1,13 @@
-
+import pretty from 'pretty';
 
 // Base class for form rendering
-class FormRenderer 
+class FormBuilder 
 {
   renderField(type, name, label, validate, attributes, bindingSyntax,options) {
     throw new Error('Method renderField must be implemented');
   }
 
-  // Main renderForm method
+   // Main renderForm method
 renderForm(schema) {
     // Process each field synchronously
     const formHTML = schema.map(field => {
@@ -25,7 +25,7 @@ renderForm(schema) {
 
 
 // Extended class for specific form rendering methods
-class Formique extends FormRenderer {
+class Formique extends FormBuilder {
 
 
  constructor (formParams = {}) {
@@ -34,11 +34,17 @@ class Formique extends FormRenderer {
     this.inputClass='form-input';
     this.formParams=formParams;
     this.formMarkUp='';
+    //this.formElementInstance = 0;
+
+    //this.renderedElements = new Set();
 
     if (this.formParams) {
-      //console.log(formParams);
-      const formElement = this.renderFormElement(); 
+      console.log(formParams);
+      this.formMarkUp += this.renderFormElement(); 
+      //this.formElementInstance ++;
+      //this.formMarkUp += this.renderFormElement();
       //console.log(formElement);
+      //this.formMarkUp += formElement;
 
 
 
@@ -100,43 +106,53 @@ class Formique extends FormRenderer {
     }
 
 
+
+
   }
 
 
  // renderFormElement method
-renderFormElement() {
-  let formHTML = '<form\n';
+  renderFormElement() {
 
-  // Use this.formParams directly
-  const paramsToUse = this.formParams || {};
+console.log("MU",this.formMarkUp);
 
-  // Dynamically add attributes if they are present in the parameters
-  for (const [key, value] of Object.entries(paramsToUse)) {
-    if (value !== undefined && value !== null) {
-      // Handle boolean attributes
-      if (typeof value === 'boolean') {
-        if (value) {
-          formHTML += `  ${key}\n`;
-        }
-      } else {
-        // Handle other attributes
-        const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
-        formHTML += `  ${formattedKey}="${value}"\n`;
-      }
-    }
+// Check if the form element is already included
+  if (this.formMarkUp !== '') {
+    // Return empty string if the <form> element is already in the markup
+    console.log("there");
+    return '';
   }
 
-  // Close the <form> tag
-  formHTML += '>\n';
+    let formHTML = '<form\n';
 
-  // Manually ensure vertical formatting of the HTML string
-  formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
+    // Use this.formParams directly
+    const paramsToUse = this.formParams || {};
 
-  //console.log("HR", formHTML);
+    // Dynamically add attributes if they are present in the parameters
+    for (const [key, value] of Object.entries(paramsToUse)) {
+      if (value !== undefined && value !== null) {
+        // Handle boolean attributes
+        if (typeof value === 'boolean') {
+          if (value) {
+            formHTML += `  ${key}\n`;
+          }
+        } else {
+          // Handle other attributes
+          const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
+          formHTML += `  ${formattedKey}="${value}"\n`;
+        }
+      }
+    }
 
-  this.formMarkUp += formHTML;
-  return this.formMarkUp;
-}
+    // Close the <form> tag
+    formHTML += '>\n';
+
+    // Manually ensure vertical formatting of the HTML string
+    formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
+
+    return formHTML;
+  }
+
 
 
 // Specific rendering methods for each field type
@@ -227,77 +243,162 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
       <input 
-                  type="${type}"
-                  name="${name}"
-                  ${bindingDirective}
-                  id="${id}"
-                  ${additionalAttrs}
-                  ${validationAttrs}
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
+        id="${id}"
+        ${additionalAttrs}
+        ${validationAttrs}
       />
     </div>
   `.replace(/^\s*\n/gm, '').trim();
 
+   // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
   // Apply vertical layout to the <input> element only
-  formHTML = formHTML.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
     const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
     return `<input\n${attributes}\n/>`;
   });
 
-  this.formMarkUp += formHTML;
-  return this.formMarkUp;
+  // Ensure the <div> block starts on a new line
+  /*
+  formattedHtml = formattedHtml.replace(/<div\s+([^>]*)>/, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  });
+  */
+
+  this.formMarkUp += formattedHtml;
+  //return this.formMarkUp;
 }
 
 
 
 
-  renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
+  // Specific rendering methods for each field type
+renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid attributes for the email input type
+  const emailInputAttributes = [
+    'required',
+    'minlength',
+    'maxlength',
+    'pattern',
+    'placeholder',
+    'readonly',
+    'disabled',
+    'size',
+    'autocomplete',
+    'spellcheck',
+    'inputmode',
+    'title',
+  ];
+
+  // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
-          validationAttrs += `${key} `;
-          break;
-        case 'email':
-          // Email validation is typically handled by the input type itself,
-          // but if you need a custom validation, you can handle it here.
-          validationAttrs += `${key}="${value}" `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'email'.`);
-          break;
+      if (emailInputAttributes.includes(key)) {
+        if (typeof value === 'boolean') {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          switch (key) {
+            case 'minlength':
+            case 'maxlength':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            case 'pattern':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            default:
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'email'.\x1b[0m`);
+              break;
+          }
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'email'.\x1b[0m`);
       }
     });
   }
 
-  let id = attributes.id || name;
+  // Handle the binding syntax
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
-    bindingDirective = ` bind:value="${name}"`;
-  } 
-
-  if (bindingSyntax === 'bind:value' && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You can not set binding value when there is no name attribute defined.');
-    return; 
+    bindingDirective = `  bind:value="${name}"\n`;
+  } else if (bindingSyntax === 'bind:value' && !name) {
+    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+    return;
   }
 
-  let inputClass = attributes.class || this.inputClass;
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
 
-  return `
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
       <input 
-        type="${type}" 
-        name="${name}" 
-        ${bindingDirective}  
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
         id="${id}"
-        ${attributes.class ? `class="${inputClass}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-        ${validationAttrs} 
-
+        ${additionalAttrs}
+        ${validationAttrs}
       />
     </div>
   `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> element only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  /*
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+  */
+
+  this.formMarkUp += formattedHtml;
+  //return this.formMarkUp;
+  //console.log(this.formMarkUp);
 }
 
 
@@ -1283,8 +1384,8 @@ method: 'post',
 action: 'submit.js', 
 id: 'myForm', 
 class: 'form',
-semantq: true,
-style: "width: 100%; font-size: 14px;"
+semantq: false,
+style: 'width: 100%; font-size: 14px;',
 //enctype: 'multipart/form-data', 
 //target: '_blank', 
 //nonvalidate: true, 
