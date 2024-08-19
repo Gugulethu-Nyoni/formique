@@ -659,36 +659,122 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 // New method for rendering tel fields
-  renderTelField(name, label, validate, attributes, bindingSyntax) {
-    let validationAttrs = '';
-    if (validate) {
-      Object.entries(validate).forEach(([key, value]) => {
-        switch (key) {
-          case 'required':
-            validationAttrs += `${key} `;
-            break;
-          default:
-            console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'tel'.`);
-            break;
+renderTelField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid attributes for the tel input type
+  const telInputAttributes = [
+  'required',
+  'pattern',
+  'placeholder',
+  'readonly',
+  'disabled',
+  'size',
+  'autocomplete',
+  'spellcheck',
+  'inputmode',
+  'title',
+  'minlength',
+  'maxlength',
+];
+
+
+  // Construct validation attributes
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (telInputAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          switch (key) {
+            case 'pattern':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            default:
+              if (telInputAttributes.includes(key)) {
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'tel'.\x1b[0m`);
+               }
+              break;
+          }
         }
-      });
-    }
-
-    let bindingDirective = '';
-    if (bindingSyntax === '::telValue') {
-      bindingDirective = ` bind:value="${name}"`;
-    }
-
-    return `
-      <label for="${name}">${label}</label>
-      <input type="tel"${bindingDirective} ${validationAttrs}
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-      />
-    `;
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'tel'.\x1b[0m`);
+      }
+    });
   }
 
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value' && name) {
+    bindingDirective = `  bind:value="${name}"\n`;
+  }
+  if (bindingSyntax.startsWith('::') && name) {
+    bindingDirective = `  bind:value="${name}"\n`;
+  }
+  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::') && !name) {
+    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+    return;
+  }
+
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
+
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}">
+      <label for="${id}">${label}</label>
+      <input 
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
+        id="${id}"
+        ${additionalAttrs}
+        ${validationAttrs}
+      />
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> element only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
+}
 
 
 
@@ -1442,11 +1528,13 @@ const formSchema = [
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
   ['number', 'age', 'Your Age', {required: false}, { id: 'age12'}, '::age'],
   ['password', 'password', 'Password', { minlength: 8, required: true }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
-
+  ['tel', 'phoneNumber', 'Phone Number', { required: true }, { class: 'form-control', style: 'width: 100%;' }, '::telValue'],
+ 
 /*
 
 
-  ['tel', 'phoneNumber', 'Phone Number', { required: true }, { class: 'form-control', style: 'width: 100%;' }, '::telValue'],
+
+
   ['date', 'birthdate', 'Birthdate', { required: true }, { id: 'birthdateInput', class: 'form-control', style: 'width: 100%;' }, '::date'],
   ['time', 'meetingTime', 'Meeting Time', { required: true }, { id: 'meetingTimeInput', class: 'form-control', style: 'width: 100%;' }, '::time'],
   ['datetime', 'meetingDateTime', 'Meeting Date & Time', { required: true }, { id: 'meetingDateTimeInput', class: 'form-control', style: 'width: 100%;' }, '::meetingDateTime'],
