@@ -175,7 +175,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
       if (textInputAttributes.includes(key)) {
-        if (typeof value === 'boolean') {
+        if (typeof value === 'boolean' && value) {
           validationAttrs += `  ${key}\n`;
         } else {
           switch (key) {
@@ -184,7 +184,9 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
-              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'text'.\x1b[0m`);
+              if (!numberInputAttributes.includes(key)) {
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
+               }
               break;
           }
         }
@@ -304,7 +306,7 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
       if (emailInputAttributes.includes(key)) {
-        if (typeof value === 'boolean') {
+        if (typeof value === 'boolean' && value) {
           validationAttrs += `  ${key}\n`;
         } else {
           switch (key) {
@@ -316,7 +318,9 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
-              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'email'.\x1b[0m`);
+              if (!numberInputAttributes.includes(key)) {
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
+               }
               break;
           }
         }
@@ -405,97 +409,238 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
-  // Initialize validation attributes string
+  // Define valid attributes for the number input type
+  const numberInputAttributes = [
+    'required',
+    'min',
+    'max',
+    'step',
+    'placeholder',
+    'readonly',
+    'disabled',
+    'size',
+    'autocomplete',
+    'inputmode',
+    'title',
+  ];
+
+  // Construct validation attributes
   let validationAttrs = '';
-  
-  // Add validation attributes based on the 'validate' object
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
-          validationAttrs += `${key} `;
-          break;
-        case 'min':
-        case 'max':
-          validationAttrs += `${key}="${value}" `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'number'.`);
-          break;
+      if (numberInputAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          switch (key) {
+            case 'min':
+            case 'max':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            case 'step':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            default:
+              if (!numberInputAttributes.includes(key)) {
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
+               }
+              break;
+          }
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
       }
     });
   }
 
-  // Determine the ID attribute (fallback to the name attribute if ID is not present)
-  let id = attributes.id || name;
-
-  // Set the binding directive if applicable
+  // Handle the binding syntax
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
-    bindingDirective = ` bind:value="${name}"`;
+    bindingDirective = `  bind:value="${name}"\n`;
   } else if (bindingSyntax === 'bind:value' && !name) {
-    console.log('\x1b[31m%s\x1b[0m', 'You can not set binding value when there is no name attribute defined.');
+    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
     return;
   }
 
-  // Set the input class, defaulting to this.inputClass if not provided
-  let inputClass = attributes.class || this.inputClass;
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
 
-  // Return the formatted HTML string
-  return `
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
       <input 
-        type="${type}" 
-        name="${name}" 
-        ${bindingDirective}  
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
         id="${id}"
-        ${attributes.class ? `class="${inputClass}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-        ${validationAttrs} 
-
+        ${additionalAttrs}
+        ${validationAttrs}
       />
     </div>
   `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> element only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+  
+  return formattedHtml;
 }
 
 
 
-
 // New method for rendering password fields
-  renderPasswordField(name, label, validate, attributes, bindingSyntax) {
-    let validationAttrs = '';
-    if (validate) {
-      Object.entries(validate).forEach(([key, value]) => {
-        switch (key) {
-          case 'required':
-            validationAttrs += `${key} `;
-            break;
-          case 'minLength':
-          case 'maxLength':
-            validationAttrs += `${key}="${value}" `;
-            break;
-          default:
-            console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'password'.`);
-            break;
+renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid attributes for the password input type
+  const passwordInputAttributes = [
+    'required',
+    'minlength',
+    'maxlength',
+    'pattern',
+    'placeholder',
+    'readonly',
+    'disabled',
+    'size',
+    'autocomplete',
+    'spellcheck',
+    'inputmode',
+    'title',
+  ];
+
+  // Construct validation attributes
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (passwordInputAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          switch (key) {
+            case 'minlength':
+            case 'maxlength':
+            case 'pattern':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            default:
+              if (!passwordInputAttributes.includes(key)) {
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'password'.\x1b[0m`);
+               }
+              break;
+          }
         }
-      });
-    }
-
-    let bindingDirective = '';
-    if (bindingSyntax === '::passwordValue') {
-      bindingDirective = ` bind:value="${name}"`;
-    }
-
-    return `
-      <label for="${name}">${label}</label>
-      <input type="password"${bindingDirective} ${validationAttrs}
-        ${attributes.id ? `id="${attributes.id}"` : ''}
-        ${attributes.class ? `class="${attributes.class}"` : ''}
-        ${attributes.style ? `style="${attributes.style}"` : ''}
-      />
-    `;
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'password'.\x1b[0m`);
+      }
+    });
   }
+
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value' && name) {
+    bindingDirective = `  bind:value="${name}"\n`;
+  } else if (bindingSyntax === 'bind:value' && !name) {
+    console.log('\x1b[31m%s\x1b[0m', 'You cannot set binding value when there is no name attribute defined.');
+    return;
+  }
+
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
+
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}"> 
+      <label for="${id}">${label}</label>
+      <input 
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
+        id="${id}"
+        ${additionalAttrs}
+        ${validationAttrs}
+      />
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> element only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
+}
+
+
 
 
 
@@ -1281,18 +1426,13 @@ return this.formMarkUp;
 
 const formSchema = [
   ['text', 'firstName', 'First Name', { minlength: 2, maxlength: 5, required: true, disabled: true}, { id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, 'bind:value'],
-  
-
   ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
+  ['number', 'age', 'Your Age', {required: false}, { id: 'age12'}, '::age'],
+   ['password', 'password', 'Password', { required: true, minlength: 8 }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
 
 /*
 
-  ['number', 'age', 'Your Age', { required: false }, { id: 'age12'}, '::age'],
- 
-  
 
-
-  ['password', 'password', 'Password', { required: true, minLength: 8 }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
   ['tel', 'phoneNumber', 'Phone Number', { required: true }, { class: 'form-control', style: 'width: 100%;' }, '::telValue'],
   ['date', 'birthdate', 'Birthdate', { required: true }, { id: 'birthdateInput', class: 'form-control', style: 'width: 100%;' }, '::date'],
   ['time', 'meetingTime', 'Meeting Time', { required: true }, { id: 'meetingTimeInput', class: 'form-control', style: 'width: 100%;' }, '::time'],
