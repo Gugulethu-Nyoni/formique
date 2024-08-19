@@ -5,7 +5,7 @@ class FormBuilder
 {
 
 
-  renderField(type, name, label, validate, attributes, bindingSyntax) {
+  renderField(type, name, label, validate, attributes, bindingSyntax, options) {
     throw new Error('Method renderField must be implemented');
   }
 
@@ -24,6 +24,7 @@ class Formique extends FormBuilder {
     this.formSchema=formSchema;
     this.divClass='input-block';
     this.inputClass='form-input';
+    this.radioGroupClass='radio-group';
     this.formParams=formParams;
     this.formMarkUp='';
 
@@ -74,8 +75,8 @@ class Formique extends FormBuilder {
 renderForm() {
     // Process each field synchronously
     const formHTML = this.formSchema.map(field => {
-        const [type, name, label, validate, attributes = {}, bindingSyntax] = field;
-        return this.renderField(type, name, label, validate, attributes, bindingSyntax);
+        const [type, name, label, validate, attributes = {}, bindingSyntax, options] = field;
+        return this.renderField(type, name, label, validate, attributes, bindingSyntax, options);
     }).join('');
     
   //return formHTML;
@@ -86,7 +87,7 @@ renderForm() {
 }
 
 
-  renderField(type, name, label, validate, attributes, bindingSyntax) {
+  renderField(type, name, label, validate, attributes, bindingSyntax, options) {
     switch (type) {
       case 'text':
         return this.renderTextField(type, name, label, validate, attributes, bindingSyntax);
@@ -117,7 +118,8 @@ renderForm() {
       case 'checkbox':
        return this.renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'radio':
-        return this.renderRadioField(type, name, label, validate, attributes, bindingSyntax);
+        console.log("HRRR",options);
+        return this.renderRadioField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'file':
         return this.renderFileField(type, name, label, validate, attributes, bindingSyntax);
       case 'hidden':
@@ -2027,7 +2029,274 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
+renderImageField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid validation attributes for image upload
+  const imageUploadValidationAttributes = [
+    'accept',
+    'required',
+    'minwidth',
+    'maxwidth',
+    'minheight',
+    'maxheight',
+  ];
 
+  // Construct validation attributes
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (imageUploadValidationAttributes.includes(key)) {
+        validationAttrs += `${key}="${value}"\n`;
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
+      }
+    });
+  }
+
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::')) {
+    bindingDirective = `bind:value="${name}"\n`;
+  }
+
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
+
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}">
+      <label for="${id}">${label}</label>
+      <input 
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
+        id="${id}"
+        ${additionalAttrs}
+        ${validationAttrs}
+      />
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> element only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
+}
+
+renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
+  // Define valid validation attributes for textarea
+  const textareaValidationAttributes = [
+    'required',
+    'minlength',
+    'maxlength',
+    'rows',
+    'cols',
+  ];
+
+  // Construct validation and dimension attributes
+  let validationAttrs = '';
+  let dimensionAttrs = '';
+
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (textareaValidationAttributes.includes(key)) {
+        if (key === 'required') {
+          validationAttrs += `required\n`;
+        } else if (['minlength', 'maxlength'].includes(key)) {
+          validationAttrs += `${key}="${value}"\n`;
+        } else if (['rows', 'cols'].includes(key)) {
+          dimensionAttrs += `${key}="${value}"\n`;
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
+      }
+    });
+  }
+
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::')) {
+    bindingDirective = `bind:value="${name}"\n`;
+  }
+
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
+
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}">
+      <label for="${id}">${label}</label>
+      <textarea 
+        name="${name}"
+        ${bindingDirective}
+        ${dimensionAttrs}
+        id="${id}"
+        ${additionalAttrs}
+        ${validationAttrs}
+      ></textarea>
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <textarea> element only
+  formattedHtml = formattedHtml.replace(/<textarea\s+([^>]*)<\/textarea>/, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<textarea\n${attributes}\n></textarea>`;
+  });
+
+  // Ensure the <div> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
+}
+
+
+
+
+renderRadioField(type, name, label, validate, attributes, bindingSyntax, options) {
+  // Define valid validation attributes for radio fields
+  console.log("Options",options);
+  const radioValidationAttributes = ['required'];
+
+  // Construct validation attributes
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (radioValidationAttributes.includes(key)) {
+        if (key === 'required') {
+          validationAttrs += `required\n`;
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
+      }
+    });
+  }
+
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (bindingSyntax === 'bind:value') {
+    bindingDirective = ` bind:value="${name}"\n`;
+  } else if (bindingSyntax.startsWith('::')) {
+    bindingDirective = ` bind:value="${name}"\n`;
+  }
+
+  // Construct radio button HTML based on options
+  let optionsHTML = '';
+  if (options && options.length) {
+    optionsHTML = options.map((option) => {
+      return `
+        <div>
+          <input type="radio" name="${name}" value="${option.value}"${bindingDirective} ${validationAttrs}
+            ${attributes.id ? `id="${attributes.id}-${option.value}"` : ''}
+            ${attributes.class ? `class="${attributes.class}"` : ''}
+            ${attributes.style ? `style="${attributes.style}"` : ''}
+          />
+          <label for="${attributes.id ? `${attributes.id}-${option.value}` : option.value}">${option.label}</label>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <fieldset class="${this.radioGroupClass}">
+      <legend>${label}</legend>
+      ${optionsHTML}
+    </fieldset>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Format the entire HTML using pretty
+  let formattedHtml = pretty(formHTML, {
+    indent_size: 2,
+    wrap_line_length: 0,
+    preserve_newlines: true, // Preserve existing newlines
+  });
+
+  // Apply vertical layout to the <input> elements only
+  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/g, (match, p1) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+    // Ensure <fieldset> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  return formattedHtml;
+}
+
+
+
+/*
 renderCheckboxField(name, label, validate, attributes, bindingSyntax) {
   let validationAttrs = '';
   if (validate) {
@@ -2060,58 +2329,10 @@ renderCheckboxField(name, label, validate, attributes, bindingSyntax) {
   `;
 }
 
+*/
 
 
-
- renderRadioField(name, label, validate, attributes, bindingSyntax, options) {
-  let validationAttrs = '';
-  
-  if (validate) {
-    Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
-          validationAttrs += `required `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'radio'.`);
-          break;
-      }
-    });
-  }
-
-  let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
-    bindingDirective = ` bind:value="${name}"`;
-  } else if (bindingSyntax.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}"`;
-  }
-
-  let optionsHTML = '';
-  if (options && options.length) {
-    optionsHTML = options.map((option) => {
-      return `
-        <div>
-          <input type="radio" name="${name}" value="${option.value}"${bindingDirective} ${validationAttrs}
-            ${attributes.id ? `id="${attributes.id}-${option.value}"` : ''}
-            ${attributes.class ? `class="${attributes.class}"` : ''}
-            ${attributes.style ? `style="${attributes.style}"` : ''}
-          >
-          <label for="${attributes.id ? `${attributes.id}-${option.value}` : option.value}">${option.label}</label>
-        </div>
-      `;
-    }).join('');
-  }
-
-  return `
-    <fieldset>
-      <legend>${label}</legend>
-      ${optionsHTML}
-    </fieldset>
-  `;
-}
-
-
-
+ 
 
 
 
@@ -2125,52 +2346,7 @@ renderCheckboxField(name, label, validate, attributes, bindingSyntax) {
 
  
 
- renderTextareaField(name, label, validate, attributes, bindingSyntax) {
-  let validationAttrs = '';
-  let dimensionAttrs = '';
-  
-  if (validate) {
-    Object.entries(validate).forEach(([key, value]) => {
-      switch (key) {
-        case 'required':
-          validationAttrs += `${key} `;
-          break;
-        case 'minLength':
-          validationAttrs += `minlength="${value}" `;
-          break;
-        case 'maxLength':
-          validationAttrs += `maxlength="${value}" `;
-          break;
-        case 'rows':
-          dimensionAttrs += `rows="${value}" `;
-          break;
-        case 'cols':
-          dimensionAttrs += `cols="${value}" `;
-          break;
-        default:
-          console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'textarea'.`);
-          break;
-      }
-    });
-  }
-
-  let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
-    bindingDirective = ` bind:value="${name}"`;
-  } else if (bindingSyntax.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}"`;
-  }
-
-  return `
-    <label for="${name}">${label}</label>
-    <textarea ${bindingDirective} ${validationAttrs} ${dimensionAttrs}
-      ${attributes.id ? `id="${attributes.id}"` : ''}
-      ${attributes.class ? `class="${attributes.class}"` : ''}
-      ${attributes.style ? `style="${attributes.style}"` : ''}
-    ></textarea>
-  `;
-}
-
+ 
 
 
 
@@ -2389,19 +2565,14 @@ const formSchema = [
   ['color', 'colorPicker', 'Pick a Color', { required: true }, { id: 'colorPickerInput', class: 'form-control', style: 'width: 100%;' }, '::colorValue'],
   ['file', 'terms', 'Upload File', { required: true }, { id: 'my-file', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
   ['hidden', 'user_id', '', { required: true }, {}, '::user_id'],
-
-
-
   ['image','profilePicture','Profile Picture', { required: true, accept: 'image/*' }, 
   { id: 'profilePictureInput', class: 'form-control', style: 'width: 100%;' }, 
   'bind:value'],
-
-  /*
-
   ['textarea', 'comments', 'Comments', 
-  { required: true, minLength: 10, maxLength: 200, rows: 4, cols: 50 }, 
+  { required: true, minlength: 10, maxlength: 200, rows: 4, cols: 50 }, 
   { id: 'commentsTextarea', class: 'form-control', style: 'width: 100%; height: 100px;' }, 
   '::comments'],
+
 
   [
   'radio', 
@@ -2417,6 +2588,7 @@ const formSchema = [
   ]
 ],
 
+/*
 
 [
   'checkbox', 
