@@ -99,6 +99,14 @@ In the example above:
   - **Pattern**: A regex pattern the input must match.
     - Example: `pattern: "/^[A-Za-z0-9]+$/"`
 
+  ### Number Field Specific Validation:
+  - **Min**: Specifies the minimum numeric value allowed.
+    - Example: `min: 1`
+  - **Max**: Specifies the maximum numeric value allowed.
+    - Example: `max: 100`
+  - **Step**: Specifies the increment step for numeric values.
+    - Example: `step: 0.01` (for decimal increments)
+
 **Formique will filter out any invalid validation defined and throw warnings on the browser console.E.g. you define min and max validations for a text field Formique will filter these out.**
 
 
