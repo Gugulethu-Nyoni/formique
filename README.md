@@ -153,7 +153,7 @@ There are two ways to install and use Formique in your project:
 ```
 
 
-    ```html
+```html
     <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
 
     <script>
@@ -621,4 +621,4 @@ Formique is licensed under the MIT License.
 
 ## Keywords
 
-Javascript forms, declarative form syntax, js form library.
+Javascript forms, declarative form syntax, js form library, formique
