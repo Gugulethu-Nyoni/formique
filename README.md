@@ -64,6 +64,17 @@ The form schema is an array of field definitions. Each field is defined by an ar
 - **Name**: The name attribute for the input. 
 - **Label**: The label for the input.
 
+You don't need to use the type, name and label key to define these parameters.
+**Example**
+`{ 'text', 'firstname', 'First Name' }`
+
+In the example above:
+ - The first item (text) defines the type of the input - this will yield: `<input type="text"` 
+ - The second item (firstname) defines the name value of the input - this will yield: `<input name="firstname"`
+ - The third item (First Name) defines the Label value- this will yield:  `<label for="firstname">First Name</label>`
+
+
+
 ## Input Validation
 - **Validation**: Object specifying validation rules. This can include:
   - **Required**: Boolean to specify if the field is mandatory.
@@ -74,6 +85,9 @@ The form schema is an array of field definitions. Each field is defined by an ar
     - Example: `maxlength: 50`
   - **Pattern**: A regex pattern the input must match.
     - Example: `pattern: "/^[A-Za-z0-9]+$/"`
+
+**Formique will filter out any invalid validation defined and throw warnings on the browser console.E.g. you define min and max validations for a text field Formique will filter these out.**
+
 
 ## Input Attributes
 - **Attributes**: Object specifying additional attributes like `id`, `class`, `style`, etc.
