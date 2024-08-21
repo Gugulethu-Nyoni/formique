@@ -40,33 +40,40 @@
 
 
   // renderFormElement method
-    renderFormElement() {
-      let formHTML = '<form\n';
-      // Use this.formParams directly
-      const paramsToUse = this.formParams || {};
+  renderFormElement() {
+    let formHTML = '<form\n';
+    
+    // Use this.formParams directly
+    const paramsToUse = this.formParams || {};
+    
+    // Check if 'laravel' is true and handle action attribute accordingly
+    if (paramsToUse.laravel === true) {
+      paramsToUse.action = `{{ url('${paramsToUse.action}') }}`;
+    }
 
-      // Dynamically add attributes if they are present in the parameters
-      for (const [key, value] of Object.entries(paramsToUse)) {
-        if (value !== undefined && value !== null) {
-          // Handle boolean attributes
-          if (typeof value === 'boolean') {
-            if (value) {
-              formHTML += `  ${key}\n`;
-            }
-          } else {
-            // Handle other attributes
-            const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
-            formHTML += `  ${formattedKey}="${value}"\n`;
+    // Dynamically add attributes if they are present in the parameters
+    for (const [key, value] of Object.entries(paramsToUse)) {
+      if (value !== undefined && value !== null) {
+        // Handle boolean attributes
+        if (typeof value === 'boolean') {
+          if (value) {
+            formHTML += `  ${key}\n`;
           }
+        } else {
+          // Handle other attributes
+          const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
+          formHTML += `  ${formattedKey}="${value}"\n`;
         }
       }
-
-      // Close the <form> tag
-      formHTML += '>\n';
-      // Manually ensure vertical formatting of the HTML string
-      formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
-      return formHTML;
     }
+
+    // Close the <form> tag
+    formHTML += '>\n';
+
+    // Manually ensure vertical formatting of the HTML string
+    formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
+    return formHTML;
+  }
 
 
     // Main renderForm method
