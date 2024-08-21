@@ -169,7 +169,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
           validationAttrs += `  ${key}\n`;
         } else {
           switch (key) {
-           case: 'pattern':
+            case 'pattern':
             case 'minlength':
             case 'maxlength':
               validationAttrs += `  ${key}="${value}"\n`;

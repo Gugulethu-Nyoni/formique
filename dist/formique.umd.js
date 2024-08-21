@@ -143,6 +143,7 @@
 
     //console.log("here");
     // Define valid attributes for different input types
+    /*
     const textInputAttributes = [
       'required',
       'minlength',
@@ -156,23 +157,31 @@
       'spellcheck',
       'inputmode',
       'title',
-    ];
+    ];*/
+
+    const textInputValidationAttributes = [
+    'required',
+    'minlength',
+    'maxlength',
+    'pattern',
+  ];
 
     // Construct validation attributes
     let validationAttrs = '';
     if (validate) {
       Object.entries(validate).forEach(([key, value]) => {
-        if (textInputAttributes.includes(key)) {
+        if (textInputValidationAttributes.includes(key)) {
           if (typeof value === 'boolean' && value) {
             validationAttrs += `  ${key}\n`;
           } else {
             switch (key) {
+              case 'pattern':
               case 'minlength':
               case 'maxlength':
                 validationAttrs += `  ${key}="${value}"\n`;
                 break;
               default:
-                if (!textInputAttributes.includes(key)) {
+                if (!textInputValidationAttributes.includes(key)) {
                 console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
                  }
                 break;
