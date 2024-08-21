@@ -86,75 +86,153 @@ The form schema is an array of field definitions. Each field is defined by an ar
 
 
 
+Here's the updated README content in markdown format with the two options for using Formique as a UMD and an ESM module:
+
+```markdown
+## Installation
+
+There are two ways to install and use Formique in your project:
+
+## Option A: Use Formique as a UMD Module
+
+1. Include the CSS and JavaScript in the head section of your HTML file:
+
+    ```html
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.1/formique.min.css">
+    ```
+
+2. Insert the js script tag just before the closing tag ```html </body> ``` of your html file.
+
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
+    ```
 ## Usage Example
 
-
-There are two ways to use install Formique in your project
-
-## Option A: Clone the GitHub repo:
-
-1. go to your terminal and run:
-
-```bash
-git clone https://github.com/Gugulethu-Nyoni/formique.git
-
-````
-2. now you can use anygridjs this way in your html file
+1. Define form container somewhere in the html body: 
 
 ```html
-
-<link rel="stylesheet" href="./formique/formique.css">
-
-```
-
-```html
-
-<script type="module">
-
-  import { Formique } from './formique/formique.js';
-
-</script>
-
+<div id="formique"></div>
 ```
 
 
-## Option B: Via npm
+2. Define your form parameters (formParams), form schema (formSchema) and then initialize Formique in script which should go below this script tag : ```html
+    <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
+    ```
 
-### Installation 
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
+
+    <script>
+        const formParams = {
+            method: 'post',
+            action: 'submit.js',
+            id: 'myForm',
+            class: 'form',
+            semantq: true,
+            style: 'width: 100%; font-size: 14px;'
+        };
+
+        const formSchema = [
+            ['text', 'name', 'Name', { required: true }, {}, ''],
+            ['email', 'email', 'Email', { required: true }, {}, ''],
+            [
+                'singleSelect', 'diet', 'Dietary Requirements', {required: true}, {}, '', 
+                [
+                    {value: 'gluten-free', label: 'Gluten-free'},
+                    {value: 'dairy-free', label: 'Dairy-free'},
+                    {value: 'keto', label: 'Ketogenic'},
+                    {value: 'low-carb', label: 'Low-carb'},
+                    {value: 'pescatarian', label: 'Pescatarian'},
+                    {value: 'halal', label: 'Halal'},
+                    {value: 'kosher', label: 'Kosher'},
+                    {value: 'vegetarian', label: 'Vegetarian'},
+                    {value: 'lacto-ovo-vegetarian', label: 'Lacto-ovo-vegetarian'},
+                    {value: 'raw-food', label: 'Raw food'},
+                    {value: 'macrobiotic', label: 'Macrobiotic'},
+                    {value: 'flexitarian', label: 'Flexitarian'}
+                ]
+            ],
+            ['submit', 'submitButton', 'Submit', {}, {}, '']
+        ];
 
 
-1. go to your terminal and run:
+       (function(formParams, formSchema) {
+        const form = new Formique(formParams, formSchema);
+        const formHTML = form.renderFormHTML();
+        })(formParams, formSchema);
 
-```bash
+    </script>
+    // </body>
+    ```
 
-npm install formique
+## Option B: Use Formique as an ESM Module
 
-````
+1. Install Formique via npm:
 
-2. now you can use formique this way in your html file
+    ```bash
+    npm install formique
+    ```
+
+2. Include the CSS and import Formique in the head section of your HTML file:
+
+    ```html
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.1/formique.min.css">
+    ```
+3. Define form container somewhere in the html body: 
 
 ```html
-
-<link rel="stylesheet" href="./node_modules/formique/formique.css">
-
+<div id="formique"></div>
 ```
 
-```html
+4. Define your form parameters (formParams), form schema (formSchema) and then initialize Formique in script which should go before the ```html </body> ``` tag.
+ 
+    ```html
+    <script type="module">
+        import Formique  from 'formique';
 
-<script type="module">
+        const formParams = {
+            method: 'post',
+            action: 'submit.js',
+            id: 'myForm',
+            class: 'form',
+            semantq: true,
+            style: 'width: 100%; font-size: 14px;'
+        };
 
-  import { Formique } from './node_modules/formique/formique.js';
+        const formSchema = [
+            ['text', 'name', 'Name', { required: true }, {}, ''],
+            ['email', 'email', 'Email', { required: true }, {}, ''],
+            [
+                'singleSelect', 'diet', 'Dietary Requirements', {required: true}, {}, '', 
+                [
+                    {value: 'gluten-free', label: 'Gluten-free'},
+                    {value: 'dairy-free', label: 'Dairy-free'},
+                    {value: 'keto', label: 'Ketogenic'},
+                    {value: 'low-carb', label: 'Low-carb'},
+                    {value: 'pescatarian', label: 'Pescatarian'},
+                    {value: 'halal', label: 'Halal'},
+                    {value: 'kosher', label: 'Kosher'},
+                    {value: 'vegetarian', label: 'Vegetarian'},
+                    {value: 'lacto-ovo-vegetarian', label: 'Lacto-ovo-vegetarian'},
+                    {value: 'raw-food', label: 'Raw food'},
+                    {value: 'macrobiotic', label: 'Macrobiotic'},
+                    {value: 'flexitarian', label: 'Flexitarian'}
+                ]
+            ],
+            ['submit', 'submitButton', 'Submit', {}, {}, ''],
+        ];
 
-  // rest of js code (app.js) can come here e.g. data object, column definition etc ( see below)
+        const form = new Formique(formParams, formSchema);
+        const formHTML = form.renderFormHTML();
 
-</script>
+    </script>
+    ```
 
+Formique can be used as either a UMD module with a simple `<script>` tag or as an ESM module via npm. 
 ```
 
+# Form Schema Example
 
-# Example Usage 
-
-## Form Schema
 
 Here's an example of a form schema that defines various input fields with validation, attributes, options, and binding syntax:
 
