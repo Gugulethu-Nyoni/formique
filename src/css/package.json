@@ -1,0 +1,13 @@
+{
+  "name": "formique-css",
+  "version": "1.0.1",
+  "description": "Formique CSS styles",
+  "main": "formique.css",
+  "files": [
+    "formique.css"
+  ],
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

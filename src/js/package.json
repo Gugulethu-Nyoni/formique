@@ -1,0 +1,13 @@
+{
+  "name": "formique",
+  "version": "1.0.1",
+  "description": "Formique JavaScript Declrative Form Library",
+  "main": "formique.js",
+  "files": [
+    "formique.js"
+  ],
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
