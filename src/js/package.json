@@ -1,6 +1,6 @@
 {
   "name": "formique",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Formique Declarative Form Syntax JavaScript Library",
   "main": "dist/formique.umd.js",
   "module": "dist/formique.esm.js",
