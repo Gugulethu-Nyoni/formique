@@ -92,9 +92,9 @@ In the example above:
 - **Validation**: Object specifying validation rules. This can include:
   - **Required**: Boolean to specify if the field is mandatory.
     - Example: `required: true`
-  - **MinLength**: Specifies the minimum number of characters allowed.
+  - **Minlength**: Specifies the minimum number of characters allowed.
     - Example: `minlength: 5`
-  - **MaxLength**: Specifies the maximum number of characters allowed.
+  - **Maxlength**: Specifies the maximum number of characters allowed.
     - Example: `maxlength: 50`
   - **Pattern**: A regex pattern the input must match.
     - Example: `pattern: "/^[A-Za-z0-9]+$/"`
