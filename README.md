@@ -1,6 +1,6 @@
 # Formique
 
-<!-- <img src="https://github.com/thincmedia/anyGridJs/blob/main/images/anyGridJs_Example.png" alt="anyGridJs Example"> --> 
+<img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/formique_screenshot.png" alt="anyGridJs Example">
 
 
 Formique: A lightweight, declarative JavaScript syntax library for generating WCAG acceAccessibility compliant forms. Suited for vanilla js and Semantq JS framework. Formique simplifies the process of creating and managing forms with a variety of input types, built-in validation, and customizable attributes. Open-source &amp; MIT licensed.
