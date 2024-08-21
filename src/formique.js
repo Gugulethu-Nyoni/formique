@@ -679,6 +679,7 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
 // New method for rendering tel fields
 renderTelField(type, name, label, validate, attributes, bindingSyntax) {
   // Define valid attributes for the tel input type
+  /*
   const telInputAttributes = [
   'required',
   'pattern',
@@ -693,13 +694,21 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
   'minlength',
   'maxlength',
 ];
+*/
+
+  const telInputValidationAttributes = [
+  'required',
+  'pattern',
+  'minlength',
+  'maxlength',
+];
 
 
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (telInputAttributes.includes(key)) {
+      if (telInputValidationAttributes.includes(key)) {
         if (typeof value === 'boolean' && value) {
           validationAttrs += `  ${key}\n`;
         } else {
@@ -710,7 +719,7 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
-              if (!telInputAttributes.includes(key)) {
+              if (!telInputValidationAttributes.includes(key)) {
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'tel'.\x1b[0m`);
                }
               break;
