@@ -148,12 +148,8 @@ There are two ways to install and use Formique in your project:
 
 2. Define your form parameters (formParams), form schema (formSchema) and then initialize Formique in script which should go below this script tag: 
 
+
 ```html
-    <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
-```
-
-
-    ```html
     <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
 
     <script>
@@ -195,9 +191,8 @@ There are two ways to install and use Formique in your project:
         const formHTML = form.renderFormHTML();
         })(formParams, formSchema);
 
-    </script>
-    // </body>
-    ```
+    </script> 
+```
 
 ## Option B: Use Formique as an ESM Module
 
@@ -621,4 +616,4 @@ Formique is licensed under the MIT License.
 
 ## Keywords
 
-Javascript forms, declarative form syntax, js form library.
+Javascript forms, declarative form syntax, js form library, formique
