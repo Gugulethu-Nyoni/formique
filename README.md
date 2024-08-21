@@ -406,7 +406,7 @@ const formParams = {
 - **action**: The URL where the form data will be submitted.
 - **id**: A unique identifier for the form.
 - **class**: CSS class names applied to the form for styling purposes.
-- **semantq**: Boolean value indicating whether to use semantic HTML elements (e.g., `<fieldset>`, `<legend>`).
+- **semantq**: Boolean value to add syntax sugar in the Semantq JS Framework use case. If set event handler attributes will be rendered in the format: @click={incrementer} 
 - **style**: Inline CSS styling applied directly to the form element.
 - **enctype**: Specifies how the form data should be encoded when submitted ('application/x-www-form-urlencoded', 'multipart/form-data', 'text/plain').
 - **target**: Specifies where to display the response after submitting the form ('_self', '_blank', '_parent', '_top').
