@@ -2,12 +2,17 @@
   "name": "formique",
   "version": "1.0.0",
   "description": "A JavaScript declarative library for building forms",
-  "main": "dist/formique.umd.js",
-  "module": "dist/formique.esm.js",
+  "main": "dist/js/formique.umd.js",
+  "module": "dist/js/formique.esm.js",
   "type": "module",
   "scripts": {
     "build": "rollup -c rollup.config.js",
-    "dev": "rollup -c rollup.config.js -w"
+    "copy-css": "mkdir -p dist/css && cp -f src/css/formique.css dist/css/formique.css",
+    "clean": "rm -rf dist/js/dist",
+    "copy-readme": "cp -f README.md dist/js/README.md && cp -f README.md dist/css/README.md",
+    "copy-js-package-json": "cp -f src/js/package.json dist/js/package.json",
+    "copy-css-package-json": "cp -f src/css/package.json dist/css/package.json",
+    "build:full": "npm run build && npm run copy-css && npm run clean && npm run copy-readme && npm run copy-js-package-json && npm run copy-css-package-json"
   },
   "keywords": [],
   "author": "Gugulethu Nyoni",
@@ -15,8 +20,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "rollup": "^2.79.1",
-    "rollup-plugin-css-only": "^3.1.0"
+    "rollup": "^2.79.1"
   },
   "files": [
     "dist/*"

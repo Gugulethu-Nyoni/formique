@@ -1,16 +1,16 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import css from 'rollup-plugin-css-only';
+import postcss from 'rollup-plugin-postcss';
 
 export default {
-  input: 'src/formique.js',
+  input: 'src/js/formique.js',
   output: [
     {
-      file: 'dist/formique.esm.js',
+      file: 'dist/js/formique.esm.js',
       format: 'esm',
     },
     {
-      file: 'dist/formique.umd.js',
+      file: 'dist/js/formique.umd.js',
       format: 'umd',
       name: 'Formique',
     },
@@ -18,8 +18,8 @@ export default {
   plugins: [
     resolve(),
     commonjs(),
-    css({
-      output: 'dist/formique.css',
+    postcss({
+      extract: 'dist/css/formique.css', // Extract CSS to this path
     }),
   ],
 };

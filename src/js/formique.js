@@ -1,4 +1,6 @@
 // Base class for form rendering
+import '../css/formique.css'; // Ensure this line is present
+
 class FormBuilder 
 {
   renderField(type, name, label, validate, attributes, bindingSyntax, options) {
