@@ -191,7 +191,8 @@ There are two ways to install and use Formique in your project:
         const formHTML = form.renderFormHTML();
         })(formParams, formSchema);
 
-    </script> ```
+    </script> 
+```
 
 ## Option B: Use Formique as an ESM Module
 
