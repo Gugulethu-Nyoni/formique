@@ -3,3 +3,7 @@ archive/
 
 # Ingore node serv
 server/
+
+src/formiquePretty.js
+src/worked_formique.js
+
