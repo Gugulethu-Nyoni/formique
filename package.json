@@ -4,6 +4,7 @@
   "description": "A JavaScript declarative library for building forms",
   "main": "dist/formique.umd.js",
   "module": "dist/formique.esm.js",
+  "type": "module",
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "dev": "rollup -c rollup.config.js -w"

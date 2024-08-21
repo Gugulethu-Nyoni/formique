@@ -1,9 +1,14 @@
 // Base class for form rendering
 class FormBuilder 
 {
+
+
   renderField(type, name, label, validate, attributes, bindingSyntax, options) {
     throw new Error('Method renderField must be implemented');
   }
+
+ 
+
   
 }
 
@@ -11,6 +16,7 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
+
  constructor (formParams = {}, formSchema) {
     super();
     this.formSchema=formSchema;
@@ -19,18 +25,42 @@ class Formique extends FormBuilder {
     this.radioGroupClass='radio-group';
     this.checkboxGroupClass='checkbox-group';
     this.selectGroupClass='form-select';
-    this.submitButtonClass='form-submit-btn';
     this.formParams=formParams;
     this.formMarkUp='';
 
-    if (this.formParams) {
+    
+    /*
+    document.addEventListener('DOMContentLoaded', () => {
+      if (this.formParams) {
         this.formMarkUp += this.renderFormElement(); 
       }
       this.renderForm();
+    });
+
+    */
 
 
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.init());
+    } else {
+      this.init();
     }
 
+    //this.renderForm();
+    
+ }
+
+
+init() {
+    // Use this.formParams and this.formSchema here
+    if (this.formParams) {
+      this.formMarkUp += this.renderFormElement(); 
+    }
+    this.renderForm();
+  }
+
+ 
 
 // renderFormElement method
   renderFormElement() {
@@ -56,6 +86,7 @@ class Formique extends FormBuilder {
 
     // Close the <form> tag
     formHTML += '>\n';
+
     // Manually ensure vertical formatting of the HTML string
     formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
     return formHTML;
@@ -68,8 +99,13 @@ renderForm() {
     const formHTML = this.formSchema.map(field => {
         const [type, name, label, validate, attributes = {}, bindingSyntax, options] = field;
         return this.renderField(type, name, label, validate, attributes, bindingSyntax, options);
-    }).join('');   
+    }).join('');
+    
+  //return formHTML;
+  //return this.formMarkUp;
+
     this.formMarkUp += formHTML; 
+    //console.log("here", this.formMarkUp);
 }
 
 
@@ -132,7 +168,7 @@ renderForm() {
  
 
 
-// text field rendering
+// Specific rendering methods for each field type
 renderTextField(type, name, label, validate, attributes, bindingSyntax) {
 
   //console.log("here");
@@ -201,7 +237,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         if (semantq) {
@@ -224,15 +260,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-
-
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
@@ -241,7 +269,6 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -257,7 +284,17 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     return `<input\n${attributes}\n/>`;
   });
 
+  // Ensure the <div> block starts on a new line
+  /*
+  formattedHtml = formattedHtml.replace(/<div\s+([^>]*)>/, (match) => {
+    // Ensure <div> starts on a new line
+    return `\n${match}\n`;
+  });
+  */
   
+
+  //this.formMarkUp += formattedHtml;
+  //console.log("HR",this.formMarkUp);
   return formattedHtml;
 }
 
@@ -330,7 +367,7 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -347,16 +384,7 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-
-
-
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
@@ -365,7 +393,6 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -463,7 +490,7 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -480,13 +507,7 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
@@ -495,7 +516,6 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -586,7 +606,7 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -603,13 +623,7 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
@@ -618,7 +632,6 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -711,7 +724,7 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -728,13 +741,7 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -743,7 +750,6 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -832,7 +838,7 @@ renderDateField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -849,13 +855,7 @@ renderDateField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
@@ -864,7 +864,6 @@ renderDateField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -952,7 +951,7 @@ renderTimeField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -969,13 +968,7 @@ renderTimeField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
@@ -984,7 +977,6 @@ renderTimeField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1072,7 +1064,7 @@ renderDateTimeField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1089,13 +1081,7 @@ renderDateTimeField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
       <label for="${id}">${label}</label>
@@ -1104,7 +1090,6 @@ renderDateTimeField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1196,7 +1181,7 @@ renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1213,13 +1198,7 @@ renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -1228,7 +1207,6 @@ renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1316,7 +1294,7 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1333,13 +1311,7 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -1348,7 +1320,6 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1432,7 +1403,7 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1449,13 +1420,7 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -1464,7 +1429,6 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1547,7 +1511,7 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1564,13 +1528,7 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -1579,7 +1537,6 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1656,7 +1613,7 @@ renderColorField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1673,13 +1630,7 @@ renderColorField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -1688,7 +1639,6 @@ renderColorField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1712,6 +1662,9 @@ renderColorField(type, name, label, validate, attributes, bindingSyntax) {
 
   return formattedHtml;
 }
+
+
+
 
 
 
@@ -1765,7 +1718,7 @@ renderFileField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1782,13 +1735,7 @@ renderFileField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -1797,7 +1744,6 @@ renderFileField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1876,7 +1822,7 @@ renderHiddenField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1893,13 +1839,7 @@ renderHiddenField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
     <label for="${id}">${label}</label>
@@ -1908,7 +1848,6 @@ renderHiddenField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -1978,7 +1917,7 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -1995,13 +1934,7 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -2010,7 +1943,6 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -2073,7 +2005,7 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -2090,13 +2022,7 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -2105,7 +2031,6 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       />
@@ -2172,7 +2097,7 @@ renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -2189,13 +2114,7 @@ renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}">
       <label for="${id}">${label}</label>
@@ -2204,7 +2123,6 @@ renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
         ${bindingDirective}
         ${dimensionAttrs}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       ></textarea>
@@ -2264,7 +2182,7 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -2281,40 +2199,22 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
     }
   }
 
-
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-
   // Construct radio button HTML based on options
   let optionsHTML = '';
   if (options && options.length) {
     optionsHTML = options.map((option) => {
       return `
         <div>
-          <input 
-          type="${type}" 
-          name="${name}" 
-          value="${option.value}"
-          ${bindingDirective} 
-          ${additionalAttrs}
-          ${attributes.id ? `id="${id}-${option.value}"` : `id="${id}-${option.value}"`}
-          class="${inputClass}"
+          <input type="radio" name="${name}" value="${option.value}"${bindingDirective} ${additionalAttrs}
+            ${attributes.id ? `id="${id}-${option.value}"` : `id="${id}-${option.value}"`}
           />
-          <label 
-          for="${attributes.id ? `${id}-${option.value}` : `${id}-${option.value}`}">
-            ${option.label}
-          </label>
+          <label for="${attributes.id ? `${id}-${option.value}` : `${id}-${option.value}`}">${option.label}</label>
         </div>
       `;
     }).join('');
   }
 
-  
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <fieldset class="${this.radioGroupClass}">
       <legend>${label}</legend>
@@ -2373,7 +2273,7 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -2390,14 +2290,6 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
     }
   }
 
-
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-
   // Construct checkbox HTML based on options
   let optionsHTML = '';
   if (Array.isArray(options)) {
@@ -2405,17 +2297,10 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
       const optionId = `${id}-${option.value}`;
       return `
         <div>
-          <input 
-          type="checkbox" 
-          name="${name}" 
-          value="${option.value}"${bindingDirective} ${additionalAttrs}
+          <input type="checkbox" name="${name}" value="${option.value}"${bindingDirective} ${additionalAttrs}
             ${attributes.id ? `id="${optionId}"` : `id="${optionId}"`}
-            class="${inputClass}"
           />
-          <label 
-          for="${optionId}">
-            ${option.label}
-          </label>
+          <label for="${optionId}">${option.label}</label>
         </div>
       `;
     }).join('');
@@ -2480,7 +2365,7 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -2514,13 +2399,7 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
     }).join('');
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <fieldset class="${this.selectGroupClass}">
       <label for="${id}">${label}</label>
@@ -2528,7 +2407,6 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
         ${bindingDirective}
         ${dimensionAttrs}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
       >
@@ -2593,7 +2471,7 @@ renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -2624,13 +2502,7 @@ renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax
   // Define multiple attribute for multi-select
   const multipleAttr = 'multiple';
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  // Construct the final HTML string
   let formHTML = `
     <fieldset class="${this.selectGroupClass}">
       <label for="${id}">${label}</label>
@@ -2638,7 +2510,6 @@ renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax
         ${bindingDirective}
         ${dimensionAttrs}
         id="${id}"
-        class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
         ${multipleAttr}
@@ -2675,7 +2546,7 @@ renderSubmitButton(type, name, label, attributes) {
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
+    if (key !== 'id' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -2692,18 +2563,10 @@ renderSubmitButton(type, name, label, attributes) {
     }
   }
 
-  let submitButtonClass;
-  if ('class' in attributes) {
-    submitButtonClass=attributes.class;
-  } else {
-    submitButtonClass=this.submitButtonClass; 
-  }
-
   // Construct the final HTML string
   const formHTML = `
     <input type="${type}"
       id="${id}"
-      class="${submitButtonClass}"
       value="${label}"
       ${additionalAttrs}
     />
