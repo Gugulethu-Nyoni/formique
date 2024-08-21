@@ -24,16 +24,19 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
   - Validation and Attributes: Easily specify validation rules and attributes for each form field.
   - Dynamic Form Generation: Generate forms dynamically based on your schema.
   - Framework Agnostic: Currently works Semantq and vanilla JS.
-
+  - Accessibility and usabality compliant: Formique yields form mark compliant with WCAG.
+  - Mobile responsive
 
 
 ## Why Choose Formique?
 
    - Vanilla JS: No dependencies; works seamlessly with vanilla JS and Semantq JS framework.(More frameworks to be added)
    - Lightweight: Minimal footprint optimized for performance.
-   - Customizable: Adapt the library to fit your project's unique needs.
+   - Customizable: Adapt the library to fit your project's unique needs for functionality and style.
    - Declarative: Write your forms in JavaScript and define forms with a concise schema for better readability and maintainability.
-
+   - Usability and Accessibility compliant: You just need to focus on defining form fields data. Formique handles WCAG compliance for you. 
+   - Mobile responsive: Formique forms are mobile responsive off the bat
+   
 
 ## Form Input Types Covered
 
