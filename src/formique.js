@@ -544,6 +544,7 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
 // New method for rendering password fields
 renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
   // Define valid attributes for the password input type
+  /*
   const passwordInputAttributes = [
     'required',
     'minlength',
@@ -558,12 +559,20 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
     'inputmode',
     'title',
   ];
+*/
+
+  const passwordInputValidationAttributes = [
+  'required',
+  'minlength',
+  'maxlength',
+  'pattern',
+];
 
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (passwordInputAttributes.includes(key)) {
+      if (passwordInputValidationAttributes.includes(key)) {
         if (typeof value === 'boolean' && value) {
           validationAttrs += `  ${key}\n`;
         } else {
@@ -574,7 +583,7 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
-              if (!passwordInputAttributes.includes(key)) {
+              if (!passwordInputValidationAttributes.includes(key)) {
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'password'.\x1b[0m`);
                }
               break;

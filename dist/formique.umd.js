@@ -284,6 +284,7 @@
     // Specific rendering methods for each field type
   renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
     // Define valid attributes for the email input type
+    /*
     const emailInputAttributes = [
       'required',
       'minlength',
@@ -298,25 +299,32 @@
       'inputmode',
       'title',
     ];
+    */
+
+    const emailInputValidationAttributes = [
+    'required',                          // Ensures the field is filled out
+    'pattern',  // Enforces a specific email format
+    'minlength',                     // Sets the minimum length of the input
+    'maxlength',                   // Sets the maximum length of the input
+    'multiple'                           // Allows multiple email addresses separated by commas
+  ];
 
     // Construct validation attributes
     let validationAttrs = '';
     if (validate) {
       Object.entries(validate).forEach(([key, value]) => {
-        if (emailInputAttributes.includes(key)) {
+        if (emailInputValidationAttributes.includes(key)) {
           if (typeof value === 'boolean' && value) {
             validationAttrs += `  ${key}\n`;
           } else {
             switch (key) {
+              case 'pattern':
               case 'minlength':
               case 'maxlength':
                 validationAttrs += `  ${key}="${value}"\n`;
                 break;
-              case 'pattern':
-                validationAttrs += `  ${key}="${value}"\n`;
-                break;
               default:
-                if (!emailInputAttributes.includes(key)) {
+                if (!emailInputValidationAttributes.includes(key)) {
                 console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
                  }
                 break;
