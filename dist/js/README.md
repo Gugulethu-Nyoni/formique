@@ -107,7 +107,7 @@ In the example above:
   - **Step**: Specifies the increment step for numeric values.
     - Example: `step: 0.01` (for decimal increments)
 
-**Formique will filter out any invalid validation defined and throw warnings on the browser console.E.g. you define min and max validations for a text field Formique will filter these out.**
+**Formique will filter out any invalid validation defined and throw warnings on the browser console.E.g. when you define min and max validations (instead of minlength and maxlength) for a text field,  Formique will filter these out.**
 
 
 ## Input Attributes
