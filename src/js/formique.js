@@ -2291,111 +2291,118 @@ renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 renderRadioField(type, name, label, validate, attributes, bindingSyntax, options) {
-  // Define valid validation attributes for radio fields
-  const radioValidationAttributes = ['required'];
-
-  // Construct validation attributes
-  let validationAttrs = '';
-  if (validate) {
-    Object.entries(validate).forEach(([key, value]) => {
-      if (radioValidationAttributes.includes(key)) {
-        if (key === 'required') {
-          validationAttrs += `required\n`;
-        }
-      } else {
-        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
-      }
-    });
-  }
-
-  // Handle the binding syntax
-  let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
-    bindingDirective = ` bind:value="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}"\n`;
-  }
-
-  // Define attributes for the radio inputs
-  let id = attributes.id || name;
-
-  // Handle additional attributes
-  let additionalAttrs = '';
-  for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
-        // Handle event attributes
-        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
-      } else {
-        // Handle boolean attributes
-        if (value === true) {
-          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
-        } else if (value !== false) {
-          // Convert underscores to hyphens and set the attribute
-          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
-        }
-      }
+    // Define valid validation attributes for radio fields
+    const radioValidationAttributes = ['required'];
+    
+    // Construct validation attributes
+    let validationAttrs = '';
+    if (validate) {
+        Object.entries(validate).forEach(([key, value]) => {
+            if (radioValidationAttributes.includes(key)) {
+                if (typeof value === 'boolean' && value) {
+                    validationAttrs += `  ${key}\n`;
+                } else {
+                    // Handle specific validation attributes
+                    switch (key) {
+                        case 'required':
+                            validationAttrs += `  ${key}\n`;
+                            break;
+                        default:
+                            if (!radioValidationAttributes.includes(key)) {
+                                console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'radio'.\x1b[0m`);
+                            }
+                            break;
+                    }
+                }
+            } else {
+                console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'radio'.\x1b[0m`);
+            }
+        });
     }
-  }
 
+    // Handle the binding syntax
+    let bindingDirective = '';
+    if (bindingSyntax === 'bind:value' && name) {
+        bindingDirective = ` bind:value="${name}"\n`;
+    } else if (bindingSyntax.startsWith('::') && name) {
+        bindingDirective = ` bind:value="${name}"\n`;
+    } else if (bindingSyntax && !name) {
+        console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+        return;
+    }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
+    // Define attributes for the radio inputs
+    let id = attributes.id || name;
 
-  // Construct radio button HTML based on options
-  let optionsHTML = '';
-  if (options && options.length) {
-    optionsHTML = options.map((option) => {
-      return `
-        <div>
-          <input 
-          type="${type}" 
-          name="${name}" 
-          value="${option.value}"
-          ${bindingDirective} 
-          ${additionalAttrs}
-          ${attributes.id ? `id="${id}-${option.value}"` : `id="${id}-${option.value}"`}
-          class="${inputClass}"
-          />
-          <label 
-          for="${attributes.id ? `${id}-${option.value}` : `${id}-${option.value}`}">
-            ${option.label}
-          </label>
-        </div>
-      `;
-    }).join('');
-  }
+    // Construct additional attributes dynamically
+    let additionalAttrs = '';
+    for (const [key, value] of Object.entries(attributes)) {
+        if (key !== 'id' && key !== 'class' && value !== undefined) {
+            if (key.startsWith('on')) {
+                // Handle event attributes
+                const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+                additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+            } else {
+                // Handle boolean attributes
+                if (value === true) {
+                    additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+                } else if (value !== false) {
+                    // Convert underscores to hyphens and set the attribute
+                    additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+                }
+            }
+        }
+    }
 
-  
-// Construct the final HTML string
-  let formHTML = `
+    let inputClass = attributes.class || this.inputClass;
+
+    // Construct radio button HTML based on options
+    let optionsHTML = '';
+    if (options && options.length) {
+        optionsHTML = options.map((option) => {
+            return `
+            <div>
+                <input 
+                    type="${type}" 
+                    name="${name}" 
+                    value="${option.value}"
+                    ${bindingDirective} 
+                    ${additionalAttrs}
+                    ${attributes.id ? `id="${id}-${option.value}"` : `id="${id}-${option.value}"`}
+                    class="${inputClass}"
+                    ${validationAttrs}
+                />
+                <label 
+                    for="${attributes.id ? `${id}-${option.value}` : `${id}-${option.value}`}">
+                    ${option.label}
+                </label>
+            </div>
+            `;
+        }).join('');
+    }
+
+    // Construct the final HTML string
+    let formHTML = `
     <fieldset class="${this.radioGroupClass}">
-      <legend>${label}</legend>
-      ${optionsHTML}
+        <legend>${label} ${validationAttrs.includes('required') ? '<span aria-hidden="true" style="color: red;">*</span>' : ''}</legend>
+        ${optionsHTML}
     </fieldset>
-  `.replace(/^\s*\n/gm, '').trim();
+    `.replace(/^\s*\n/gm, '').trim();
 
-  let formattedHtml = formHTML; 
+    // Apply vertical layout to the <input> elements only
+    let formattedHtml = formHTML.replace(/<input\s+([^>]*)\/>/g, (match, p1) => {
+        // Reformat attributes into a vertical layout
+        const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+        return `<input\n${attributes}\n/>`;
+    });
 
-  // Apply vertical layout to the <input> elements only
-  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/g, (match, p1) => {
-    // Reformat attributes into a vertical layout
-    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
-    return `<input\n${attributes}\n/>`;
-  });
+    // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+    formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+        // Ensure <fieldset> starts on a new line
+        return `\n${match}\n`;
+    }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
-  formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
-    // Ensure <fieldset> starts on a new line
-    return `\n${match}\n`;
-  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
-
-  return formattedHtml;
+    return formattedHtml;
 }
 
 
