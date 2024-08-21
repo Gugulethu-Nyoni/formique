@@ -3,7 +3,9 @@
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/formique_screenshot.png" alt="Formiqu Screenshot">
 
 
-Formique is a lightweight, declarative JavaScript syntax library for generating WCAG acceAccessibility compliant forms. Suited for vanilla js and Semantq JS framework. Formique simplifies the process of creating and managing forms with a variety of input types, built-in validation, and customizable attributes. Open-source &amp; MIT licensed.
+Formique is a lightweight, declarative JavaScript syntax library for generating WCAG accessibility and usability compliant forms. The library is suited for vanilla js and Semantq JS framework. Formique simplifies the process of using JavaScript to create and manage forms with a variety of input types, built-in validation, and customizable attributes and styling. 
+
+Formique is Open-source &amp; MIT licensed.
 
 
 ## Accessibility Compliance
