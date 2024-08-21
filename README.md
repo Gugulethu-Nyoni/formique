@@ -17,10 +17,10 @@ Formique: A lightweight, declarative JavaScript syntax library for generating fo
 
 ## Why Choose Formique?
 
-   - Vanilla JS: No dependencies; works seamlessly with vanilla JS or any JS framework.
+   - Vanilla JS: No dependencies; works seamlessly with vanilla JS and Semantq JS framework.(More frameworks to be added)
    - Lightweight: Minimal footprint optimized for performance.
    - Customizable: Adapt the library to fit your project's unique needs.
-   - Declarative: Define forms with a straightforward schema for better readability and maintainability.
+   - Declarative: Write your forms in JavaScript and define forms with a concise schema for better readability and maintainability.
 
 
 ## Form Input Types Covered
@@ -53,6 +53,11 @@ Formique: A lightweight, declarative JavaScript syntax library for generating fo
 # How to Write Form Schema
 
 The form schema is an array of field definitions. Each field is defined by an array containing:
+- Input definition (required)
+- Input validation (optional)
+- Input attributes (optional)
+- Binding syntax (optional)
+- Options (applicable to single select, multiple select, radio and check box inputs)
 
 ## Input Definition
 - **Type**: The input type (e.g., 'text', 'email', 'radio').
@@ -72,17 +77,18 @@ The form schema is an array of field definitions. Each field is defined by an ar
 
 ## Input Attributes
 - **Attributes**: Object specifying additional attributes like `id`, `class`, `style`, etc.
-  - Example: `{ id: 'username', class: 'form-input' }`
+  - Example: `{ id: 'username', class: 'form-input', style: 'font-size: 13px;' }`
 
 ## Binding
 - **Binding**: Optional binding syntax for dynamic data. It can use `bind:value` or `::inputName`.
-  - Example: `'bind:value'` or `'::inputName'`  - inputName must be the value defined as the input name (second item in the input definition object). 
+  - Example: `'bind:value'` or `'::inputName'`  - inputName must be the value defined as the input name (second item) in the input definition object. 
 
 ## Options
 - **Options**: For singleSelect,, multipleSelect, radio, and checkbox inputs. This is an array of options, each with a `value` and `label`.
   - Example: `[{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }]`
 
-  For fields like singleSelect and multipleSelect you can define default or pre selected options this way:  
+### Selected Options
+  For fields like singleSelect and multipleSelect you can also define default or pre selected options this way:  
 
   `[{ value: 'red', label: 'Red' }, { value: 'blue', label: 'Blue', selected: true }]`
 
