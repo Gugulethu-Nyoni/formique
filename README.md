@@ -120,7 +120,6 @@ In the example above:
   In the example given: the blue option will be selected by default.
 
 
-```markdown
 ## Installation
 
 There are two ways to install and use Formique in your project:
@@ -147,9 +146,12 @@ There are two ways to install and use Formique in your project:
 ```
 
 
-2. Define your form parameters (formParams), form schema (formSchema) and then initialize Formique in script which should go below this script tag : ```html
+2. Define your form parameters (formParams), form schema (formSchema) and then initialize Formique in script which should go below this script tag: 
+
+```html
     <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
-    ```
+```
+
 
     ```html
     <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
@@ -261,12 +263,11 @@ There are two ways to install and use Formique in your project:
     ```
 
 Formique can be used as either a UMD module with a simple `<script>` tag or as an ESM module via npm. 
-```
 
 # Form Schema Example
 
 
-Here's an example of a form schema that defines various input fields with validation, attributes, options, and binding syntax:
+Here's an example of a form schema that defines various input fields with validation, attributes, binding syntax and options:
 
 ```javascript
 const formSchema = [
