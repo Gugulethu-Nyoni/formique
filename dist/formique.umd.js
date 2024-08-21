@@ -184,6 +184,8 @@
       });
     }
 
+
+
     // Handle the binding syntax
     let bindingDirective = '';
     if (bindingSyntax === 'bind:value' && name) {
@@ -683,6 +685,8 @@
           } else {
             switch (key) {
               case 'pattern':
+              case 'minlength':
+              case 'maxlength':
                 validationAttrs += `  ${key}="${value}"\n`;
                 break;
               default:
