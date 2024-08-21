@@ -1,14 +1,9 @@
 // Base class for form rendering
 class FormBuilder 
 {
-
-
   renderField(type, name, label, validate, attributes, bindingSyntax, options) {
     throw new Error('Method renderField must be implemented');
   }
-
- 
-
   
 }
 
@@ -16,7 +11,6 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
-
  constructor (formParams = {}, formSchema) {
     super();
     this.formSchema=formSchema;
@@ -28,7 +22,6 @@ class Formique extends FormBuilder {
     this.submitButtonClass='form-submit-btn';
     this.formParams=formParams;
     this.formMarkUp='';
-
 
     if (this.formParams) {
         this.formMarkUp += this.renderFormElement(); 
@@ -63,7 +56,6 @@ class Formique extends FormBuilder {
 
     // Close the <form> tag
     formHTML += '>\n';
-
     // Manually ensure vertical formatting of the HTML string
     formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
     return formHTML;
@@ -76,13 +68,8 @@ renderForm() {
     const formHTML = this.formSchema.map(field => {
         const [type, name, label, validate, attributes = {}, bindingSyntax, options] = field;
         return this.renderField(type, name, label, validate, attributes, bindingSyntax, options);
-    }).join('');
-    
-  //return formHTML;
-  //return this.formMarkUp;
-
+    }).join('');   
     this.formMarkUp += formHTML; 
-    //console.log("here", this.formMarkUp);
 }
 
 
@@ -145,7 +132,7 @@ renderForm() {
  
 
 
-// Specific rendering methods for each field type
+// text field rendering
 renderTextField(type, name, label, validate, attributes, bindingSyntax) {
 
   //console.log("here");
@@ -270,17 +257,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     return `<input\n${attributes}\n/>`;
   });
 
-  // Ensure the <div> block starts on a new line
-  /*
-  formattedHtml = formattedHtml.replace(/<div\s+([^>]*)>/, (match) => {
-    // Ensure <div> starts on a new line
-    return `\n${match}\n`;
-  });
-  */
   
-
-  //this.formMarkUp += formattedHtml;
-  //console.log("HR",this.formMarkUp);
   return formattedHtml;
 }
 

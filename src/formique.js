@@ -178,6 +178,8 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     });
   }
 
+
+
   // Handle the binding syntax
   let bindingDirective = '';
   if (bindingSyntax === 'bind:value' && name) {
@@ -677,6 +679,8 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
         } else {
           switch (key) {
             case 'pattern':
+            case 'minlength':
+            case 'maxlength':
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
