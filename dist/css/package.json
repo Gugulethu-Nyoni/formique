@@ -1,6 +1,6 @@
 {
   "name": "formique-css",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Formique CSS styles",
   "main": "formique.css",
   "files": [
