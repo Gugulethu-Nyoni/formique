@@ -3,7 +3,7 @@
 <!-- <img src="https://github.com/thincmedia/anyGridJs/blob/main/images/anyGridJs_Example.png" alt="anyGridJs Example"> --> 
 
 
-Formique: A lightweight, declarative JavaScript library for generating forms. Suited for vanilla js needs and Semantq JS framework. Formique simplifies the process of creating and managing forms with a variety of input types, built-in validation, and customizable attributes. Open-source &amp; MIT licensed.
+Formique: A lightweight, declarative JavaScript syntax library for generating forms. Suited for vanilla js and Semantq JS framework. Formique simplifies the process of creating and managing forms with a variety of input types, built-in validation, and customizable attributes. Open-source &amp; MIT licensed.
 
 ## Key Features
 
@@ -56,7 +56,7 @@ The form schema is an array of field definitions. Each field is defined by an ar
 
 ## Input Definition
 - **Type**: The input type (e.g., 'text', 'email', 'radio').
-- **Name**: The name attribute for the input.
+- **Name**: The name attribute for the input. 
 - **Label**: The label for the input.
 
 ## Input Validation
@@ -68,32 +68,33 @@ The form schema is an array of field definitions. Each field is defined by an ar
   - **MaxLength**: Specifies the maximum number of characters allowed.
     - Example: `maxlength: 50`
   - **Pattern**: A regex pattern the input must match.
-    - Example: `pattern: /^[A-Za-z0-9]+$/`
-  - **Custom**: Function for custom validation logic.
-    - Example: `custom: value => value.startsWith('A')`
+    - Example: `pattern: "/^[A-Za-z0-9]+$/"`
 
 ## Input Attributes
 - **Attributes**: Object specifying additional attributes like `id`, `class`, `style`, etc.
-  - Example: `attributes: { id: 'username', class: 'form-control' }`
+  - Example: `{ id: 'username', class: 'form-input' }`
 
 ## Binding
 - **Binding**: Optional binding syntax for dynamic data. It can use `bind:value` or `::inputName`.
-  - Example: `binding: 'bind:value'` or `binding: '::username'`
+  - Example: `'bind:value'` or `'::inputName'`  - inputName must be the value defined as the input name (second item in the input definition object). 
 
 ## Options
-- **Options**: For select, radio, and checkbox inputs. This is an array of options, each with a `value` and `label`.
-  - Example: `options: [{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }]`
+- **Options**: For singleSelect,, multipleSelect, radio, and checkbox inputs. This is an array of options, each with a `value` and `label`.
+  - Example: `[{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }]`
 
+  For fields like singleSelect and multipleSelect you can define default or pre selected options this way:  
 
+  `[{ value: 'red', label: 'Red' }, { value: 'blue', label: 'Blue', selected: true }]`
 
-Here's the updated README content in markdown format with the two options for using Formique as a UMD and an ESM module:
+  In the example given: the blue option will be selected by default.
+
 
 ```markdown
 ## Installation
 
 There are two ways to install and use Formique in your project:
 
-## Option A: Use Formique as a UMD Module
+## Option A: Use Formique as a Universal Module Definition (UMD) Module
 
 1. Include the CSS and JavaScript in the head section of your HTML file:
 
@@ -108,7 +109,7 @@ There are two ways to install and use Formique in your project:
     ```
 ## Usage Example
 
-1. Define form container somewhere in the html body: 
+1. Define the form container somewhere in the html body: 
 
 ```html
 <div id="formique"></div>
@@ -347,11 +348,7 @@ const formParams = {
   style: 'width: 100%; font-size: 14px;' // Inline CSS styling
 };
 
-const form = new Formique(formParams, formSchema);
-const formHTML = form.renderFormHTML();
-console.log(formHTML);
 ```
-
 
 
 # Full List of Possible Form Parameters
@@ -388,15 +385,6 @@ By customizing these parameters, you can control various aspects of the form's b
 
 
 
-## HTML 
-
-In your html, place this markup as placegolder for where the form will be rendered.
-
-```html
-
-<div id="formique"></div>
-
-```
 
 ## Example HTML Output
 
@@ -573,24 +561,22 @@ In your html, place this markup as placegolder for where the form will be render
 
 Formique provides a set of CSS classes to facilitate the styling of various form elements. The default class names for different form components are as follows:
 
-- **Wrapper for Input Elements:** `input-block`
+- **Wrapper (div) for Input Elements:** `input-block`
 - **Input Fields:** `form-input`
 - **Radio Button Groups:** `radio-group`
 - **Checkbox Groups:** `checkbox-group`
 - **Select Dropdowns:** `form-select`
 
-These classes are predefined in the `formique.css` stylesheet. Developers can either use this stylesheet for consistent styling or create their own custom CSS based on these class names to suit their design preferences.
+These classes are predefined in the `formique.css` stylesheet. Developers can either use this stylesheet for consistent styling or create their own custom CSS based on these class names to suit their design preferences. Also, Formique implements these class names by default. The input class can be overidden by defining your preferred class names in the input attributes object e.g.
 
-### Customizing Styles
+```javascript
+{ class: 'form-control' }
+```
 
-1. **Using Default Styles:** Apply the `formique.css` stylesheet to leverage the default styling provided by Formique.
-2. **Custom CSS:** If you prefer custom styling, you can override the default styles by defining your own CSS rules for the above class names.
 
 ### Inline Styling
 
-In addition to external stylesheets, individual form elements can be styled directly via attributes specified in the form schema. This allows for precise control over the appearance of each element without needing additional CSS files.
-
-By utilizing these options, you can easily adapt the look and feel of your form to meet your project's design requirements.
+In addition to external stylesheets, individual form elements can be styled directly via attributes specified in the form schema. This allows for fine grained control over the appearance of each element. 
 
 
 ## Contribute
@@ -603,4 +589,4 @@ Formique is licensed under the MIT License.
 
 ## Keywords
 
-Javascript datatables.
+Javascript forms, declarative form syntax, js form library.
