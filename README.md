@@ -3,7 +3,17 @@
 <!-- <img src="https://github.com/thincmedia/anyGridJs/blob/main/images/anyGridJs_Example.png" alt="anyGridJs Example"> --> 
 
 
-Formique: A lightweight, declarative JavaScript syntax library for generating forms. Suited for vanilla js and Semantq JS framework. Formique simplifies the process of creating and managing forms with a variety of input types, built-in validation, and customizable attributes. Open-source &amp; MIT licensed.
+Formique: A lightweight, declarative JavaScript syntax library for generating WCAG acceAccessibility compliant forms. Suited for vanilla js and Semantq JS framework. Formique simplifies the process of creating and managing forms with a variety of input types, built-in validation, and customizable attributes. Open-source &amp; MIT licensed.
+
+
+## Accessibility Compliance
+
+Formique is designed with a laser focus on usability and accessibility, ensuring that the generated form HTML markup meets the highest standards of web accessibility, such as the Web Content Accessibility Guidelines (WCAG) 2.1.
+
+With minimal declarative form input definitions, Formique takes care of the rest to ensure the final markup is comprehensive enough to meet [official](https://www.w3.org/WAI/tutorials/forms/) usability and accessibility standards. 
+
+For more information on the Web Content (Forms) Accessibility Guidelines (WCAG), you can visit the [W3C website](https://www.w3.org/WAI/tutorials/forms/).
+
 
 ## Key Features
 
@@ -64,8 +74,9 @@ The form schema is an array of field definitions. Each field is defined by an ar
 - **Name**: The name attribute for the input. 
 - **Label**: The label for the input.
 
-You don't need to use the type, name and label key to define these parameters.
-**Example**
+You don't need to use the type, name and label keys to define these parameters.
+**Example Input Definition:**
+
 `{ 'text', 'firstname', 'First Name' }`
 
 In the example above:
