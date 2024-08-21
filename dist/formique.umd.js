@@ -425,6 +425,7 @@
 
   renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
     // Define valid attributes for the number input type
+    /*
     const numberInputAttributes = [
       'required',
       'min',
@@ -438,12 +439,21 @@
       'inputmode',
       'title',
     ];
+    */
+
+
+    const numberInputValidationAttributes = [
+    'required',
+    'min',
+    'max',
+    'step',
+  ];
 
     // Construct validation attributes
     let validationAttrs = '';
     if (validate) {
       Object.entries(validate).forEach(([key, value]) => {
-        if (numberInputAttributes.includes(key)) {
+        if (numberInputValidationAttributes.includes(key)) {
           if (typeof value === 'boolean' && value) {
             validationAttrs += `  ${key}\n`;
           } else {
@@ -456,7 +466,7 @@
                 validationAttrs += `  ${key}="${value}"\n`;
                 break;
               default:
-                if (!numberInputAttributes.includes(key)) {
+                if (!numberInputValidationAttributes.includes(key)) {
                 console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
                  }
                 break;
@@ -550,6 +560,7 @@
   // New method for rendering password fields
   renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
     // Define valid attributes for the password input type
+    /*
     const passwordInputAttributes = [
       'required',
       'minlength',
@@ -564,12 +575,20 @@
       'inputmode',
       'title',
     ];
+  */
+
+    const passwordInputValidationAttributes = [
+    'required',
+    'minlength',
+    'maxlength',
+    'pattern',
+  ];
 
     // Construct validation attributes
     let validationAttrs = '';
     if (validate) {
       Object.entries(validate).forEach(([key, value]) => {
-        if (passwordInputAttributes.includes(key)) {
+        if (passwordInputValidationAttributes.includes(key)) {
           if (typeof value === 'boolean' && value) {
             validationAttrs += `  ${key}\n`;
           } else {
@@ -580,7 +599,7 @@
                 validationAttrs += `  ${key}="${value}"\n`;
                 break;
               default:
-                if (!passwordInputAttributes.includes(key)) {
+                if (!passwordInputValidationAttributes.includes(key)) {
                 console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'password'.\x1b[0m`);
                  }
                 break;
@@ -676,6 +695,7 @@
   // New method for rendering tel fields
   renderTelField(type, name, label, validate, attributes, bindingSyntax) {
     // Define valid attributes for the tel input type
+    /*
     const telInputAttributes = [
     'required',
     'pattern',
@@ -690,13 +710,21 @@
     'minlength',
     'maxlength',
   ];
+  */
+
+    const telInputValidationAttributes = [
+    'required',
+    'pattern',
+    'minlength',
+    'maxlength',
+  ];
 
 
     // Construct validation attributes
     let validationAttrs = '';
     if (validate) {
       Object.entries(validate).forEach(([key, value]) => {
-        if (telInputAttributes.includes(key)) {
+        if (telInputValidationAttributes.includes(key)) {
           if (typeof value === 'boolean' && value) {
             validationAttrs += `  ${key}\n`;
           } else {
@@ -707,7 +735,7 @@
                 validationAttrs += `  ${key}="${value}"\n`;
                 break;
               default:
-                if (!telInputAttributes.includes(key)) {
+                if (!telInputValidationAttributes.includes(key)) {
                 console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'tel'.\x1b[0m`);
                  }
                 break;

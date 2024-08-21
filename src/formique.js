@@ -419,6 +419,7 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
 
 renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
   // Define valid attributes for the number input type
+  /*
   const numberInputAttributes = [
     'required',
     'min',
@@ -432,12 +433,21 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
     'inputmode',
     'title',
   ];
+  */
+
+
+  const numberInputValidationAttributes = [
+  'required',
+  'min',
+  'max',
+  'step',
+];
 
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (numberInputAttributes.includes(key)) {
+      if (numberInputValidationAttributes.includes(key)) {
         if (typeof value === 'boolean' && value) {
           validationAttrs += `  ${key}\n`;
         } else {
@@ -450,7 +460,7 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
-              if (!numberInputAttributes.includes(key)) {
+              if (!numberInputValidationAttributes.includes(key)) {
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
                }
               break;
