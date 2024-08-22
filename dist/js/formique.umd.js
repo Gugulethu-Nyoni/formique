@@ -46,10 +46,7 @@
     // Use this.formParams directly
     const paramsToUse = this.formParams || {};
     
-    // Check if 'laravel' is true and handle action attribute accordingly
-    if (paramsToUse.laravel === true) {
-      paramsToUse.action = `{{ url('${paramsToUse.action}') }}`;
-    }
+
 
     // Dynamically add attributes if they are present in the parameters
     for (const [key, value] of Object.entries(paramsToUse)) {
