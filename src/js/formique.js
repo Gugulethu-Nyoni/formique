@@ -35,37 +35,42 @@ class Formique extends FormBuilder {
 
 
 // renderFormElement method
-renderFormElement() {
-  let formHTML = '<form\n';
-  
-  // Use this.formParams directly
-  const paramsToUse = this.formParams || {};
-  
+  renderFormElement() {
+    let formHTML = '<form\n';
+    
+    // Use this.formParams directly
+    const paramsToUse = this.formParams || {};
 
-
-  // Dynamically add attributes if they are present in the parameters
-  for (const [key, value] of Object.entries(paramsToUse)) {
-    if (value !== undefined && value !== null) {
-      // Handle boolean attributes
-      if (typeof value === 'boolean') {
-        if (value) {
-          formHTML += `  ${key}\n`;
+    // Dynamically add attributes if they are present in the parameters
+    for (const [key, value] of Object.entries(paramsToUse)) {
+      if (value !== undefined && value !== null) {
+        // Handle boolean attributes
+        if (typeof value === 'boolean') {
+          if (value) {
+            formHTML += `  ${key}\n`;
+          }
+        } else {
+          // Handle other attributes
+          const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
+          formHTML += `  ${formattedKey}="${value}"\n`;
         }
-      } else {
-        // Handle other attributes
-        const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
-        formHTML += `  ${formattedKey}="${value}"\n`;
       }
     }
+
+    // Close the <form> tag
+    formHTML += '>\n';
+
+   // Conditionally add CSRF token if 'laravel' is true
+    if (paramsToUse.laravel) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        formHTML += `<input type="hidden" name="_token" value="${csrfToken}">`;
+    }
+
+
+    // Manually ensure vertical formatting of the HTML string
+    formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
+    return formHTML;
   }
-
-  // Close the <form> tag
-  formHTML += '>\n';
-
-  // Manually ensure vertical formatting of the HTML string
-  formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
-  return formHTML;
-}
 
 
   // Main renderForm method
@@ -2512,109 +2517,103 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
 
 
 renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options) {
-  // Define valid validation attributes for select fields
-  const selectValidationAttributes = ['required'];
+    // Define valid validation attributes for select fields
+    const selectValidationAttributes = ['required'];
 
-  // Construct validation attributes
-  let validationAttrs = '';
-  if (validate) {
-    Object.entries(validate).forEach(([key, value]) => {
-      if (selectValidationAttributes.includes(key)) {
-        if (key === 'required') {
-          validationAttrs += `${key} `;
-        }
-      } else {
-        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
-      }
-    });
-  }
-
-  // Handle the binding syntax
-  let bindingDirective = '';
-  if (typeof bindingSyntax === 'string' && bindingSyntax.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}" `;
-  }
-
-  // Define attributes for the select field
-  let id = attributes.id || name;
-  let dimensionAttrs = ''; // No dimension attributes applicable for select fields
-
-  // Handle additional attributes
-  let additionalAttrs = '';
-  for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
-        // Handle event attributes
-        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
-      } else {
-        // Handle boolean attributes
-        if (value === true) {
-          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
-        } else if (value !== false) {
-          // Convert underscores to hyphens and set the attribute
-          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
-        }
-      }
+    // Construct validation attributes
+    let validationAttrs = '';
+    if (validate) {
+        Object.entries(validate).forEach(([key, value]) => {
+            if (selectValidationAttributes.includes(key)) {
+                if (key === 'required') {
+                    validationAttrs += `${key} `;
+                }
+            } else {
+                console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
+            }
+        });
     }
-  }
 
-  // Construct select options HTML based on options
-  let selectHTML = '';
-  if (Array.isArray(options)) {
-    // Add a default option
-    selectHTML += `
-      <option value="">Choose an option</option>
-    `;
+    // Handle the binding syntax
+    let bindingDirective = '';
+    if (typeof bindingSyntax === 'string' && bindingSyntax.startsWith('::')) {
+        bindingDirective = ` bind:value="${name}" `;
+    }
 
-    // Add the provided options
-    selectHTML += options.map((option) => {
-      const isSelected = option.selected ? ' selected' : '';
-      return `
-        <option value="${option.value}"${isSelected}>${option.label}</option>
-      `;
-    }).join('');
-  }
+    // Define attributes for the select field
+    let id = attributes.id || name;
+    let dimensionAttrs = ''; // No dimension attributes applicable for select fields
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
-  let formHTML = `
+    // Handle additional attributes
+    let additionalAttrs = '';
+    for (const [key, value] of Object.entries(attributes)) {
+        if (key !== 'id' && key !== 'class' && value !== undefined) {
+            if (key.startsWith('on')) {
+                // Handle event attributes
+                const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+                additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+            } else {
+                // Handle boolean attributes
+                if (value === true) {
+                    additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+                } else if (value !== false) {
+                    // Convert underscores to hyphens and set the attribute
+                    additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+                }
+            }
+        }
+    }
+
+    // Construct select options HTML based on options
+    let selectHTML = '';
+    if (Array.isArray(options)) {
+        // Add a default option
+        selectHTML += `
+        <option value="">Choose an option</option>
+        `;
+
+        // Add the provided options
+        selectHTML += options.map((option) => {
+            const isSelected = option.selected ? ' selected' : '';
+            return `
+            <option value="${option.value}"${isSelected}>${option.label}</option>
+            `;
+        }).join('');
+    }
+
+    let inputClass = attributes.class || this.inputClass;
+
+    // Construct the final HTML string
+    let formHTML = `
     <fieldset class="${this.selectGroupClass}">
-      <label for="${id}">${label}</label>
-      <select name="${name}"
-        ${bindingDirective}
-        ${dimensionAttrs}
-        id="${id}"
-        class="${inputClass}"
-        ${additionalAttrs}
-        ${validationAttrs}
-      >
-        ${selectHTML}
-      </select>
+        <label for="${id}">${label} ${validationAttrs.includes('required') ? '<span aria-hidden="true" style="color: red;">*</span>' : ''}</label>
+        <select name="${name}"
+            ${bindingDirective}
+            ${dimensionAttrs}
+            id="${id}"
+            class="${inputClass}"
+            ${additionalAttrs}
+            ${validationAttrs}
+        >
+            ${selectHTML}
+        </select>
     </fieldset>
-  `.replace(/^\s*\n/gm, '').trim();
+    `.replace(/^\s*\n/gm, '').trim();
 
-  let formattedHtml = formHTML; 
+    // Apply vertical layout to the <select> element and its children
+    let formattedHtml = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+        // Reformat attributes into a vertical layout
+        const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+        return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
+    });
 
-  // Apply vertical layout to the <select> element and its children
-  formattedHtml = formattedHtml.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
-    // Reformat attributes into a vertical layout
-    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
-    return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
-  });
+    // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+    formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+        // Ensure <fieldset> starts on a new line
+        return `\n${match}\n`;
+    }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
-  formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
-    // Ensure <fieldset> starts on a new line
-    return `\n${match}\n`;
-  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
-
-  return formattedHtml;
+    return formattedHtml;
 }
 
 
