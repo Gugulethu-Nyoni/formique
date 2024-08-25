@@ -229,7 +229,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   let id = attributes.id || name;
 
   // Determine if semantiq is true based on formParams
-  const semantq = this.formParams?.semantq || false;
+const framework = this.formSettings?.framework || false;
 
   // Construct additional attributes dynamically
   let additionalAttrs = '';
@@ -237,7 +237,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
     if (key !== 'id' && key !== 'class' && value !== undefined) {
       if (key.startsWith('on')) {
         // Handle event attributes
-        if (semantq) {
+        if (framework === 'semantq') {
           const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
           additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
         } else {
