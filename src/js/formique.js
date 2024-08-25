@@ -279,7 +279,7 @@ const framework = this.formSettings?.framework || false;
         class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
-      />
+        ${additionalAttrs.includes('placeholder') ? '' : (this.formSettings.placeholders ? `placeholder="${label}"` : '')}      />
     </div>
 `.replace(/^\s*\n/gm, '').trim();
 
