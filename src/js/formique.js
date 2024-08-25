@@ -25,9 +25,12 @@ class Formique extends FormBuilder {
     this.formParams=formParams;
     this.formMarkUp='';
 
-    if (this.formParams) {
-        this.formMarkUp += this.renderFormElement(); 
-      }
+    
+    if (Object.keys(this.formParams).length > 0) {
+      this.formMarkUp += this.renderFormElement();
+     }
+
+
       this.renderForm();
 
 
