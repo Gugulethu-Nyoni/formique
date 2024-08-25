@@ -13,7 +13,7 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
- constructor (formParams = {}, formSchema) {
+ constructor (formParams = {}, formSchema, formSettings={}) {
     super();
     this.formSchema=formSchema;
     this.divClass='input-block';
@@ -24,6 +24,14 @@ class Formique extends FormBuilder {
     this.submitButtonClass='form-submit-btn';
     this.formParams=formParams;
     this.formMarkUp='';
+    this.formSettings = {
+      requiredFieldIndicator: true,
+      placeholders: true,
+      asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
+      ...formSettings
+    };
+
+
 
     
     if (Object.keys(this.formParams).length > 0) {
@@ -258,9 +266,11 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
         inputClass = this.inputClass; 
   }
 // Construct the final HTML string
-  let formHTML = `
-    <div class="${this.divClass}"> 
-      <label for="${id}">${label}</label>
+ let formHTML = `
+    <div class="${this.divClass}">
+      <label for="${id}">${label}
+        ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+      </label>
       <input 
         type="${type}"
         name="${name}"
@@ -271,7 +281,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
         ${validationAttrs}
       />
     </div>
-  `.replace(/^\s*\n/gm, '').trim();
+`.replace(/^\s*\n/gm, '').trim();
 
    let formattedHtml = formHTML; 
 
@@ -2589,7 +2599,9 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
     // Construct the final HTML string
     let formHTML = `
     <fieldset class="${this.selectGroupClass}">
-        <label for="${id}">${label} ${validationAttrs.includes('required') ? '<span aria-hidden="true" style="color: red;">*</span>' : ''}</label>
+        <label for="${id}">${label} 
+            ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+        </label>
         <select name="${name}"
             ${bindingDirective}
             ${dimensionAttrs}
@@ -2601,7 +2613,8 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
             ${selectHTML}
         </select>
     </fieldset>
-    `.replace(/^\s*\n/gm, '').trim();
+`.replace(/^\s*\n/gm, '').trim();
+
 
     // Apply vertical layout to the <select> element and its children
     let formattedHtml = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {

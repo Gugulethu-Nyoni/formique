@@ -18,9 +18,12 @@
   "author": "Gugulethu Nyoni",
   "license": "MIT",
   "devDependencies": {
+    "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "rollup": "^2.79.1"
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^2.79.1",
+    "rollup-plugin-postcss": "^4.0.2"
   },
   "files": [
     "dist/*"
