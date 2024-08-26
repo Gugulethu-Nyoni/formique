@@ -169,6 +169,12 @@
     color: var(--label-color); /* Orange color for labels */
 }
 
+#formique .form-select legend {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--label-color); /* Orange color for legend */
+}
+
 #formique .form-select .form-select-input {
     width: 100%;
     padding: 0.75rem;
@@ -197,12 +203,13 @@
 
 /* General Styles */
 
+/*
 body {
-    background-color: var(--background-dark); /* Dark background for the page */
-    color: var(--text-light); /* Light text color for readability */
+    background-color: var(--background-dark); 
+    color: var(--text-light); 
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
 }
-
+*/
 

@@ -1,6 +1,4 @@
 import '../css/formique.css'; // Ensure this line is present
-//import { handleDynamicSingleSelect } from './handlerDynamicSingleSelect.js';
-//import './handlerDynamicSingleSelect.js';
 
 
 // Base class for form rendering
@@ -2421,7 +2419,10 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
     // Construct the final HTML string
     let formHTML = `
     <fieldset class="${this.radioGroupClass}">
-        <legend>${label} ${validationAttrs.includes('required') ? '<span aria-hidden="true" style="color: red;">*</span>' : ''}</legend>
+        <legend>
+        ${label} 
+        ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+        </legend>
         ${optionsHTML}
     </fieldset>
     `.replace(/^\s*\n/gm, '').trim();
@@ -2649,13 +2650,31 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
   
 
     const onchangeAttr = (mode === 'dynamicSingleSelect' && subCategoriesOptions) ? ' onchange="handleDynamicSingleSelect(this.value,id)"' : '';
+    
+    let labelDisplay;
+    let rawLabel; 
+
+    if (mode === 'dynamicSingleSelect' && subCategoriesOptions) {
+      if (label.includes('-')) {
+        const [mainCategoryLabel] = label.split('-');
+        labelDisplay = mainCategoryLabel; 
+        rawLabel = label;
+      } else {
+        labelDisplay = label;
+        rawLabel = label;
+      }
+    } else {
+      labelDisplay = label;
+    }
+
 
     // Construct the final HTML string
     let formHTML = `
     <fieldset class="${this.selectGroupClass}">
-        <label for="${id}">${label} 
+        <legend>${labelDisplay} 
             ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-        </label>
+        </legend>
+        <label for="${id}"> Select ${labelDisplay} 
         <select name="${name}"
             ${bindingDirective}
             ${dimensionAttrs}
@@ -2705,7 +2724,7 @@ if (targetDiv) {
   const scriptElement = document.createElement('script');
   scriptElement.textContent = `
   window.handleDynamicSingleSelect = function(category, fieldsetid) {
-    console.log("HERE", fieldsetid);
+    //console.log("HERE", fieldsetid);
 
     // Hide all subcategory fields
     document.querySelectorAll(\`[class*="\${fieldsetid}"]\`).forEach(div => {
@@ -2738,11 +2757,24 @@ subCategoriesOptions.forEach(subCategory => {
   }).join('');
 
 
+    let subCategoryLabel; 
+    console.log('Label:', rawLabel); // Debug log
+
+    if (rawLabel.includes('-')) {
+      subCategoryLabel = rawLabel.split('-')?.[1] + ' Option'; 
+    } else {
+      subCategoryLabel = 'options';
+    }
+
+
+    
+
   // Create the HTML for the fieldset and select elements
   let formHTML = `
     <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}-options" style="display: none;">
-        <label for="${id}">${label} Options
-            ${this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+        <legend> ${label} ${subCategoryLabel} ${this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+        </legend>
+        <label for="${id}"> Select ${label} ${subCategoryLabel}           
         </label>
         <select name="${id}"
             ${bindingDirective}
@@ -2979,26 +3011,7 @@ if (!formContainer) {
 // no renderMethod below here
 }
 
-/*
-function handleDynamicSingleSelect(category) {
 
-  if (category === 'formique-activator') return; 
-  // Hide all subcategory divs
-  document.querySelectorAll('[id$="-options"]').forEach(div => {
-    div.style.display = "none";
-  });
-
-  // Show the selected category
-  const selectedCategoryFieldset = document.getElementById(`${category}-options`);
-  if (selectedCategoryFieldset) {
-    selectedCategoryFieldset.style.display = "block";
-  }
-}
-
-
-handleDynamicSingleSelect('formique-activator');
-
-*/
 
 export default Formique;
 //export { handleDynamicSingleSelect };
@@ -3006,380 +3019,6 @@ export default Formique;
 
 
 
-
-
-
-
-
-
-
-
-/*
-
-
-const formSchema = [
-  ['text', 'firstName', 'First Name', { minlength: 2, maxlength: 5, required: true, disabled: true}, { value: "John", id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()"}, '::firstName'],
-  ['email', 'email', 'Email', { required: true}, { class: 'form-input', style: 'width: 100%;'}, '::emailValue'],
-  ['number', 'age', 'Your Age', {required: false}, { id: 'age12'}, '::age'],
-  ['password', 'password', 'Password', { minlength: 8, required: true }, { class: 'form-control', style: 'width: 100%;' }, '::passwordValue'],
-  ['tel', 'phoneNumber', 'Phone Number', { required: true }, { class: 'form-control', style: 'width: 100%;' }, '::telValue'],
-  ['date', 'birthdate', 'Birth Date', { required: true }, { id: 'birthdateInput', class: 'form-control', style: 'width: 100%;' }, '::date'],
-  ['time', 'meetingTime', 'Meeting Time', { required: true }, { id: 'meetingTimeInput', class: 'form-control', style: 'width: 100%;' }, '::time'],
-  ['datetime-local', 'meetingDateTime', 'Meeting Date & Time', { required: true }, { id: 'meetingDateTimeInput', class: 'form-control', style: 'width: 100%;' }, '::meetingDateTime'],
-  ['month', 'eventMonth', 'Event Month', { required: true }, { id: 'eventMonthInput', class: 'form-control', style: 'width: 100%;' }, '::eventMonth'],
-  ['week', 'eventWeek', 'Event Week', { required: true }, { id: 'eventWeekInput', class: 'form-control', style: 'width: 100%;' }, '::eventWeek'],
-  ['url', 'websiteUrl', 'Website URL', { required: true}, { id: 'websiteUrlInput', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
-  ['search', 'searchQuery', 'Search', { required: true }, { id: 'searchQueryInput', class: 'form-control', style: 'width: 100%;' }, '::searchQuery'],
-  ['color', 'colorPicker', 'Pick a Color', { required: true }, { id: 'colorPickerInput', class: 'form-control', style: 'width: 100%;' }, '::colorValue'],
-  ['file', 'terms', 'Upload File', { required: true }, { id: 'my-file', class: 'form-control', style: 'width: 100%;' }, 'bind:value'],
-  ['hidden', 'user_id', '', { required: true }, {}, '::user_id'],
-  ['image','profilePicture','Profile Picture', { required: true, accept: 'image/*' }, 
-  { id: 'profilePictureInput', class: 'form-control', style: 'width: 100%;' }, 
-  'bind:value'],
-  ['textarea', 'comments', 'Comments', 
-  { required: true, minlength: 10, maxlength: 200, rows: 4, cols: 50 }, 
-  { id: 'commentsTextarea', class: 'form-control', style: 'width: 100%; height: 100px;' }, 
-  '::comments'],
-
-
-  [
-  'radio', 
-  'gender', 
-  'Gender', 
-  { required: true }, 
-  { id: 'genderRadio', class: 'form-radio-input', style: 'margin-left: 1rem;', onchange: 'actioner()' }, 
-  '::gender', 
-  [
-    { value: 'male', label: 'Male' },
-    { value: 'female', label: 'Female' },
-    { value: 'other', label: 'Other' },
-  ]
-],
-
-
-[
-  'checkbox', 
-  'preferences', 
-  'Preferences', 
-  { required: true }, 
-  { id: 'preferencesCheckbox', class: 'form-checkbox-input', style: 'margin-left: 1rem;', onchange: 'submit' }, 
-  '::preferences', 
-  [
-    { value: 'news', label: 'Newsletter' },
-    { value: 'updates', label: 'Product Updates' },
-    { value: 'offers', label: 'Special Offers' },
-  ]
-],
-
-
-
-[
-  'singleSelect', 
-  'colors', 
-  'Colors', 
-  { required: true }, // Validation options
-  { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'trigger' }, // Attributes
-  '::colors', // Binding syntax
-  [
-    { value: 'red', label: 'Red', selected: false },
-    { value: 'green', label: 'Green'},
-    { value: 'blue', label: 'Blue', selected: true},
-  ] // Options
-],
-
-
-
-[
-  'multipleSelect', // Type of field
-  'colors', // Name/identifier of the field
-  'Colors', // Label of the field
-  { required: true, min: 2, max: 3 }, // Validation options
-  { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'alerter' }, // Attributes
-  '::colors', // Binding syntax
-  [
-    { value: 'red', label: 'Red' },
-    { value: 'green', label: 'Green' },
-    { value: 'blue', label: 'Blue', selected: false },
-    { value: 'yellow', label: 'Yellow', selected: false },
-  ] // Options
-],
-
-
-[
-    'submit',
-    'submitButton',
-    'Submit',
-    { required: true },
-    { id: 'submitBtn', class: 'form-submit-btn', style: 'margin-top: 1rem;' }
-  ],
-
-
-[
-    'dynamicSingleSelect',
-    'location',
-    'Country & State',
-    { required: true },
-    {},
-    '',
-    [
-        {
-            // Key or identifier for this dynamic select input
-            key: 'country',  // Example key for the dynamic select (e.g., 'country')
-
-            // Primary select options
-            options: [
-                {
-                    value: 'usa',
-                    label: 'USA',
-                    dynamic: [
-                        {
-                            label: 'States',
-                            options: [
-                                { value: 'ca', label: 'California' },
-                                { value: 'ny', label: 'New York' },
-                                { value: 'tx', label: 'Texas' }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    value: 'canada',
-                    label: 'Canada',
-                    dynamic: [
-                        {
-                            label: 'Provinces',
-                            options: [
-                                { value: 'on', label: 'Ontario' },
-                                { value: 'qc', label: 'Quebec' },
-                                { value: 'bc', label: 'British Columbia' }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            key: 'category',  // Example key for another dynamic select
-            options: [
-                {
-                    value: 'technology',
-                    label: 'Technology',
-                    dynamic: [
-                        {
-                            label: 'Tech Fields',
-                            options: [
-                                { value: 'ai', label: 'Artificial Intelligence' },
-                                { value: 'ml', label: 'Machine Learning' },
-                                { value: 'cyber', label: 'Cybersecurity' }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    value: 'health',
-                    label: 'Health',
-                    dynamic: [
-                        {
-                            label: 'Health Areas',
-                            options: [
-                                { value: 'nutrition', label: 'Nutrition' },
-                                { value: 'fitness', label: 'Fitness' },
-                                { value: 'mental', label: 'Mental Health' }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        }
-        // Add more dynamic select fields as needed
-    ]
-],
-
-
-
-];
-
-
-*/
-
-
-/* SMALLER SET OF FIELDS */
-
-/*
-
-const formSchema = [
-  // Text Input Field
-  [
-    'text', 
-    'firstName', 
-    'First Name', 
-    { minlength: 2, maxlength: 5, required: true, disabled: true }, // Validation options
-    { value: "John", id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()" }, // Attributes
-    '::firstName' // Binding syntax
-  ],
-
-  // URL Input Field
-  [
-    'url', 
-    'websiteUrl', 
-    'Website URL', 
-    { required: true }, // Validation options
-    { id: 'websiteUrlInput', class: 'form-control', style: 'width: 100%;' }, // Attributes
-    'bind:value' // Binding syntax
-  ],
-
-  // Radio Input Field
-  [
-    'radio', 
-    'gender', 
-    'Gender', 
-    { required: true }, // Validation options
-    { id: 'genderRadio', class: 'form-radio-input', style: 'margin-left: 1rem;', onchange: 'actioner()' }, // Attributes
-    '::gender', // Binding syntax
-    [
-      { value: 'male', label: 'Male' }, // Options
-      { value: 'female', label: 'Female' },
-      { value: 'other', label: 'Other' }
-    ]
-  ],
-
-  // Checkbox Input Field
-  [
-    'checkbox', 
-    'preferences', 
-    'Preferences', 
-    { required: true }, // Validation options
-    { id: 'preferencesCheckbox', class: 'form-checkbox-input', style: 'margin-left: 1rem;', onchange: 'submit' }, // Attributes
-    '::preferences', // Binding syntax
-    [
-      { value: 'news', label: 'Newsletter' }, // Options
-      { value: 'updates', label: 'Product Updates' },
-      { value: 'offers', label: 'Special Offers' }
-    ]
-  ],
-
-  // Single Select Input Field
-  [
-    'singleSelect', 
-    'colors', 
-    'Colors', 
-    { required: true }, // Validation options
-    { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'trigger' }, // Attributes
-    '::colors', // Binding syntax
-    [
-      { value: 'red', label: 'Red' }, // Options
-      { value: 'green', label: 'Green' },
-      { value: 'blue', label: 'Blue', selected: true }
-    ]
-  ],
-
-  // Multiple Select Input Field
-  [
-    'multipleSelect', // Type of field
-    'colors', // Name/identifier of the field
-    'Colors', // Label of the field
-    { required: true, minlength: 2, maxlength: 3 }, // Validation options
-    { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'alerter' }, // Attributes
-    '::colors', // Binding syntax
-    [
-      { value: 'red', label: 'Red' }, // Options
-      { value: 'green', label: 'Green' },
-      { value: 'blue', label: 'Blue' },
-      { value: 'yellow', label: 'Yellow' }
-    ]
-  ],
-
-  // Submit Button
-  [
-    'submit',
-    'submitButton',
-    'Submit',
-    { required: true }, // Validation options
-    { id: 'submitBtn', class: 'form-submit-btn', style: 'margin-top: 1rem;' } // Attributes
-  ]
-];
-
-
-const formParams= {
-method: 'post', 
-action: 'submit.js', 
-id: 'myForm', 
-class: 'form',
-semantq: true,
-style: 'width: 100%; font-size: 14px;',
-//enctype: 'multipart/form-data', 
-//target: '_blank', 
-//nonvalidate: true, 
-//accept_charset: 'UTF-8', 
-  };
-
-
-
-
-
-// Instantiate the form
-const form = new Formique(formParams, formSchema);
-const formHTML = form.renderFormHTML();
-console.log(formHTML);
-
-*/
-
-
-
-
-
-const formParams= {
-method: 'post', 
-action: 'submit.js', 
-  };
-
-
-const formSchema=[ 
-
-  ['text','name','Enter Your Name',{required: true},{},''],
-
-  [
-    'dynamicSingleSelect',
-    'location',
-    'Country & State',
-    { required: true },
-    {},
-    '',
-        [
-      {
-        id: 'usa',
-        label: 'USA',
-        options: [
-          { value: 'california', label: 'California' },
-          { value: 'new york', label: 'New York' },
-          { value: 'texas', label: 'Texas' }
-        ]
-      },
-      {
-        id: 'canada',
-        label: 'Canada',
-        options: [
-          { value: 'ontario', label: 'Ontario' },
-          { value: 'quebec', label: 'Quebec' },
-          { value: 'british-columbia', label: 'British Columbia', selected: true }
-        ]
-      }
-    ]
-
-],
-
-];
-
-const formSettings={
-  requiredFieldIndicator: true,
-  framework: 'semantq',
-  placeholders: true,
-}
-
-// Instantiate the form
-const form = new Formique(formParams, formSchema, formSettings);
-const formHTML = form.renderFormHTML();
-//console.log(formHTML);
 
 
 
