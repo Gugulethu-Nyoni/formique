@@ -44,4 +44,8 @@ export default {
       extract: 'dist/css/formique.css', // Extract CSS to the specified path
     }),
   ],
+
+  treeshake: {
+    moduleSideEffects: false // Ensure all code is included if needed
+  }
 };

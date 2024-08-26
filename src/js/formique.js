@@ -1,5 +1,9 @@
-// Base class for form rendering
 import '../css/formique.css'; // Ensure this line is present
+//import { handleDynamicSingleSelect } from './handlerDynamicSingleSelect.js';
+//import './handlerDynamicSingleSelect.js';
+
+
+// Base class for form rendering
 
 class FormBuilder 
 {
@@ -139,6 +143,8 @@ renderForm() {
         return this.renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'multipleSelect':
         return this.renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
+      case 'dynamicSingleSelect':
+       return this.renderDynamicSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
       case 'submit':
         return this.renderSubmitButton(type, name, label, attributes);
       default:
@@ -292,8 +298,10 @@ const framework = this.formSettings?.framework || false;
     return `<input\n${attributes}\n/>`;
   });
 
+
+  this.formMarkUp +=formattedHtml;
   
-  return formattedHtml;
+  //return formattedHtml;
 }
 
 
@@ -432,9 +440,9 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
   
 
-  //this.formMarkUp += formattedHtml;
+  this.formMarkUp += formattedHtml;
 
-  return formattedHtml;
+  //return formattedHtml;
   //return this.formMarkUp;
   //console.log(this.formMarkUp);
 }
@@ -570,7 +578,8 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
   
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -702,7 +711,8 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -959,7 +969,8 @@ renderDateField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -1079,7 +1090,8 @@ renderTimeField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -1199,7 +1211,8 @@ renderDateTimeField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -1323,7 +1336,8 @@ renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -1443,7 +1457,8 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -1559,7 +1574,8 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -1674,7 +1690,8 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -1783,7 +1800,8 @@ renderColorField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -1892,7 +1910,8 @@ renderFileField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -2003,7 +2022,8 @@ renderHiddenField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -2105,7 +2125,8 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -2299,7 +2320,8 @@ renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -2417,7 +2439,8 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
         return `\n${match}\n`;
     }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-    return formattedHtml;
+    //return formattedHtml;
+    this.formMarkUp +=formattedHtml;
 }
 
 
@@ -2524,12 +2547,39 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
 
-renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options) {
+/* DYNAMIC SINGLE SELECT BLOCK */
+
+// Function to render the dynamic select field and update based on user selection
+renderDynamicSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options) {
+  
+// Step 1: Transform the data into an array of objects
+const mainCategoryOptions = options.flat().map(item => {
+  // Check if any option has selected: true
+  const selected = item.options.some(option => option.selected === true);
+
+  // Create a transformed object
+  return {
+    value: item.id,
+    label: item.label,
+    ...(selected && { selected: true }) // Conditionally add selected: true
+  };
+});
+
+const subCategoriesOptions=options;
+const mode='dynamicSingleSelect';
+this.renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, mainCategoryOptions, subCategoriesOptions, mode);
+
+}
+
+
+renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options, subCategoriesOptions, mode) {
+
     // Define valid validation attributes for select fields
     const selectValidationAttributes = ['required'];
 
@@ -2596,6 +2646,10 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
 
     let inputClass = attributes.class || this.inputClass;
 
+  
+
+    const onchangeAttr = (mode === 'dynamicSingleSelect' && subCategoriesOptions) ? ' onchange="handleDynamicSingleSelect(this.value,id)"' : '';
+
     // Construct the final HTML string
     let formHTML = `
     <fieldset class="${this.selectGroupClass}">
@@ -2609,6 +2663,7 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
             class="${inputClass}"
             ${additionalAttrs}
             ${validationAttrs}
+            ${onchangeAttr} 
         >
             ${selectHTML}
         </select>
@@ -2629,9 +2684,102 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
         return `\n${match}\n`;
     }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-    return formattedHtml;
+    //console.log(formattedHtml);
+    this.formMarkUp+=formattedHtml;
+    //return formattedHtml;
+
+
+    /* dynamicSingleSelect */
+
+if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
+
+
+// Find the target div with id "formique"
+const targetDiv = document.getElementById('formique');
+
+let categoryId = attributes.id || name;
+
+
+if (targetDiv) {
+  // Create a script element
+  const scriptElement = document.createElement('script');
+  scriptElement.textContent = `
+  window.handleDynamicSingleSelect = function(category, fieldsetid) {
+    console.log("HERE", fieldsetid);
+
+    // Hide all subcategory fields
+    document.querySelectorAll(\`[class*="\${fieldsetid}"]\`).forEach(div => {
+      div.style.display = "none";
+    });
+
+    // Show the selected category
+    const selectedCategoryFieldset = document.getElementById(category + '-options');
+    if (selectedCategoryFieldset) {
+      selectedCategoryFieldset.style.display = "block";
+    }
+  }
+`;
+
+  // Append the script element to the target div
+  targetDiv.appendChild(scriptElement);
+} else {
+  console.error('Target div with id "formique" not found.');
 }
 
+subCategoriesOptions.forEach(subCategory => {
+  const { id, label, options } = subCategory;
+
+  // Build the select options HTML
+  const selectHTML = options.map(option => {
+    const isSelected = option.selected ? ' selected' : '';
+    return `
+      <option value="${option.value}"${isSelected}>${option.label}</option>
+    `;
+  }).join('');
+
+
+  // Create the HTML for the fieldset and select elements
+  let formHTML = `
+    <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}-options" style="display: none;">
+        <label for="${id}">${label} Options
+            ${this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+        </label>
+        <select name="${id}"
+            ${bindingDirective}
+            ${dimensionAttrs}
+            id="${id}"
+            class="${inputClass}"
+            ${additionalAttrs}
+            ${validationAttrs}
+        >
+            <option value="">Choose an option</option>
+            ${selectHTML}
+        </select>
+    </fieldset>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Apply vertical layout to the <select> element and its children
+  formHTML = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
+  });
+
+  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+  formHTML = formHTML.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+    // Ensure <fieldset> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  // Append the generated HTML to formMarkUp
+  this.formMarkUp += formHTML;
+
+  //return formHTML;
+});
+
+
+}
+}
 
 
 
@@ -2740,8 +2888,19 @@ renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
+
+
+/* DYNAMIC SINGLE SELECT BLOCK */
+
+
+
+
+
+
+/* END DYNAMIC SINGLE SELECT BLOCK */
 
 
 
@@ -2788,7 +2947,8 @@ renderSubmitButton(type, name, label, attributes) {
 
   let formattedHtml = formHTML; 
 
-  return formattedHtml;
+  //return formattedHtml;
+  this.formMarkUp +=formattedHtml;
 }
 
 
@@ -2798,13 +2958,15 @@ renderSubmitButton(type, name, label, attributes) {
  renderFormHTML () {
 
 this.formMarkUp+= '</form>'; 
+console.log(this.formMarkUp);
+
+
 const formContainer = document.getElementById('formique');
 if (!formContainer) {
   console.error('Error: formContainer not found. Please ensure an element with id "formique" exists in the HTML.');
 } else {
   formContainer.innerHTML = this.formMarkUp;
 }
-
 
 //return this.formMarkUp;
 
@@ -2817,11 +2979,29 @@ if (!formContainer) {
 // no renderMethod below here
 }
 
+/*
+function handleDynamicSingleSelect(category) {
+
+  if (category === 'formique-activator') return; 
+  // Hide all subcategory divs
+  document.querySelectorAll('[id$="-options"]').forEach(div => {
+    div.style.display = "none";
+  });
+
+  // Show the selected category
+  const selectedCategoryFieldset = document.getElementById(`${category}-options`);
+  if (selectedCategoryFieldset) {
+    selectedCategoryFieldset.style.display = "block";
+  }
+}
 
 
+handleDynamicSingleSelect('formique-activator');
+
+*/
 
 export default Formique;
-
+//export { handleDynamicSingleSelect };
 
 
 
@@ -2933,6 +3113,87 @@ const formSchema = [
     { id: 'submitBtn', class: 'form-submit-btn', style: 'margin-top: 1rem;' }
   ],
 
+
+[
+    'dynamicSingleSelect',
+    'location',
+    'Country & State',
+    { required: true },
+    {},
+    '',
+    [
+        {
+            // Key or identifier for this dynamic select input
+            key: 'country',  // Example key for the dynamic select (e.g., 'country')
+
+            // Primary select options
+            options: [
+                {
+                    value: 'usa',
+                    label: 'USA',
+                    dynamic: [
+                        {
+                            label: 'States',
+                            options: [
+                                { value: 'ca', label: 'California' },
+                                { value: 'ny', label: 'New York' },
+                                { value: 'tx', label: 'Texas' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    value: 'canada',
+                    label: 'Canada',
+                    dynamic: [
+                        {
+                            label: 'Provinces',
+                            options: [
+                                { value: 'on', label: 'Ontario' },
+                                { value: 'qc', label: 'Quebec' },
+                                { value: 'bc', label: 'British Columbia' }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            key: 'category',  // Example key for another dynamic select
+            options: [
+                {
+                    value: 'technology',
+                    label: 'Technology',
+                    dynamic: [
+                        {
+                            label: 'Tech Fields',
+                            options: [
+                                { value: 'ai', label: 'Artificial Intelligence' },
+                                { value: 'ml', label: 'Machine Learning' },
+                                { value: 'cyber', label: 'Cybersecurity' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    value: 'health',
+                    label: 'Health',
+                    dynamic: [
+                        {
+                            label: 'Health Areas',
+                            options: [
+                                { value: 'nutrition', label: 'Nutrition' },
+                                { value: 'fitness', label: 'Fitness' },
+                                { value: 'mental', label: 'Mental Health' }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        // Add more dynamic select fields as needed
+    ]
+],
 
 
 
@@ -3062,6 +3323,63 @@ const formHTML = form.renderFormHTML();
 console.log(formHTML);
 
 */
+
+
+
+
+
+const formParams= {
+method: 'post', 
+action: 'submit.js', 
+  };
+
+
+const formSchema=[ 
+
+  ['text','name','Enter Your Name',{required: true},{},''],
+
+  [
+    'dynamicSingleSelect',
+    'location',
+    'Country & State',
+    { required: true },
+    {},
+    '',
+        [
+      {
+        id: 'usa',
+        label: 'USA',
+        options: [
+          { value: 'california', label: 'California' },
+          { value: 'new york', label: 'New York' },
+          { value: 'texas', label: 'Texas' }
+        ]
+      },
+      {
+        id: 'canada',
+        label: 'Canada',
+        options: [
+          { value: 'ontario', label: 'Ontario' },
+          { value: 'quebec', label: 'Quebec' },
+          { value: 'british-columbia', label: 'British Columbia', selected: true }
+        ]
+      }
+    ]
+
+],
+
+];
+
+const formSettings={
+  requiredFieldIndicator: true,
+  framework: 'semantq',
+  placeholders: true,
+}
+
+// Instantiate the form
+const form = new Formique(formParams, formSchema, formSettings);
+const formHTML = form.renderFormHTML();
+//console.log(formHTML);
 
 
 
