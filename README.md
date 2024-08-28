@@ -162,6 +162,21 @@ There are two ways to install and use Formique in your project:
 Alternatively, you can also define your container element with a different ID value instead of the default 'formique'. To do this, set containerId: 'someelementid' in the formSettings object.
 2. Define your form parameters (formParams), form schema (formSchema) and then initialize Formique in script which should go below this script tag: 
 
+## Example:
+
+```javascript
+const formSettings={
+  requiredFieldIndicator: true,
+  framework: 'semantq',
+  placeholders: true,
+  containerid:'form-div'
+}
+
+
+const form = new Formique(formParams, formSchema, formSettings);
+const formHTML = form.renderFormHTML();
+```
+
 
 ```html
     <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
@@ -172,7 +187,6 @@ Alternatively, you can also define your container element with a different ID va
             action: 'submit.js',
             id: 'myForm',
             class: 'form',
-            semantq: true,
             style: 'width: 100%; font-size: 14px;'
         };
 
