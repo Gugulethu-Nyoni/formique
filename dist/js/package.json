@@ -1,14 +1,20 @@
 {
   "name": "formique",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Formique Declarative Form Syntax JavaScript Library",
-  "main": "dist/formique.umd.js",
-  "module": "dist/formique.esm.js",
+  "type": "module",
   "exports": {
-    ".": "./dist/formique.esm.js"
+    ".": "./formique.mjs"
   },
+  "module": "./formique.mjs",
+  "unpkg": "./formique.umd.js",
+  "main": "./formique.cjs.js",
+  "browser": "./formique.global.js",
   "files": [
-    "dist/*",
+    "formique.cjs.js",
+    "formique.mjs",
+    "formique.umd.js",
+    "formique.global.js",
     "README.md"
   ],
   "keywords": [],

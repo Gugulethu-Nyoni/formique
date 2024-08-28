@@ -60,6 +60,7 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 - Radio: ```html <input type="radio"> ```
 - Checkbox: ```html <input type="checkbox"> ```
 - Select (Single & Multiple): ```html <select> ```
+- Dynamic Single Select (for displaying single select drop sub categories based on selected single select category e.g. if you want to display a dynamic drop down of states when a country is selected from a countries drop down): ```html <select> ```
 - Submit: ```html <input type="submit"> ```
 
 
@@ -199,10 +200,10 @@ There are two ways to install and use Formique in your project:
         ];
 
 
-       (function(formParams, formSchema) {
+       
         const form = new Formique(formParams, formSchema);
         const formHTML = form.renderFormHTML();
-        })(formParams, formSchema);
+        
 
     </script> 
 ```

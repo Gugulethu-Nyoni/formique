@@ -2647,8 +2647,6 @@ renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, 
 
     let inputClass = attributes.class || this.inputClass;
 
-  
-
     const onchangeAttr = (mode === 'dynamicSingleSelect' && subCategoriesOptions) ? ' onchange="handleDynamicSingleSelect(this.value,id)"' : '';
     
     let labelDisplay;
