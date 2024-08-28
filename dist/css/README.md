@@ -1,6 +1,6 @@
 # Formique
 
-<img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/formique_screenshot.png" alt="Formiqu Screenshot">
+<img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/formique_screenshot.png" alt="Formique Screenshot">
 
 
 Formique is a lightweight, declarative JavaScript syntax library for generating WCAG accessibility and usability compliant forms. The library is suited for vanilla js and Semantq JS framework. Formique simplifies the process of using JavaScript to create and manage forms with a variety of input types, built-in validation, and customizable attributes and styling. 
@@ -60,6 +60,7 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 - Radio: ```html <input type="radio"> ```
 - Checkbox: ```html <input type="checkbox"> ```
 - Select (Single & Multiple): ```html <select> ```
+- Dynamic Single Select: Displays a single-select dropdown of subcategories based on a selected category. For example, it dynamically shows a dropdown of states when a country is selected from a list of countries: ```html <select> ```
 - Submit: ```html <input type="submit"> ```
 
 
@@ -199,10 +200,10 @@ There are two ways to install and use Formique in your project:
         ];
 
 
-       (function(formParams, formSchema) {
+       
         const form = new Formique(formParams, formSchema);
         const formHTML = form.renderFormHTML();
-        })(formParams, formSchema);
+        
 
     </script> 
 ```
