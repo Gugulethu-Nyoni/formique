@@ -159,7 +159,7 @@ There are two ways to install and use Formique in your project:
 <div id="formique"></div>
 ```
 
-
+Alternatively, you can also define your container element with a different ID value instead of the default 'formique'. To do this, set containerId: 'someelementid' in the formSettings object.
 2. Define your form parameters (formParams), form schema (formSchema) and then initialize Formique in script which should go below this script tag: 
 
 
