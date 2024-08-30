@@ -100,7 +100,7 @@ renderForm() {
 }
 
 
-  renderField(type, name, label, validate, attributes, bindingSyntax, options) {
+renderField(type, name, label, validate, attributes, bindingSyntax, options) {
     switch (type) {
       case 'text':
         return this.renderTextField(type, name, label, validate, attributes, bindingSyntax);
@@ -2991,9 +2991,7 @@ renderSubmitButton(type, name, label, attributes) {
  renderFormHTML () {
 
 this.formMarkUp+= '</form>'; 
-console.log(this.formMarkUp);
-
-
+//console.log(this.formMarkUp);
 const formContainer = document.getElementById(this.containerId);
 if (!formContainer) {
   console.error('Error: formContainer not found. Please ensure an element with id "formique" exists in the HTML.');
