@@ -4,7 +4,11 @@
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/formique_screenshot.png" alt="Formique Screenshot"> 
 -->
 
-![Example Image](./formique_screenshot.png)
+![Formique ScreenShot](./formique_screenshot.png)
+
+
+![Formique Dynamic Select Animation](./dynamicSelect.gif)
+
 
 Formique is a lightweight, declarative JavaScript syntax library for generating WCAG accessibility and usability compliant forms. The library is suited for vanilla js and Semantq JS framework. Formique simplifies the process of using JavaScript to create and manage forms with a variety of input types, built-in validation, and customizable attributes and styling. 
 
