@@ -2715,20 +2715,25 @@ subCategoriesOptions.forEach(subCategory => {
     console.log('Label:', rawLabel); // Debug log
 
     if (rawLabel.includes('-')) {
-      subCategoryLabel = rawLabel.split('-')?.[1] + ' Option'; 
+      subCategoryLabel = rawLabel.split('-')?.[1] + ' Options'; 
     } else {
       subCategoryLabel = 'options';
     }
 
+    let optionsLabel;
+    if (subCategoryLabel !== 'options') {
+      optionsLabel = rawLabel.split('-')?.[1] + ' Option'; 
+    } else {
+    optionsLabel  = subCategoryLabel; 
+    }
 
-    
 
   // Create the HTML for the fieldset and select elements
   let formHTML = `
     <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}-options" style="display: none;">
         <legend> ${label} ${subCategoryLabel} ${this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
         </legend>
-        <label for="${id}"> Select ${label} ${subCategoryLabel}           
+        <label for="${id}"> Select ${label} ${optionsLabel}           
         </label>
         <select name="${id}"
             ${bindingDirective}
