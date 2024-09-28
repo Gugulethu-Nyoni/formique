@@ -2470,7 +2470,7 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
           />
           <label 
           for="${optionId}">
-            ${option.label} ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+            ${option.label}
           </label>
         </div>
       `;
@@ -2480,7 +2480,9 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
   // Construct the final HTML string
   let formHTML = `
     <fieldset class="${this.checkboxGroupClass}">
-      <legend>${label}</legend>
+      <legend>
+      ${label}  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+      </legend>
       ${optionsHTML}
     </fieldset>
   `.replace(/^\s*\n/gm, '').trim();
