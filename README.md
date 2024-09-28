@@ -9,11 +9,10 @@ Formique is Open-source &amp; MIT licensed.
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/formique_screenshot.png" alt="Formique Screenshot"> 
 -->
 
-![Formique ScreenShot](./formique_screenshot.png)
+![Formique ScreenShot](https://raw.githubusercontent.com/Gugulethu-Nyoni/formique/main/formique_screenshot.png)
 
 
-![Formique Dynamic Select Animation](./dynamicSelect.gif)
-
+![Formique Dynamic Select Animation](https://raw.githubusercontent.com/Gugulethu-Nyoni/formique/main/dynamicSelect.gif)
 
 
 ## Accessibility Compliance
