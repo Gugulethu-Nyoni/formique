@@ -1,7 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+
 /* Formique CSS */
 
 
-/* Dark Theme */
+/* Dark Theme 
 
 :root {
     --background-dark: #1e1e1e;
@@ -29,6 +31,21 @@
     --button-background: #ff4081;
     --button-background-hover: #e91e63;
 }
+
+/* Deep Blue, Purple, and Pink Theme */
+:root {
+    --background-dark: #1a1a40;
+    --background-light: #2b2b73;
+    --text-light: #f1f1f1;
+    --border-color: #4a4a91;
+    --input-background: #3a3a6b;
+    --input-background-disabled: #555587;
+    --label-color: #ff66b3;
+    --radio-checkbox-accent: #ff66b3;
+    --button-background: linear-gradient(45deg, #6a4fbf, #ff66b3);
+    --button-background-hover: linear-gradient(45deg, #4e2e8b, #ff4081);
+}
+
 
 /* Indigo Theme 
 :root {
@@ -60,7 +77,7 @@
 
 
 
-/* Dark and Orange 
+/* Dark and Orange
 
 :root {
     --background-dark: #121212;
@@ -75,21 +92,38 @@
     --button-background-hover: #e68900;
 }
 
-
 */
 
 
 
+/*
 
 #formique {
-    max-width: 600px; /* Limit the width for better mobile view */
+    max-width: 600px; 
     margin: auto;
     padding: 1rem;
-    background-color: var(--background-light); /* Slightly lighter dark background */
+    background-color: var(--background-light); 
     border-radius: 8px;
-    color: var(--text-light); /* Light text color for readability */
-    font-family: Arial, sans-serif; /* Font for the form */
+    color: var(--text-light); 
+    font-family: 'Montserrat', sans-serif;
 }
+
+
+*/
+
+
+#formique {
+    max-width: 600px; 
+    margin: auto;
+    padding: 1rem;
+    background: linear-gradient(45deg, #1a1a40, #6a4fbf, #ff66b3); /* Blue, purple, pink gradient */
+    border-radius: 8px;
+    color: #ffffff; /* White text color */
+    font-family: 'Montserrat', sans-serif;
+}
+
+
+
 
 /* Input Block Styling */
 #formique .input-block {
@@ -188,10 +222,10 @@
 /* Submit Button Styling */
 #formique .form-submit-btn {
     padding: 0.75rem 1.5rem;
-    border: none;
+    border: 1px solid var(--text-light);
     border-radius: 4px;
     background-color: var(--button-background); /* Orange background */
-    color: var(--background-dark); /* Dark text color for contrast */
+    color: var(--text-light);
     font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -199,6 +233,7 @@
 
 #formique .form-submit-btn:hover {
     background-color: var(--button-background-hover); /* Darker orange on hover */
+    color: var(--text-light);
 }
 
 /* General Styles */
