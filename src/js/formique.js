@@ -417,22 +417,6 @@ const emailInputValidationAttributes = [
 
 renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
   // Define valid attributes for the number input type
-  /*
-  const numberInputAttributes = [
-    'required',
-    'min',
-    'max',
-    'step',
-    'placeholder',
-    'readonly',
-    'disabled',
-    'size',
-    'autocomplete',
-    'inputmode',
-    'title',
-  ];
-  */
-
 
   const numberInputValidationAttributes = [
   'required',
@@ -2486,7 +2470,7 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
           />
           <label 
           for="${optionId}">
-            ${option.label}
+            ${option.label} ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
           </label>
         </div>
       `;
