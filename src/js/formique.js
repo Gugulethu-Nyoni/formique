@@ -288,33 +288,18 @@ const framework = this.formSettings?.framework || false;
 
 
 
-  // Specific rendering methods for each field type
+  // Specific rendering method for rendering the email field
 renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   // Define valid attributes for the email input type
-  /*
-  const emailInputAttributes = [
-    'required',
-    'minlength',
-    'maxlength',
-    'pattern',
-    'placeholder',
-    'readonly',
-    'disabled',
-    'size',
-    'autocomplete',
-    'spellcheck',
-    'inputmode',
-    'title',
-  ];
-  */
-
-  const emailInputValidationAttributes = [
-  'required',                          // Ensures the field is filled out
-  'pattern',  // Enforces a specific email format
-  'minlength',                     // Sets the minimum length of the input
-  'maxlength',                   // Sets the maximum length of the input
-  'multiple'                           // Allows multiple email addresses separated by commas
+  
+const emailInputValidationAttributes = [
+  'required',
+  'pattern',
+  'minlength',
+  'maxlength',
+  'multiple'
 ];
+
 
   // Construct validation attributes
   let validationAttrs = '';
@@ -380,8 +365,6 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
   }
 
 
-
-
   let inputClass; 
   if ('class' in attributes) {
     inputClass = attributes.class; 
@@ -391,7 +374,9 @@ renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+        ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+      </label>
       <input 
         type="${type}"
         name="${name}"
