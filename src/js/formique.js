@@ -385,7 +385,7 @@ const emailInputValidationAttributes = [
         class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
-        ${additionalAttrs.includes('placeholder') ? '' : (this.formSettings.placeholders ? `placeholder="${label}"` : '')}      />
+        ${additionalAttrs.includes('placeholder') ? '' : (this.formSettings.placeholders ? `placeholder="${label}"` : '')}
 
       />
     </div>
