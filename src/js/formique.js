@@ -163,25 +163,6 @@ renderField(type, name, label, validate, attributes, bindingSyntax, options) {
 
 // text field rendering
 renderTextField(type, name, label, validate, attributes, bindingSyntax) {
-
-  //console.log("here");
-  // Define valid attributes for different input types
-  /*
-  const textInputAttributes = [
-    'required',
-    'minlength',
-    'maxlength',
-    'pattern',
-    'placeholder',
-    'readonly',
-    'disabled',
-    'size',
-    'autocomplete',
-    'spellcheck',
-    'inputmode',
-    'title',
-  ];*/
-
   const textInputValidationAttributes = [
   'required',
   'minlength',
@@ -235,7 +216,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
 
-  // Determine if semantiq is true based on formParams
+  // Determine if semanti is true based on formSettings
 const framework = this.formSettings?.framework || false;
 
   // Construct additional attributes dynamically
@@ -301,7 +282,6 @@ const framework = this.formSettings?.framework || false;
 
 
   this.formMarkUp +=formattedHtml;
-  
   //return formattedHtml;
 }
 
@@ -3013,7 +2993,6 @@ if (!formContainer) {
 
 
 export default Formique;
-//export { handleDynamicSingleSelect };
 
 
 
