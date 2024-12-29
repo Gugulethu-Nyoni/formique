@@ -1,6 +1,6 @@
 # Formique
 
-Formique is a lightweight, declarative JavaScript syntax library for generating WCAG accessibility and usability compliant forms. The library is suited for vanilla js and Semantq JS framework. Formique simplifies the process of using JavaScript to create and manage forms with a variety of input types, built-in validation, and customizable attributes and styling. 
+FormiqueJS is a lightweight, declarative JavaScript syntax library for generating WCAG accessibility and usability compliant forms. The library is suited for vanilla js and Semantq JS framework. Formique simplifies the process of using JavaScript to create and manage forms with a variety of input types, built-in validation, and customizable attributes and styling. 
 
 Formique is Open-source &amp; MIT licensed.
 
@@ -9,15 +9,15 @@ Formique is Open-source &amp; MIT licensed.
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/formique_screenshot.png" alt="Formique Screenshot"> 
 -->
 
-![Formique ScreenShot](https://raw.githubusercontent.com/Gugulethu-Nyoni/formique/main/formique_screenshot.png)
+![FormiqueJS ScreenShot](https://raw.githubusercontent.com/Gugulethu-Nyoni/formique/main/formique_screenshot.png)
 
 
-![Formique Dynamic Select Animation](https://raw.githubusercontent.com/Gugulethu-Nyoni/formique/main/dynamicSelect.gif)
+![FormiqueJS Dynamic Select Animation](https://raw.githubusercontent.com/Gugulethu-Nyoni/formique/main/dynamicSelect.gif)
 
 
 ## Accessibility Compliance
 
-Formique is designed with a laser focus on usability and accessibility, ensuring that the generated form HTML markup meets the highest standards of web accessibility, such as the Web Content Accessibility Guidelines (WCAG) 2.1.
+FormiqueJS is designed with a laser focus on usability and accessibility, ensuring that the generated form HTML markup meets the highest standards of web accessibility, such as the Web Content Accessibility Guidelines (WCAG) 2.1.
 
 With minimal declarative form input definitions, Formique takes care of the rest to ensure the final markup is comprehensive enough to meet [official](https://www.w3.org/WAI/tutorials/forms/) usability and accessibility standards. 
 

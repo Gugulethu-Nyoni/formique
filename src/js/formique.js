@@ -99,6 +99,10 @@ renderForm() {
     this.formMarkUp += formHTML; 
 }
 
+class AbstractDateTypeFactory {
+  function createDateItem: DateType
+}
+
 
 renderField(type, name, label, validate, attributes, bindingSyntax, options) {
     switch (type) {
@@ -215,9 +219,8 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
-
   // Determine if semanti is true based on formSettings
-const framework = this.formSettings?.framework || false;
+  const framework = this.formSettings?.framework || false;
 
   // Construct additional attributes dynamically
   let additionalAttrs = '';
