@@ -1,12 +1,16 @@
 //import '../css/formique.css'; // Ensure this line is present
-//Base class for form rendering self 
+
+// Base class for form rendering self 
 
 class FormBuilder 
 {
   renderField(type, name, label, validate, attributes, options) {
     throw new Error('Method renderField must be implemented');
   }
+  
 }
+
+
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
@@ -22,16 +26,21 @@ class Formique extends FormBuilder {
     this.formParams=formParams;
     this.formMarkUp='';
     this.containerId = formSettings.containerId || 'formique';
+
+
     this.formSettings = {
       requiredFieldIndicator: true,
       placeholders: true,
       asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
       ...formSettings
     };
+
     
     if (Object.keys(this.formParams).length > 0) {
       this.formMarkUp += this.renderFormElement();
      }
+
+
       this.renderForm();
 
 
@@ -81,12 +90,11 @@ class Formique extends FormBuilder {
 renderForm() {
     // Process each field synchronously
     const formHTML = this.formSchema.map(field => {
-        const [type, name, label, validate, attributes = {}, options] = field;
+        const [type, name, label, validate, attributes = {},options] = field;
         return this.renderField(type, name, label, validate, attributes, options);
     }).join('');   
     this.formMarkUp += formHTML; 
 }
-
 
 
 renderField(type, name, label, validate, attributes, options) {
@@ -147,6 +155,7 @@ renderField(type, name, label, validate, attributes, options) {
   }
 
 
+ 
 
 
 // text field rendering
@@ -189,7 +198,10 @@ renderTextField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
+    if (attributes.binding) {
+
+  if (attributes.binding) {
+if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
   if (attributes.binding.startsWith('::') && name) {
@@ -199,6 +211,9 @@ renderTextField(type, name, label, validate, attributes) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
+  }
+
+}
 
 
   // Get the id from attributes or fall back to name
@@ -273,62 +288,62 @@ renderTextField(type, name, label, validate, attributes) {
 }
 
 
+renderNumberField(type, name, label, validate, attributes) {
+  // Define valid attributes for the number input type
 
-
-  // Specific rendering method for rendering the email field
-renderEmailField(type, name, label, validate, attributes) {
-  // Define valid attributes for the email input type
-  
-const emailInputValidationAttributes = [
+  const numberInputValidationAttributes = [
   'required',
-  'pattern',
-  'minlength',
-  'maxlength',
-  'multiple'
+  'min',
+  'max',
+  'step',
 ];
-
 
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (emailInputValidationAttributes.includes(key)) {
+      if (numberInputValidationAttributes.includes(key)) {
         if (typeof value === 'boolean' && value) {
           validationAttrs += `  ${key}\n`;
         } else {
           switch (key) {
-            case 'pattern':
-            case 'minlength':
-            case 'maxlength':
+            case 'min':
+            case 'max':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            case 'step':
               validationAttrs += `  ${key}="${value}"\n`;
               break;
             default:
-              if (!emailInputValidationAttributes.includes(key)) {
+              if (!numberInputValidationAttributes.includes(key)) {
               console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
                }
               break;
           }
         }
       } else {
-        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'email'.\x1b[0m`);
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
       }
     });
   }
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding) {
+  if (attributes.binding) {
+if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax.startsWith('::') && name) {
+  if (attributes.binding.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
+  }
+}
 
-  
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -353,7 +368,6 @@ const emailInputValidationAttributes = [
     }
   }
 
-
   let inputClass; 
   if ('class' in attributes) {
     inputClass = attributes.class; 
@@ -363,9 +377,7 @@ const emailInputValidationAttributes = [
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}"> 
-      <label for="${id}">${label}
-        ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-      </label>
+      <label for="${id}">${label}</label>
       <input 
         type="${type}"
         name="${name}"
@@ -374,8 +386,6 @@ const emailInputValidationAttributes = [
         class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
-        ${additionalAttrs.includes('placeholder') ? '' : (this.formSettings.placeholders ? `placeholder="${label}"` : '')}
-
       />
     </div>
   `.replace(/^\s*\n/gm, '').trim();
@@ -390,19 +400,256 @@ const emailInputValidationAttributes = [
   });
 
   // Ensure the <div> block starts on a new line and remove extra blank lines
-  
   formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
     // Ensure <div> starts on a new line
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
   
-
-  this.formMarkUp += formattedHtml;
-
   //return formattedHtml;
-  //return this.formMarkUp;
-  //console.log(this.formMarkUp);
+  this.formMarkUp +=formattedHtml;
 }
+
+
+
+
+renderSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions, mode) {
+
+    // Define valid validation attributes for select fields
+    const selectValidationAttributes = ['required'];
+
+    // Construct validation attributes
+    let validationAttrs = '';
+    if (validate) {
+        Object.entries(validate).forEach(([key, value]) => {
+            if (selectValidationAttributes.includes(key)) {
+                if (key === 'required') {
+                    validationAttrs += `${key} `;
+                }
+            } else {
+                console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
+            }
+        });
+    }
+
+    // Handle the binding syntax
+    let bindingDirective = '';
+    if (typeof bindingSyntax === 'string' && bindingSyntax.startsWith('::')) {
+        bindingDirective = ` bind:value="${name}" `;
+    }
+
+    // Define attributes for the select field
+    let id = attributes.id || name;
+    let dimensionAttrs = ''; // No dimension attributes applicable for select fields
+
+    // Handle additional attributes
+    let additionalAttrs = '';
+    for (const [key, value] of Object.entries(attributes)) {
+        if (key !== 'id' && key !== 'class' && value !== undefined) {
+            if (key.startsWith('on')) {
+                // Handle event attributes
+                const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+                additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+            } else {
+                // Handle boolean attributes
+                if (value === true) {
+                    additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+                } else if (value !== false) {
+                    // Convert underscores to hyphens and set the attribute
+                    additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+                }
+            }
+        }
+    }
+
+    // Construct select options HTML based on options
+    let selectHTML = '';
+    if (Array.isArray(options)) {
+        // Add a default option
+        selectHTML += `
+        <option value="">Choose an option</option>
+        `;
+
+        // Add the provided options
+        selectHTML += options.map((option) => {
+            const isSelected = option.selected ? ' selected' : '';
+            return `
+            <option value="${option.value}"${isSelected}>${option.label}</option>
+            `;
+        }).join('');
+    }
+
+    let inputClass = attributes.class || this.inputClass;
+
+    const onchangeAttr = (mode === 'dynamicSingleSelect' && subCategoriesOptions) ? ' onchange="handleDynamicSingleSelect(this.value,id)"' : '';
+    
+    let labelDisplay;
+    let rawLabel; 
+
+    if (mode === 'dynamicSingleSelect' && subCategoriesOptions) {
+      if (label.includes('-')) {
+        const [mainCategoryLabel] = label.split('-');
+        labelDisplay = mainCategoryLabel; 
+        rawLabel = label;
+      } else {
+        labelDisplay = label;
+        rawLabel = label;
+      }
+    } else {
+      labelDisplay = label;
+    }
+
+
+    // Construct the final HTML string
+    let formHTML = `
+    <fieldset class="${this.selectGroupClass}">
+        <legend>${labelDisplay} 
+            ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+        </legend>
+        <label for="${id}"> Select ${labelDisplay} 
+        <select name="${name}"
+            ${bindingDirective}
+            ${dimensionAttrs}
+            id="${id}"
+            class="${inputClass}"
+            ${additionalAttrs}
+            ${validationAttrs}
+            ${onchangeAttr} 
+        >
+            ${selectHTML}
+        </select>
+    </fieldset>
+`.replace(/^\s*\n/gm, '').trim();
+
+
+    // Apply vertical layout to the <select> element and its children
+    let formattedHtml = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+        // Reformat attributes into a vertical layout
+        const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+        return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
+    });
+
+    // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+    formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+        // Ensure <fieldset> starts on a new line
+        return `\n${match}\n`;
+    }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+    //console.log(formattedHtml);
+    this.formMarkUp+=formattedHtml;
+    //return formattedHtml;
+
+
+    /* dynamicSingleSelect */
+
+if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
+
+
+// Find the target div with id "formique"
+const targetDiv = document.getElementById('formique');
+
+let categoryId = attributes.id || name;
+
+
+if (targetDiv) {
+  // Create a script element
+  const scriptElement = document.createElement('script');
+  scriptElement.textContent = `
+  window.handleDynamicSingleSelect = function(category, fieldsetid) {
+    //console.log("HERE", fieldsetid);
+
+    // Hide all subcategory fields
+    document.querySelectorAll(\`[class*="\${fieldsetid}"]\`).forEach(div => {
+      div.style.display = "none";
+    });
+
+    // Show the selected category
+    const selectedCategoryFieldset = document.getElementById(category + '-options');
+    if (selectedCategoryFieldset) {
+      selectedCategoryFieldset.style.display = "block";
+    }
+  }
+`;
+
+  // Append the script element to the target div
+  targetDiv.appendChild(scriptElement);
+} else {
+  console.error('Target div with id "formique" not found.');
+}
+
+subCategoriesOptions.forEach(subCategory => {
+  const { id, label, options } = subCategory;
+
+  // Build the select options HTML
+  const selectHTML = options.map(option => {
+    const isSelected = option.selected ? ' selected' : '';
+    return `
+      <option value="${option.value}"${isSelected}>${option.label}</option>
+    `;
+  }).join('');
+
+
+    let subCategoryLabel; 
+    console.log('Label:', rawLabel); // Debug log
+
+    if (rawLabel.includes('-')) {
+      subCategoryLabel = rawLabel.split('-')?.[1] + ' Options'; 
+    } else {
+      subCategoryLabel = 'options';
+    }
+
+    let optionsLabel;
+    if (subCategoryLabel !== 'options') {
+      optionsLabel = rawLabel.split('-')?.[1] + ' Option'; 
+    } else {
+    optionsLabel  = subCategoryLabel; 
+    }
+
+
+  // Create the HTML for the fieldset and select elements
+  let formHTML = `
+    <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}-options" style="display: none;">
+        <legend> ${label} ${subCategoryLabel} ${this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+        </legend>
+        <label for="${id}"> Select ${label} ${optionsLabel}           
+        </label>
+        <select name="${id}"
+            ${bindingDirective}
+            ${dimensionAttrs}
+            id="${id}"
+            class="${inputClass}"
+            ${additionalAttrs}
+            ${validationAttrs}
+        >
+            <option value="">Choose an option</option>
+            ${selectHTML}
+        </select>
+    </fieldset>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Apply vertical layout to the <select> element and its children
+  formHTML = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+    // Reformat attributes into a vertical layout
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
+  });
+
+  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+  formHTML = formHTML.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+    // Ensure <fieldset> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  // Append the generated HTML to formMarkUp
+  this.formMarkUp += formHTML;
+
+  //return formHTML;
+});
+
+
+}
+}
+
+
 
 
 
@@ -446,7 +693,15 @@ action: 'submit.js',
 
   
 const formSchema=[ 
-  ['text','name','Enter Your Name',{required: true},{placeholder: 'Ibizo Lakho', binding: 'bind:value'},''],
+  ['text','name','Enter Your Name',{required: true},{placeholder: 'Ibizo Lakho', onclick:'trigger()', binding: 'bind:value'}],
+  ['singleSelect','gender','Enter Your Gender', {required: true}, {id: 'the-gender',dependents: ['age','pregnancyDetails']},
+    [
+      {value: 'female', label:'Female'},
+      {value: 'male', label: 'Male'}
+    ]
+  ],
+  ['number','age','Age', {required: true}, {dependsOn: 'gender', condition: (gender) => gender === 'Female', id: 'age'}],
+  ['text','pregnancyDetails','Pregnancy Details',{required: true},{dependsOn: 'gender', condition: (gender) => gender === 'Female'}]
 ];
 
 
