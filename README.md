@@ -4,7 +4,6 @@ FormiqueJS is a lightweight, declarative JavaScript syntax library for generatin
 
 Formique is Open-source &amp; MIT licensed.
 
-
 <!--
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/formique_screenshot.png" alt="Formique Screenshot"> 
 -->
@@ -15,7 +14,7 @@ Formique is Open-source &amp; MIT licensed.
 ![FormiqueJS Dynamic Select Animation](https://raw.githubusercontent.com/Gugulethu-Nyoni/formique/main/dynamicSelect.gif)
 
 
-## Accessibility Compliance
+## Accessibility Compliance - 
 
 FormiqueJS is designed with a laser focus on usability and accessibility, ensuring that the generated form HTML markup meets the highest standards of web accessibility, such as the Web Content Accessibility Guidelines (WCAG) 2.1.
 

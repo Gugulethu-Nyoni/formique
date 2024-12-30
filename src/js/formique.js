@@ -1,11 +1,10 @@
 import '../css/formique.css'; // Ensure this line is present
 
-
-// Base class for form rendering
+// Base class for form rendering self 
 
 class FormBuilder 
 {
-  renderField(type, name, label, validate, attributes, bindingSyntax, options) {
+  renderField(type, name, label, validate, attributes, options) {
     throw new Error('Method renderField must be implemented');
   }
   
@@ -35,8 +34,6 @@ class Formique extends FormBuilder {
       asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
       ...formSettings
     };
-
-
 
     
     if (Object.keys(this.formParams).length > 0) {
@@ -93,63 +90,59 @@ class Formique extends FormBuilder {
 renderForm() {
     // Process each field synchronously
     const formHTML = this.formSchema.map(field => {
-        const [type, name, label, validate, attributes = {}, bindingSyntax, options] = field;
-        return this.renderField(type, name, label, validate, attributes, bindingSyntax, options);
+        const [type, name, label, validate, attributes = {},options] = field;
+        return this.renderField(type, name, label, validate, attributes, options);
     }).join('');   
     this.formMarkUp += formHTML; 
 }
 
-class AbstractDateTypeFactory {
-  function createDateItem: DateType
-}
 
-
-renderField(type, name, label, validate, attributes, bindingSyntax, options) {
+renderField(type, name, label, validate, attributes, options) {
     switch (type) {
       case 'text':
-        return this.renderTextField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderTextField(type, name, label, validate, attributes);
       case 'email':
-        return this.renderEmailField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderEmailField(type, name, label, validate, attributes);
       case 'number':
-        return this.renderNumberField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderNumberField(type, name, label, validate, attributes);
       case 'password':
-        return this.renderPasswordField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderPasswordField(type, name, label, validate, attributes);
       case 'tel': // New case for tel field
-        return this.renderTelField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderTelField(type, name, label, validate, attributes);
       case 'date':
-        return this.renderDateField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderDateField(type, name, label, validate, attributes);
       case 'time':
-        return this.renderTimeField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderTimeField(type, name, label, validate, attributes);
       case 'datetime-local':
-        return this.renderDateTimeField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderDateTimeField(type, name, label, validate, attributes);
       case 'month':
-        return this.renderMonthField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderMonthField(type, name, label, validate, attributes);
       case 'week':
-        return this.renderWeekField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderWeekField(type, name, label, validate, attributes);
       case 'url':
-        return this.renderUrlField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderUrlField(type, name, label, validate, attributes);
       case 'search':
-        return this.renderSearchField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderSearchField(type, name, label, validate, attributes);
       case 'color':
-        return this.renderColorField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderColorField(type, name, label, validate, attributes);
       case 'checkbox':
-       return this.renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options);
+       return this.renderCheckboxField(type, name, label, validate, attributes, options);
       case 'radio':
-        return this.renderRadioField(type, name, label, validate, attributes, bindingSyntax, options);
+        return this.renderRadioField(type, name, label, validate, attributes, options);
       case 'file':
-        return this.renderFileField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderFileField(type, name, label, validate, attributes);
       case 'hidden':
-        return this.renderHiddenField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderHiddenField(type, name, label, validate, attributes);
       case 'image':
-        return this.renderImageField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderImageField(type, name, label, validate, attributes);
       case 'textarea':
-        return this.renderTextareaField(type, name, label, validate, attributes, bindingSyntax);
+        return this.renderTextareaField(type, name, label, validate, attributes);
       case 'singleSelect':
-        return this.renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
+        return this.renderSingleSelectField(type, name, label, validate, attributes, options);
       case 'multipleSelect':
-        return this.renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
+        return this.renderMultipleSelectField(type, name, label, validate, attributes, options);
       case 'dynamicSingleSelect':
-       return this.renderDynamicSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options);
+       return this.renderDynamicSingleSelectField(type, name, label, validate, attributes, options);
       case 'submit':
         return this.renderSubmitButton(type, name, label, attributes);
       default:
@@ -166,7 +159,7 @@ renderField(type, name, label, validate, attributes, bindingSyntax, options) {
 
 
 // text field rendering
-renderTextField(type, name, label, validate, attributes, bindingSyntax) {
+renderTextField(type, name, label, validate, attributes) {
   const textInputValidationAttributes = [
   'required',
   'minlength',
@@ -205,13 +198,13 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax.startsWith('::') && name) {
+  if (attributes.binding.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -292,7 +285,7 @@ renderTextField(type, name, label, validate, attributes, bindingSyntax) {
 
 
   // Specific rendering method for rendering the email field
-renderEmailField(type, name, label, validate, attributes, bindingSyntax) {
+renderEmailField(type, name, label, validate, attributes) {
   // Define valid attributes for the email input type
   
 const emailInputValidationAttributes = [
@@ -333,13 +326,13 @@ const emailInputValidationAttributes = [
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax.startsWith('::') && name) {
+  if (attributes.binding.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -420,7 +413,7 @@ const emailInputValidationAttributes = [
 
 
 
-renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
+renderNumberField(type, name, label, validate, attributes) {
   // Define valid attributes for the number input type
 
   const numberInputValidationAttributes = [
@@ -461,13 +454,13 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax.startsWith('::') && name) {
+  if (attributes.binding.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -540,7 +533,7 @@ renderNumberField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 // New method for rendering password fields
-renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
+renderPasswordField(type, name, label, validate, attributes) {
   // Define valid attributes for the password input type
   /*
   const passwordInputAttributes = [
@@ -595,13 +588,13 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax.startsWith('::') && name) {
+  if (attributes.binding.startsWith('::') && name) {
    bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -676,7 +669,7 @@ renderPasswordField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 // New method for rendering tel fields
-renderTelField(type, name, label, validate, attributes, bindingSyntax) {
+renderTelField(type, name, label, validate, attributes) {
   // Define valid attributes for the tel input type
   /*
   const telInputAttributes = [
@@ -732,13 +725,13 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax.startsWith('::') && name) {
+  if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -808,7 +801,7 @@ renderTelField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderDateField(type, name, label, validate, attributes, bindingSyntax) {
+renderDateField(type, name, label, validate, attributes) {
   // Define valid attributes for the date input type
   const dateInputAttributes = [
     'required',
@@ -853,13 +846,13 @@ renderDateField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax.startsWith('::') && name) {
+  if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -930,7 +923,7 @@ renderDateField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderTimeField(type, name, label, validate, attributes, bindingSyntax) {
+renderTimeField(type, name, label, validate, attributes) {
   // Define valid attributes for the time input type
   const timeInputAttributes = [
     'required',
@@ -974,13 +967,13 @@ renderTimeField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax.startsWith('::') && name) {
+  if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1052,7 +1045,7 @@ renderTimeField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderDateTimeField(type, name, label, validate, attributes, bindingSyntax) {
+renderDateTimeField(type, name, label, validate, attributes) {
   // Define valid attributes for the datetime input type
   const dateTimeInputAttributes = [
     'required',
@@ -1096,12 +1089,12 @@ renderDateTimeField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax.startsWith('::') && name) {
+  } if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1176,7 +1169,7 @@ renderDateTimeField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
+renderMonthField(type, name, label, validate, attributes) {
   // Define valid attributes for the month input type
   const monthInputAttributes = [
     'required',
@@ -1222,11 +1215,11 @@ renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax.startsWith('::') && name) {
+  } if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax && !name) {
+  } if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1297,7 +1290,7 @@ renderMonthField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
+renderWeekField(type, name, label, validate, attributes) {
   // Define valid attributes for the week input type
   const weekInputAttributes = [
     'required',
@@ -1343,11 +1336,11 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax.startsWith('::') && name) {
+  } if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax  && !name) {
+  } if (attributes.binding  && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1418,7 +1411,7 @@ renderWeekField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
+renderUrlField(type, name, label, validate, attributes) {
   // Define valid attributes for the URL input type
   const urlInputAttributes = [
     'required',
@@ -1460,11 +1453,11 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax.startsWith('::') && name) {
+  } if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax && !name) {
+  } if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1534,7 +1527,7 @@ renderUrlField(type, name, label, validate, attributes, bindingSyntax) {
 }
 
 
-renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
+renderSearchField(type, name, label, validate, attributes) {
   // Define valid attributes for the search input type
   const searchInputAttributes = [
     'required',
@@ -1576,11 +1569,11 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' && name) {
+  if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax.startsWith('::') && name) {
+  } if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax && !name) {
+  } if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1650,7 +1643,7 @@ renderSearchField(type, name, label, validate, attributes, bindingSyntax) {
 }
 
 
-renderColorField(type, name, label, validate, attributes, bindingSyntax) {
+renderColorField(type, name, label, validate, attributes) {
   // Define valid attributes for the color input type
   const colorInputAttributes = [
     'required',
@@ -1685,12 +1678,12 @@ renderColorField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
+  if (attributes.binding === 'bind:value') {
     bindingDirective = `  bind:value="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::') && name) {
+  } else if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1761,7 +1754,7 @@ renderColorField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderFileField(type, name, label, validate, attributes, bindingSyntax) {
+renderFileField(type, name, label, validate, attributes) {
   // Define valid attributes for the file input type
   const fileInputAttributes = [
     'required',
@@ -1795,12 +1788,12 @@ renderFileField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
+  if (attributes.binding === 'bind:value') {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax.startsWith('::') && name) {
+  } if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1873,7 +1866,7 @@ renderFileField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderHiddenField(type, name, label, validate, attributes, bindingSyntax) {
+renderHiddenField(type, name, label, validate, attributes) {
   // Define valid attributes for the hidden input type
   const validAttributes = [
     'type',
@@ -1906,12 +1899,12 @@ renderHiddenField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
+  if (attributes.binding === 'bind:value') {
     bindingDirective = `  bind:value="${name}"\n`;
-  } if (bindingSyntax.startsWith('::') && name) {
+  } if (attributes.binding.startsWith('::') && name) {
     bindingDirective = `  bind:value="${name}"\n`;
   }
-  if (bindingSyntax && !name) {
+  if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1983,7 +1976,7 @@ renderHiddenField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderImageField(type, name, label, validate, attributes, bindingSyntax) {
+renderImageField(type, name, label, validate, attributes) {
   // Define valid validation attributes for image upload
   const imageUploadValidationAttributes = [
     'accept',
@@ -2014,9 +2007,9 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value') {
+  if (attributes.binding === 'bind:value') {
     bindingDirective = ` bind:value="${name}"`;
-  } else if (bindingSyntax.startsWith('::')) {
+  } else if (attributes.binding.startsWith('::')) {
     bindingDirective = ` bind:value="${name}"`;
   }
 
@@ -2087,7 +2080,7 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderImageField(type, name, label, validate, attributes, bindingSyntax) {
+renderImageField(type, name, label, validate, attributes) {
   // Define valid validation attributes for image upload
   const imageUploadValidationAttributes = [
     'accept',
@@ -2112,7 +2105,7 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::')) {
+  if (attributes.binding === 'bind:value' || bindingSyntax.startsWith('::')) {
     bindingDirective = `bind:value="${name}"\n`;
   }
 
@@ -2179,7 +2172,7 @@ renderImageField(type, name, label, validate, attributes, bindingSyntax) {
   return formattedHtml;
 }
 
-renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
+renderTextareaField(type, name, label, validate, attributes) {
   // Define valid validation attributes for textarea
   const textareaValidationAttributes = [
     'required',
@@ -2211,7 +2204,7 @@ renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:value' || bindingSyntax.startsWith('::')) {
+  if (attributes.binding === 'bind:value' || bindingSyntax.startsWith('::')) {
     bindingDirective = `bind:value="${name}"\n`;
   }
 
@@ -2282,7 +2275,7 @@ renderTextareaField(type, name, label, validate, attributes, bindingSyntax) {
 
 
 
-renderRadioField(type, name, label, validate, attributes, bindingSyntax, options) {
+renderRadioField(type, name, label, validate, attributes, options) {
     // Define valid validation attributes for radio fields
     const radioValidationAttributes = ['required'];
     
@@ -2314,11 +2307,11 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
 
     // Handle the binding syntax
     let bindingDirective = '';
-    if (bindingSyntax === 'bind:value' && name) {
+    if (attributes.binding === 'bind:value' && name) {
         bindingDirective = ` bind:value="${name}"\n`;
-    } else if (bindingSyntax.startsWith('::') && name) {
+    } else if (attributes.binding.startsWith('::') && name) {
         bindingDirective = ` bind:value="${name}"\n`;
-    } else if (bindingSyntax && !name) {
+    } else if (attributes.binding && !name) {
         console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
         return;
     }
@@ -2402,7 +2395,7 @@ renderRadioField(type, name, label, validate, attributes, bindingSyntax, options
 }
 
 
-renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, options) {
+renderCheckboxField(type, name, label, validate, attributes, options) {
   // Define valid validation attributes for checkbox fields
   const checkboxValidationAttributes = ['required'];
 
@@ -2422,9 +2415,9 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (bindingSyntax === 'bind:checked') {
+  if (attributes.binding === 'bind:checked') {
     bindingDirective = ` bind:checked="${name}"\n`;
-  } else if (bindingSyntax.startsWith('::')) {
+  } else if (attributes.binding.startsWith('::')) {
     bindingDirective = ` bind:checked="${name}"\n`;
   }
 
@@ -2516,7 +2509,7 @@ renderCheckboxField(type, name, label, validate, attributes, bindingSyntax, opti
 /* DYNAMIC SINGLE SELECT BLOCK */
 
 // Function to render the dynamic select field and update based on user selection
-renderDynamicSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options) {
+renderDynamicSingleSelectField(type, name, label, validate, attributes, options) {
   
 // Step 1: Transform the data into an array of objects
 const mainCategoryOptions = options.flat().map(item => {
@@ -2533,12 +2526,12 @@ const mainCategoryOptions = options.flat().map(item => {
 
 const subCategoriesOptions=options;
 const mode='dynamicSingleSelect';
-this.renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, mainCategoryOptions, subCategoriesOptions, mode);
+this.renderSingleSelectField(type, name, label, validate, attributes, mainCategoryOptions, subCategoriesOptions, mode);
 
 }
 
 
-renderSingleSelectField(type, name, label, validate, attributes, bindingSyntax, options, subCategoriesOptions, mode) {
+renderSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions, mode) {
 
     // Define valid validation attributes for select fields
     const selectValidationAttributes = ['required'];
@@ -2777,7 +2770,7 @@ subCategoriesOptions.forEach(subCategory => {
 
 
 
-renderMultipleSelectField(type, name, label, validate, attributes, bindingSyntax, options) {
+renderMultipleSelectField(type, name, label, validate, attributes, options) {
   // Define valid validation attributes for multiple select fields
   const selectValidationAttributes = ['required', 'minlength', 'maxlength'];
 
