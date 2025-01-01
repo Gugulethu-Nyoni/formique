@@ -26,6 +26,9 @@ class Formique extends FormBuilder {
     this.formParams=formParams;
     this.formMarkUp='';
     this.containerId = formSettings.containerId || 'formique';
+    this.dependencyGraph = {};
+    this.observers = {};
+    this.initDependencyGraph();
 
 
     this.formSettings = {
@@ -45,6 +48,102 @@ class Formique extends FormBuilder {
 
 
     }
+
+
+
+    initDependencyGraph() {
+  this.formSchema.forEach((field) => {
+    const [type, name, label, validate, attributes = {}] = field;
+    const fieldId = attributes.id || name; // Use id if present, fallback to name
+
+    // Initialize the dependency graph for the parent field
+    if (!this.dependencyGraph[fieldId]) {
+      this.dependencyGraph[fieldId] = [{ state: null }];
+    }
+
+    // Process dependents
+    if (attributes.dependsOn) {
+      const parentField = attributes.dependsOn;
+      const conditionString = attributes.condition;
+
+      // Convert condition string to a dynamic function
+      const conditionFn = (value) => value === conditionString;
+
+      if (!this.dependencyGraph[parentField]) {
+        this.dependencyGraph[parentField] = [{ state: null }];
+      }
+
+      this.dependencyGraph[parentField].push({
+        dependent: fieldId,
+        condition: conditionFn,
+      });
+
+      // Attach input change listener for parent field
+      this.attachInputChangeListener(parentField);
+    }
+  });
+}
+
+/*
+// Attach event listeners dynamically to parent fields
+attachInputChangeListener(parentFieldId) {
+  const fieldElement = document.getElementById(parentFieldId);
+
+  // Ensure the field exists in the DOM before adding an event listener
+  if (fieldElement) {
+    fieldElement.addEventListener('change', (event) => {
+      this.handleInputChange(event);
+    });
+  }
+}
+
+
+// Handle input change and notify observers
+handleInputChange(event) {
+  const { name, value } = event.target;
+  this.notifyObservers(name, value);
+}
+
+
+
+  attachInputChangeListener(parentField) {
+  const fieldElement = document.getElementById(parentField);
+
+  // Ensure the field exists in the DOM before adding an event listener
+  if (fieldElement) {
+    fieldElement.addEventListener('change', (event) => {
+      this.handleInputChange(event);
+    });
+  }
+}
+
+
+  addObserver(parent, dependent, condition) {
+    if (!this.observers[parent]) {
+      this.observers[parent] = [];
+    }
+    this.observers[parent].push({ dependent, condition });
+  }
+
+  notifyObservers(parent, value) {
+    if (this.observers[parent]) {
+      this.observers[parent].forEach(({ dependent, condition }) => {
+        const shouldDisplay = condition(value);
+        const fieldElement = document.getElementById(dependent);
+        if (fieldElement) {
+          fieldElement.style.display = shouldDisplay ? "block" : "none";
+        }
+      });
+    }
+  }
+
+
+handleInputChange(event) {
+    const { name, value } = event.target;
+    this.notifyObservers(name, value);
+  }
+
+*/
 
 
 // renderFormElement method
@@ -92,12 +191,25 @@ renderForm() {
     const formHTML = this.formSchema.map(field => {
         const [type, name, label, validate, attributes = {},options] = field;
         return this.renderField(type, name, label, validate, attributes, options);
-    }).join('');   
+    }).join('');
+    //console.log("HERE",formHTML);
     this.formMarkUp += formHTML; 
 }
 
 
 renderField(type, name, label, validate, attributes, options) {
+
+/* let's check for dependency and handle it */
+
+  if (attributes.dependents) {
+    attributes.dependents.forEach((dependent) => {
+      this.addObserver(name, dependent, attributes.condition || (() => true));
+    });
+  }
+
+
+    console.log("graph",this.dependencyGraph);
+
     switch (type) {
       case 'text':
         return this.renderTextField(type, name, label, validate, attributes);
@@ -222,30 +334,39 @@ if (attributes.binding === 'bind:value' && name) {
   const framework = this.formSettings?.framework || false;
 
   // Construct additional attributes dynamically
-  let additionalAttrs = '';
-  for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
-        // Handle event attributes
-        if (framework === 'semantq') {
-          const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-          additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
-        } else {
-          // Add parentheses if not present
-          const eventValue = value.endsWith('()') ? value : `${value}()`;
-          additionalAttrs += `  ${key}="${eventValue}"\n`;
-        }
+  // Construct additional attributes dynamically
+let additionalAttrs = '';
+const excludedAttributes = ['dependsOn', 'condition']; // Add attributes to exclude
+
+for (const [key, value] of Object.entries(attributes)) {
+  if (
+    key !== 'id' &&
+    key !== 'class' &&
+    value !== undefined &&
+    !excludedAttributes.includes(key) // Exclude specific attributes
+  ) {
+    if (key.startsWith('on')) {
+      // Handle event attributes
+      if (framework === 'semantq') {
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
       } else {
-        // Handle boolean attributes
-        if (value === true) {
-          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
-        } else if (value !== false) {
-          // Convert underscores to hyphens and set the attribute
-          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
-        }
+        // Add parentheses if not present
+        const eventValue = value.endsWith('()') ? value : `${value}()`;
+        additionalAttrs += `  ${key}="${eventValue}"\n`;
+      }
+    } else {
+      // Handle boolean attributes
+      if (value === true) {
+        additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+      } else if (value !== false) {
+        // Convert underscores to hyphens and set the attribute
+        additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
       }
     }
   }
+}
+
 
 
 
@@ -349,24 +470,39 @@ if (attributes.binding === 'bind:value' && name) {
   let id = attributes.id || name;
 
   // Construct additional attributes dynamically
-  let additionalAttrs = '';
-  for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
-        // Handle event attributes
+  // Construct additional attributes dynamically
+let additionalAttrs = '';
+const excludedAttributes = ['dependsOn', 'condition']; // Add attributes to exclude
+
+for (const [key, value] of Object.entries(attributes)) {
+  if (
+    key !== 'id' &&
+    key !== 'class' &&
+    value !== undefined &&
+    !excludedAttributes.includes(key) // Exclude specific attributes
+  ) {
+    if (key.startsWith('on')) {
+      // Handle event attributes
+      if (framework === 'semantq') {
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
       } else {
-        // Handle boolean attributes
-        if (value === true) {
-          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
-        } else if (value !== false) {
-          // Convert underscores to hyphens and set the attribute
-          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
-        }
+        // Add parentheses if not present
+        const eventValue = value.endsWith('()') ? value : `${value}()`;
+        additionalAttrs += `  ${key}="${eventValue}"\n`;
+      }
+    } else {
+      // Handle boolean attributes
+      if (value === true) {
+        additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+      } else if (value !== false) {
+        // Convert underscores to hyphens and set the attribute
+        additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
       }
     }
   }
+}
+
 
   let inputClass; 
   if ('class' in attributes) {
@@ -442,24 +578,39 @@ renderSingleSelectField(type, name, label, validate, attributes, options, subCat
     let dimensionAttrs = ''; // No dimension attributes applicable for select fields
 
     // Handle additional attributes
-    let additionalAttrs = '';
-    for (const [key, value] of Object.entries(attributes)) {
-        if (key !== 'id' && key !== 'class' && value !== undefined) {
-            if (key.startsWith('on')) {
-                // Handle event attributes
-                const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-                additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
-            } else {
-                // Handle boolean attributes
-                if (value === true) {
-                    additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
-                } else if (value !== false) {
-                    // Convert underscores to hyphens and set the attribute
-                    additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
-                }
-            }
-        }
+    // Construct additional attributes dynamically
+let additionalAttrs = '';
+const excludedAttributes = ['dependsOn', 'condition']; // Add attributes to exclude
+
+for (const [key, value] of Object.entries(attributes)) {
+  if (
+    key !== 'id' &&
+    key !== 'class' &&
+    value !== undefined &&
+    !excludedAttributes.includes(key) // Exclude specific attributes
+  ) {
+    if (key.startsWith('on')) {
+      // Handle event attributes
+      if (framework === 'semantq') {
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        // Add parentheses if not present
+        const eventValue = value.endsWith('()') ? value : `${value}()`;
+        additionalAttrs += `  ${key}="${eventValue}"\n`;
+      }
+    } else {
+      // Handle boolean attributes
+      if (value === true) {
+        additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+      } else if (value !== false) {
+        // Convert underscores to hyphens and set the attribute
+        additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+      }
     }
+  }
+}
+
 
     // Construct select options HTML based on options
     let selectHTML = '';
@@ -479,7 +630,6 @@ renderSingleSelectField(type, name, label, validate, attributes, options, subCat
     }
 
     let inputClass = attributes.class || this.inputClass;
-
     const onchangeAttr = (mode === 'dynamicSingleSelect' && subCategoriesOptions) ? ' onchange="handleDynamicSingleSelect(this.value,id)"' : '';
     
     let labelDisplay;
@@ -664,8 +814,10 @@ if (!formContainer) {
 } else {
   formContainer.innerHTML = this.formMarkUp;
 }
-
 */
+
+//return this.formMarkUp;
+
 
 console.log(this.formMarkUp);
 
@@ -676,11 +828,6 @@ console.log(this.formMarkUp);
 
 
 }
-
-
-
-
-
 
 
 //export default Formique;
@@ -700,11 +847,9 @@ const formSchema=[
       {value: 'male', label: 'Male'}
     ]
   ],
-  ['number','age','Age', {required: true}, {dependsOn: 'gender', condition: (gender) => gender === 'Female', id: 'age'}],
-  ['text','pregnancyDetails','Pregnancy Details',{required: true},{dependsOn: 'gender', condition: (gender) => gender === 'Female'}]
+  ['number','age','Age', {required: true}, {dependsOn: 'gender', condition: 'Female', id: 'age'}],
+  ['text','pregnancyDetails','Pregnancy Details',{required: true},{dependsOn: 'gender', condition: 'Female'}]
 ];
-
-
 
 
 const formSettings={
