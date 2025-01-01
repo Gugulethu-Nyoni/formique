@@ -80,6 +80,14 @@ initDependencyGraph() {
             dependent: dependentName,
             condition: typeof condition === "function" ? condition.toString().replace(/"/g, "'") : condition || null, // Handle function or string
           });
+
+          // hide the dependent's field's at the input-block di level: 
+          
+         const dependentInput = document.querySelector(`input[name="${dependentName}"]`);
+         const inputWrapper = dependentInput.closest('.input-block');
+         // To toggle visibility
+          inputWrapper.style.display = inputWrapper.style.display = 'none';
+          
         } else {
           console.warn(`Dependent field "${dependentName}" not found in schema.`);
         }

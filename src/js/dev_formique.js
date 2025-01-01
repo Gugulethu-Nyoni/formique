@@ -79,7 +79,7 @@ class Formique extends FormBuilder {
       });
 
       // Attach input change listener for parent field
-      this.attachInputChangeListener(parentField);
+        this.attachInputChangeListener(parentField);
     }
   });
 }
