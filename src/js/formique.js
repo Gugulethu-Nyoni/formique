@@ -116,6 +116,35 @@ attachInputChangeListener(parentField) {
 }
 
 
+handleParentFieldChange(parentFieldId, value) {
+  const dependencies = this.dependencyGraph[parentFieldId];
+
+  if (dependencies) {
+    // Update the state of the parent field itself
+    dependencies.forEach(({ dependent, condition }) => {
+      let isConditionMet = false;
+
+      // If condition is a function, evaluate it
+      if (typeof condition === 'function') {
+        isConditionMet = condition(value);
+      } 
+      // If condition is a string (or other), evaluate the condition directly
+      else if (condition && value === condition) {
+        isConditionMet = true;
+      }
+
+      // Update the state of the parent field
+      if (dependencies[dependencies.length - 1].state === null) {
+        dependencies[dependencies.length - 1].state = isConditionMet;
+      }
+    });
+
+    // Optionally log the updated state for debugging
+    console.log(`Updated state for parent field ${parentFieldId}: ${dependencies[dependencies.length - 1].state}`);
+  }
+}
+
+
 
 
 
