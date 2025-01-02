@@ -51,6 +51,146 @@ class Formique extends FormBuilder {
     }
 
 
+initDependencyGraph() {
+  this.dependencyGraph = {};
+
+  this.formSchema.forEach((field) => {
+    const [type, name, label, validate, attributes = {}] = field;
+    const fieldId = attributes.id || name;
+
+    if (attributes.dependents) {
+      // Initialize dependency array for the parent field
+      this.dependencyGraph[fieldId] = attributes.dependents.map((dependentName) => {
+        const dependentField = this.formSchema.find(
+          ([, depName]) => depName === dependentName
+        );
+
+        if (dependentField) {
+          return {
+            dependent: dependentName,
+            condition: dependentField[4]?.condition || null, // Keep function as-is
+          };
+        } else {
+          console.warn(`Dependent field "${dependentName}" not found in schema.`);
+        }
+      });
+
+      // Add state tracking for the parent field
+      this.dependencyGraph[fieldId].push({ state: null });
+
+      // Attach the input change event listener to the parent field
+      this.attachInputChangeListener(fieldId);
+    }
+
+    // Hide dependent fields initially
+    if (attributes.dependents) {
+      attributes.dependents.forEach((dependentName) => {
+        const dependentElement = document.querySelector(`#${dependentName}`);
+        if (dependentElement) {
+          const inputBlock = dependentElement.closest('.input-block');
+          if (inputBlock) {
+            inputBlock.style.display = 'none'; // Hide dependent field by default
+          }
+        }
+      });
+    }
+  });
+
+  console.log("Dependency Graph:", this.dependencyGraph);
+}
+
+// Attach Event Listeners
+attachInputChangeListener(parentField) {
+  const fieldElement = document.getElementById(parentField);
+
+  if (fieldElement) {
+    fieldElement.addEventListener('input', (event) => {
+      const value = event.target.value;
+      this.handleParentFieldChange(parentField, value);
+    });
+  }
+}
+
+
+// Handle Parent Field Changes and Notify Observers
+handleParentFieldChange(parentFieldId, value) {
+  const dependencies = this.dependencyGraph[parentFieldId];
+
+  if (dependencies) {
+    // Update the state of the parent field
+    this.dependencyGraph[parentFieldId].forEach((dep) => {
+      if (dep.state !== undefined) {
+        dep.state = value; // Set state to the selected value
+      }
+    });
+
+    // Log the updated dependency graph for the parent field
+    console.log(`Updated Dependency Graph for ${parentFieldId}:`, this.dependencyGraph[parentFieldId]);
+
+    // Optionally, log the entire dependency graph to verify state changes
+    console.log("Complete Dependency Graph:", this.dependencyGraph);
+
+    // Now notify all observers (dependent fields)
+    dependencies.forEach((dependency) => {
+      if (dependency.observers) {
+        dependency.observers.forEach((observerId) => {
+          const observerElement = document.getElementById(observerId);
+
+          if (observerElement) {
+            // Check if the condition for the observer is satisfied
+            const conditionMet = typeof dependency.condition === 'function'
+              ? dependency.condition(value)
+              : value === dependency.condition;
+
+            // Toggle visibility based on the condition
+            const inputBlock = observerElement.closest('.input-block');
+            if (inputBlock) {
+              inputBlock.style.display = conditionMet ? 'block' : 'none';
+            }
+          }
+        });
+      }
+    });
+  }
+}
+
+
+// Register observers for each dependent field
+registerObservers() {
+  this.formSchema.forEach((field) => {
+    const [type, name, label, validate, attributes = {}] = field;
+    const fieldId = attributes.id || name;
+
+    if (attributes.dependents) {
+      attributes.dependents.forEach((dependentName) => {
+        // Ensure the dependency graph exists for the parent field
+        if (this.dependencyGraph[fieldId]) {
+          // Find the dependent field in the form schema
+          const dependentField = this.formSchema.find(
+            ([, depName]) => depName === dependentName
+          );
+          
+          // If the dependent field exists, register it as an observer
+          if (dependentField) {
+            const dependentFieldId = dependentField[4]?.id || dependentName;
+            this.dependencyGraph[fieldId].forEach((dependency) => {
+              if (dependency.dependent === dependentName) {
+                // Store the dependent as an observer for this parent field
+                if (!dependency.observers) {
+                  dependency.observers = [];
+                }
+                dependency.observers.push(dependentFieldId);
+              }
+            });
+          }
+        }
+      });
+    }
+  });
+
+  console.log("Observers Registered:", this.dependencyGraph);
+}
+
 
 
 
