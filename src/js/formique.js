@@ -29,6 +29,8 @@ class Formique extends FormBuilder {
     this.dependencyGraph = {};
     document.addEventListener('DOMContentLoaded', () => {
     this.initDependencyGraph();
+    this.registerObservers();
+
     });
 
 
@@ -43,114 +45,10 @@ class Formique extends FormBuilder {
     if (Object.keys(this.formParams).length > 0) {
       this.formMarkUp += this.renderFormElement();
      }
-
-
-      this.renderForm();
-
-
-    }
-
-
-
-initDependencyGraph() {
-  this.dependencyGraph = {};
-
-  this.formSchema.forEach((field) => {
-    const [type, name, label, validate, attributes = {}] = field;
-    const fieldId = attributes.id || name; // Use id if present, fallback to name
-
-    // Check if the field has dependents
-    if (attributes.dependents) {
-      // Initialize the dependency graph entry for the parent field if not already present
-      this.dependencyGraph[fieldId] = [];
-
-      // Process each dependent field
-      attributes.dependents.forEach((dependentName) => {
-        // Find the dependent field in the schema
-        const dependentField = this.formSchema.find(
-          ([, depName]) => depName === dependentName
-        );
-
-        if (dependentField) {
-          const [, , , , depAttributes = {}] = dependentField;
-          const condition = depAttributes.condition;
-
-          // Add the dependent and its condition to the graph
-          this.dependencyGraph[fieldId].push({
-            dependent: dependentName,
-            condition: typeof condition === "function" ? condition.toString().replace(/"/g, "'") : condition || null, // Handle function or string
-          });
-
-          // hide the dependent's field's at the input-block di level: 
-          
-         const dependentInput = document.querySelector(`input[name="${dependentName}"]`);
-         const inputWrapper = dependentInput.closest('.input-block');
-         // To toggle visibility
-          inputWrapper.style.display = inputWrapper.style.display = 'none';
-          
-        } else {
-          console.warn(`Dependent field "${dependentName}" not found in schema.`);
-        }
-      });
-
-      // Add a state entry for the parent field
-      this.dependencyGraph[fieldId].push({ state: null });
-
-      // Attach input change listener to this parent field
-      this.attachInputChangeListener(fieldId);
-    }
-  });
-
-  // Log the constructed dependency graph for debugging
-  console.log("Dependency Graph:",this.dependencyGraph);
-}
-  
-
-// Attach event listeners dynamically to parent fields
-attachInputChangeListener(parentField) {
-
-//alert(parentField);
-  const fieldElement = document.getElementById(parentField);
-  //alert(fieldElement);
-
-  if (fieldElement) {
-    fieldElement.addEventListener('input', (event) => {
-      const value = event.target.value;
-      this.handleParentFieldChange(parentField, value);
-    });
     
-    
-  }
-}
 
-
-handleParentFieldChange(parentFieldId, value) {
-  const dependencies = this.dependencyGraph[parentFieldId];
-
-  if (dependencies) {
-    // Update the state of the parent field itself
-    dependencies.forEach(({ dependent, condition }) => {
-      let isConditionMet = false;
-
-      // If condition is a function, evaluate it
-      if (typeof condition === 'function') {
-        isConditionMet = condition(value);
-      } 
-      // If condition is a string (or other), evaluate the condition directly
-      else if (condition && value === condition) {
-        isConditionMet = true;
-      }
-
-      // Update the state of the parent field
-      if (dependencies[dependencies.length - 1].state === null) {
-        dependencies[dependencies.length - 1].state = isConditionMet;
-      }
-    });
-
-    // Optionally log the updated state for debugging
-    console.log(`Updated state for parent field ${parentFieldId}: ${dependencies[dependencies.length - 1].state}`);
-  }
-}
+    this.renderForm();
+    }
 
 
 

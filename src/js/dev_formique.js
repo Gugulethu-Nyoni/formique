@@ -27,8 +27,12 @@ class Formique extends FormBuilder {
     this.formMarkUp='';
     this.containerId = formSettings.containerId || 'formique';
     this.dependencyGraph = {};
-    this.observers = {};
+    document.addEventListener('DOMContentLoaded', () => {
     this.initDependencyGraph();
+    this.registerObservers();
+
+    });
+    
 
 
     this.formSettings = {
@@ -49,101 +53,147 @@ class Formique extends FormBuilder {
 
     }
 
+  
+initDependencyGraph() {
+  this.dependencyGraph = {};
 
-
-    initDependencyGraph() {
   this.formSchema.forEach((field) => {
     const [type, name, label, validate, attributes = {}] = field;
-    const fieldId = attributes.id || name; // Use id if present, fallback to name
+    const fieldId = attributes.id || name;
 
-    // Initialize the dependency graph for the parent field
-    if (!this.dependencyGraph[fieldId]) {
-      this.dependencyGraph[fieldId] = [{ state: null }];
-    }
+    if (attributes.dependents) {
+      // Initialize dependency array for the parent field
+      this.dependencyGraph[fieldId] = attributes.dependents.map((dependentName) => {
+        const dependentField = this.formSchema.find(
+          ([, depName]) => depName === dependentName
+        );
 
-    // Process dependents
-    if (attributes.dependsOn) {
-      const parentField = attributes.dependsOn;
-      const conditionString = attributes.condition;
-
-      // Convert condition string to a dynamic function
-      const conditionFn = (value) => value === conditionString;
-
-      if (!this.dependencyGraph[parentField]) {
-        this.dependencyGraph[parentField] = [{ state: null }];
-      }
-
-      this.dependencyGraph[parentField].push({
-        dependent: fieldId,
-        condition: conditionFn,
+        if (dependentField) {
+          return {
+            dependent: dependentName,
+            condition: dependentField[4]?.condition || null, // Keep function as-is
+          };
+        } else {
+          console.warn(`Dependent field "${dependentName}" not found in schema.`);
+        }
       });
 
-      // Attach input change listener for parent field
-        this.attachInputChangeListener(parentField);
+      // Add state tracking for the parent field
+      this.dependencyGraph[fieldId].push({ state: null });
+
+      // Attach the input change event listener to the parent field
+      this.attachInputChangeListener(fieldId);
     }
-  });
-}
 
-/*
-// Attach event listeners dynamically to parent fields
-attachInputChangeListener(parentFieldId) {
-  const fieldElement = document.getElementById(parentFieldId);
-
-  // Ensure the field exists in the DOM before adding an event listener
-  if (fieldElement) {
-    fieldElement.addEventListener('change', (event) => {
-      this.handleInputChange(event);
-    });
-  }
-}
-
-
-// Handle input change and notify observers
-handleInputChange(event) {
-  const { name, value } = event.target;
-  this.notifyObservers(name, value);
-}
-
-
-
-  attachInputChangeListener(parentField) {
-  const fieldElement = document.getElementById(parentField);
-
-  // Ensure the field exists in the DOM before adding an event listener
-  if (fieldElement) {
-    fieldElement.addEventListener('change', (event) => {
-      this.handleInputChange(event);
-    });
-  }
-}
-
-
-  addObserver(parent, dependent, condition) {
-    if (!this.observers[parent]) {
-      this.observers[parent] = [];
-    }
-    this.observers[parent].push({ dependent, condition });
-  }
-
-  notifyObservers(parent, value) {
-    if (this.observers[parent]) {
-      this.observers[parent].forEach(({ dependent, condition }) => {
-        const shouldDisplay = condition(value);
-        const fieldElement = document.getElementById(dependent);
-        if (fieldElement) {
-          fieldElement.style.display = shouldDisplay ? "block" : "none";
+    // Hide dependent fields initially
+    if (attributes.dependents) {
+      attributes.dependents.forEach((dependentName) => {
+        const dependentElement = document.querySelector(`#${dependentName}`);
+        if (dependentElement) {
+          const inputBlock = dependentElement.closest('.input-block');
+          if (inputBlock) {
+            inputBlock.style.display = 'none'; // Hide dependent field by default
+          }
         }
       });
     }
+  });
+
+  console.log("Dependency Graph:", this.dependencyGraph);
+}
+
+// Attach Event Listeners
+attachInputChangeListener(parentField) {
+  const fieldElement = document.getElementById(parentField);
+
+  if (fieldElement) {
+    fieldElement.addEventListener('input', (event) => {
+      const value = event.target.value;
+      this.handleParentFieldChange(parentField, value);
+    });
   }
+}
 
 
-handleInputChange(event) {
-    const { name, value } = event.target;
-    this.notifyObservers(name, value);
+// Handle Parent Field Changes and Notify Observers
+handleParentFieldChange(parentFieldId, value) {
+  const dependencies = this.dependencyGraph[parentFieldId];
+
+  if (dependencies) {
+    // Update the state of the parent field
+    this.dependencyGraph[parentFieldId].forEach((dep) => {
+      if (dep.state !== undefined) {
+        dep.state = value; // Set state to the selected value
+      }
+    });
+
+    // Log the updated dependency graph for the parent field
+    console.log(`Updated Dependency Graph for ${parentFieldId}:`, this.dependencyGraph[parentFieldId]);
+
+    // Optionally, log the entire dependency graph to verify state changes
+    console.log("Complete Dependency Graph:", this.dependencyGraph);
+
+    // Now notify all observers (dependent fields)
+    dependencies.forEach((dependency) => {
+      if (dependency.observers) {
+        dependency.observers.forEach((observerId) => {
+          const observerElement = document.getElementById(observerId);
+
+          if (observerElement) {
+            // Check if the condition for the observer is satisfied
+            const conditionMet = typeof dependency.condition === 'function'
+              ? dependency.condition(value)
+              : value === dependency.condition;
+
+            // Toggle visibility based on the condition
+            const inputBlock = observerElement.closest('.input-block');
+            if (inputBlock) {
+              inputBlock.style.display = conditionMet ? 'block' : 'none';
+            }
+          }
+        });
+      }
+    });
   }
+}
 
-*/
+
+// Register observers for each dependent field
+registerObservers() {
+  this.formSchema.forEach((field) => {
+    const [type, name, label, validate, attributes = {}] = field;
+    const fieldId = attributes.id || name;
+
+    if (attributes.dependents) {
+      attributes.dependents.forEach((dependentName) => {
+        // Ensure the dependency graph exists for the parent field
+        if (this.dependencyGraph[fieldId]) {
+          // Find the dependent field in the form schema
+          const dependentField = this.formSchema.find(
+            ([, depName]) => depName === dependentName
+          );
+          
+          // If the dependent field exists, register it as an observer
+          if (dependentField) {
+            const dependentFieldId = dependentField[4]?.id || dependentName;
+            this.dependencyGraph[fieldId].forEach((dependency) => {
+              if (dependency.dependent === dependentName) {
+                // Store the dependent as an observer for this parent field
+                if (!dependency.observers) {
+                  dependency.observers = [];
+                }
+                dependency.observers.push(dependentFieldId);
+              }
+            });
+          }
+        }
+      });
+    }
+  });
+
+  console.log("Observers Registered:", this.dependencyGraph);
+}
+
 
 
 // renderFormElement method
@@ -191,25 +241,12 @@ renderForm() {
     const formHTML = this.formSchema.map(field => {
         const [type, name, label, validate, attributes = {},options] = field;
         return this.renderField(type, name, label, validate, attributes, options);
-    }).join('');
-    //console.log("HERE",formHTML);
+    }).join('');   
     this.formMarkUp += formHTML; 
 }
 
 
 renderField(type, name, label, validate, attributes, options) {
-
-/* let's check for dependency and handle it */
-
-  if (attributes.dependents) {
-    attributes.dependents.forEach((dependent) => {
-      this.addObserver(name, dependent, attributes.condition || (() => true));
-    });
-  }
-
-
-    console.log("graph",this.dependencyGraph);
-
     switch (type) {
       case 'text':
         return this.renderTextField(type, name, label, validate, attributes);
@@ -310,8 +347,6 @@ renderTextField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-    if (attributes.binding) {
-
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `  bind:value="${name}"\n`;
@@ -325,8 +360,6 @@ if (attributes.binding === 'bind:value' && name) {
   }
   }
 
-}
-
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -334,39 +367,30 @@ if (attributes.binding === 'bind:value' && name) {
   const framework = this.formSettings?.framework || false;
 
   // Construct additional attributes dynamically
-  // Construct additional attributes dynamically
-let additionalAttrs = '';
-const excludedAttributes = ['dependsOn', 'condition']; // Add attributes to exclude
-
-for (const [key, value] of Object.entries(attributes)) {
-  if (
-    key !== 'id' &&
-    key !== 'class' &&
-    value !== undefined &&
-    !excludedAttributes.includes(key) // Exclude specific attributes
-  ) {
-    if (key.startsWith('on')) {
-      // Handle event attributes
-      if (framework === 'semantq') {
-        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && key !== 'class' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        if (framework === 'semantq') {
+          const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+          additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+        } else {
+          // Add parentheses if not present
+          const eventValue = value.endsWith('()') ? value : `${value}()`;
+          additionalAttrs += `  ${key}="${eventValue}"\n`;
+        }
       } else {
-        // Add parentheses if not present
-        const eventValue = value.endsWith('()') ? value : `${value}()`;
-        additionalAttrs += `  ${key}="${eventValue}"\n`;
-      }
-    } else {
-      // Handle boolean attributes
-      if (value === true) {
-        additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
-      } else if (value !== false) {
-        // Convert underscores to hyphens and set the attribute
-        additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
       }
     }
   }
-}
-
 
 
 
@@ -407,6 +431,7 @@ for (const [key, value] of Object.entries(attributes)) {
   this.formMarkUp +=formattedHtml;
   //return formattedHtml;
 }
+
 
 
 renderNumberField(type, name, label, validate, attributes) {
@@ -807,21 +832,20 @@ subCategoriesOptions.forEach(subCategory => {
 
 this.formMarkUp+= '</form>'; 
 //console.log(this.formMarkUp);
-/*
+
 const formContainer = document.getElementById(this.containerId);
 if (!formContainer) {
   console.error('Error: formContainer not found. Please ensure an element with id "formique" exists in the HTML.');
 } else {
   formContainer.innerHTML = this.formMarkUp;
 }
-*/
-
-//return this.formMarkUp;
 
 
-console.log(this.formMarkUp);
+return this.formMarkUp;
 
-//return this.formMarkUp;
+
+//console.log(this.formMarkUp);
+
 
 
  }
@@ -841,14 +865,16 @@ action: 'submit.js',
   
 const formSchema=[ 
   ['text','name','Enter Your Name',{required: true},{placeholder: 'Ibizo Lakho', onclick:'trigger()', binding: 'bind:value'}],
-  ['singleSelect','gender','Enter Your Gender', {required: true}, {id: 'the-gender',dependents: ['age','pregnancyDetails']},
+  ['singleSelect','gender','Enter Your Gender', {required: true}, {id: 'the-gender',dependents: ['age','pregnancyDetails','maleDetails']},
     [
       {value: 'female', label:'Female'},
       {value: 'male', label: 'Male'}
     ]
   ],
-  ['number','age','Age', {required: true}, {dependsOn: 'gender', condition: 'Female', id: 'age'}],
-  ['text','pregnancyDetails','Pregnancy Details',{required: true},{dependsOn: 'gender', condition: 'Female'}]
+  ['number','age','Age', {required: true}, {dependsOn: 'gender', condition: 'female', id: 'age'}],
+  ['text','pregnancyDetails','Pregnancy Details',{required: true},{dependsOn: 'gender', condition: (value) => value === 'female'}],
+  
+  ['text','maleDetails','Male Details',{required: true}, {dependsOn: 'gender', condition: 'male' }]
 ];
 
 
@@ -861,7 +887,7 @@ const formSettings={
 // Instantiate the form
 const form = new Formique(formParams, formSchema, formSettings);
 const formHTML = form.renderFormHTML();
-console.log(formHTML);
+//console.log(formHTML);
 
 
 
