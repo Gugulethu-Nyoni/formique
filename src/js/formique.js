@@ -2466,6 +2466,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
 
     // Handle the binding syntax
     let bindingDirective = '';
+    if (attributes.binding) {
     if (attributes.binding === 'bind:value' && name) {
         bindingDirective = ` bind:value="${name}"\n`;
     } else if (attributes.binding.startsWith('::') && name) {
@@ -2474,6 +2475,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
         console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
         return;
     }
+  }
 
     // Define attributes for the radio inputs
     let id = attributes.id || name;
@@ -2573,11 +2575,13 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
 
   // Handle the binding syntax
   let bindingDirective = '';
+  if (attributes.binding) {
   if (attributes.binding === 'bind:checked') {
     bindingDirective = ` bind:checked="${name}"\n`;
   } else if (attributes.binding.startsWith('::')) {
     bindingDirective = ` bind:checked="${name}"\n`;
   }
+ }
 
   // Define attributes for the checkbox inputs
   let id = attributes.id || name;
@@ -2709,9 +2713,11 @@ renderSingleSelectField(type, name, label, validate, attributes, options, subCat
 
     // Handle the binding syntax
     let bindingDirective = '';
-    if (typeof bindingSyntax === 'string' && bindingSyntax.startsWith('::')) {
+    if (attributes.binding) {
+    if (typeof attributes.binding === 'string' && attributes.binding.startsWith('::')) {
         bindingDirective = ` bind:value="${name}" `;
     }
+  }
 
     // Define attributes for the select field
     let id = attributes.id || name;
@@ -2950,9 +2956,11 @@ renderMultipleSelectField(type, name, label, validate, attributes, options) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (typeof bindingSyntax === 'string' && bindingSyntax.startsWith('::')) {
+  if (attributes.binding) {
+  if (typeof attributes.binding === 'string' && attributes.binding.startsWith('::')) {
     bindingDirective = ` bind:value="${name}" `;
   }
+}
 
   // Define attributes for the select field
   let id = attributes.id || name;
