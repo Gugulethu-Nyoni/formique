@@ -343,6 +343,7 @@ renderTextField(type, name, label, validate, attributes) {
 
 
   // Handle the binding syntax
+  // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
@@ -356,6 +357,7 @@ if (attributes.binding === 'bind:value' && name) {
     return;
   }
   }
+
 
 
   // Get the id from attributes or fall back to name
@@ -473,6 +475,7 @@ const emailInputValidationAttributes = [
   }
 
   // Handle the binding syntax
+  // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
@@ -486,6 +489,7 @@ if (attributes.binding === 'bind:value' && name) {
     return;
   }
   }
+
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -603,6 +607,7 @@ renderNumberField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
+  // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
@@ -616,6 +621,7 @@ if (attributes.binding === 'bind:value' && name) {
     return;
   }
   }
+
 
 
   // Get the id from attributes or fall back to name
@@ -739,6 +745,7 @@ renderPasswordField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
+  // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
@@ -752,6 +759,9 @@ if (attributes.binding === 'bind:value' && name) {
     return;
   }
   }
+
+
+  
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
