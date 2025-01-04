@@ -152,11 +152,13 @@ const inputBlock = ['input-block', 'radio-group', 'checkbox-group', 'form-select
   .map(className => observerElement.closest(`.${className}`))
   .find(element => element !== null);
 
+  console.log("CHECK",inputBlock);
+
 if (inputBlock) {
   inputBlock.style.display = conditionMet ? 'block' : 'none';
 }
 
-            
+
           }
         });
       }
