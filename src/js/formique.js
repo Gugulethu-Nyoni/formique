@@ -343,7 +343,6 @@ renderTextField(type, name, label, validate, attributes) {
 
 
   // Handle the binding syntax
-  // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
@@ -368,8 +367,7 @@ if (attributes.binding === 'bind:value' && name) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         if (framework === 'semantq') {
           const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
@@ -497,8 +495,7 @@ if (attributes.binding === 'bind:value' && name) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -630,8 +627,7 @@ if (attributes.binding === 'bind:value' && name) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -761,7 +757,7 @@ if (attributes.binding === 'bind:value' && name) {
   }
 
 
-  
+
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -769,8 +765,7 @@ if (attributes.binding === 'bind:value' && name) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -906,8 +901,7 @@ renderTelField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1027,8 +1021,7 @@ renderDateField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1148,8 +1141,7 @@ renderTimeField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1269,8 +1261,7 @@ renderDateTimeField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1394,8 +1385,7 @@ renderMonthField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1515,8 +1505,7 @@ renderWeekField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1632,8 +1621,7 @@ renderUrlField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1748,8 +1736,7 @@ renderSearchField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1858,8 +1845,7 @@ renderColorField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -1968,8 +1954,7 @@ renderFileField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2080,8 +2065,7 @@ renderHiddenField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2183,8 +2167,7 @@ renderImageField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2279,8 +2262,7 @@ renderImageField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2378,8 +2360,7 @@ renderTextareaField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2486,8 +2467,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
     // Construct additional attributes dynamically
     let additionalAttrs = '';
     for (const [key, value] of Object.entries(attributes)) {
-        if (key !== 'id' && key !== 'class' && value !== undefined) {
-            if (key.startsWith('on')) {
+      if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {            if (key.startsWith('on')) {
                 // Handle event attributes
                 const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
                 additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2591,8 +2571,7 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2727,8 +2706,7 @@ renderSingleSelectField(type, name, label, validate, attributes, options, subCat
     // Handle additional attributes
     let additionalAttrs = '';
     for (const [key, value] of Object.entries(attributes)) {
-        if (key !== 'id' && key !== 'class' && value !== undefined) {
-            if (key.startsWith('on')) {
+      if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {            if (key.startsWith('on')) {
                 // Handle event attributes
                 const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
                 additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2969,8 +2947,7 @@ renderMultipleSelectField(type, name, label, validate, attributes, options) {
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -3062,8 +3039,7 @@ renderSubmitButton(type, name, label, attributes) {
   // Handle additional attributes§
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && value !== undefined) {
-      if (key.startsWith('on')) {
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += ` ${key}="${eventValue}"`;
