@@ -346,10 +346,10 @@ renderTextField(type, name, label, validate, attributes) {
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding.startsWith('::') && name) {
-   bindingDirective = `  bind:value="${name}"\n`;
+   bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -476,10 +476,10 @@ const emailInputValidationAttributes = [
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding.startsWith('::') && name) {
-   bindingDirective = `  bind:value="${name}"\n`;
+   bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -606,10 +606,10 @@ renderNumberField(type, name, label, validate, attributes) {
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding.startsWith('::') && name) {
-   bindingDirective = `  bind:value="${name}"\n`;
+   bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -742,10 +742,10 @@ renderPasswordField(type, name, label, validate, attributes) {
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding.startsWith('::') && name) {
-   bindingDirective = `  bind:value="${name}"\n`;
+   bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -880,10 +880,10 @@ renderTelField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -1001,10 +1001,10 @@ renderDateField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -1122,10 +1122,10 @@ renderTimeField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -1244,9 +1244,9 @@ renderDateTimeField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -1370,9 +1370,9 @@ renderMonthField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
@@ -1491,9 +1491,9 @@ renderWeekField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding  && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
@@ -1608,9 +1608,9 @@ renderUrlField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
@@ -1724,9 +1724,9 @@ renderSearchField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
@@ -1833,9 +1833,9 @@ renderColorField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value') {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } else if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -1943,9 +1943,9 @@ renderFileField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value') {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
@@ -2054,9 +2054,9 @@ renderHiddenField(type, name, label, validate, attributes) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding === 'bind:value') {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `  bind:value="${name}"\n`;
+    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
