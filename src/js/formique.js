@@ -81,17 +81,24 @@ initDependencyGraph() {
     }
 
     // Hide dependent fields initially
-    if (attributes.dependents) {
-      attributes.dependents.forEach((dependentName) => {
-        const dependentElement = document.querySelector(`#${dependentName}`);
-        if (dependentElement) {
-          const inputBlock = dependentElement.closest('.input-block');
-          if (inputBlock) {
-            inputBlock.style.display = 'none'; // Hide dependent field by default
-          }
-        }
-      });
+if (attributes.dependents) {
+  attributes.dependents.forEach((dependentName) => {
+    const dependentElement = document.querySelector(`#${dependentName}`);
+    if (dependentElement) {
+      // Find the closest element with one of the specified class names
+      const inputBlock = ['input-block', 'radio-group', 'checkbox-group', 'form-select']
+        .map(className => dependentElement.closest(`.${className}`))
+        .find(element => element !== null);
+
+      if (inputBlock) {
+        inputBlock.style.display = 'none'; // Hide dependent field by default
+      }
     }
+  });
+}
+
+
+    
   });
 
   console.log("Dependency Graph:", this.dependencyGraph);
