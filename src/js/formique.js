@@ -98,7 +98,7 @@ if (attributes.dependents) {
 }
 
 
-    
+
   });
 
   console.log("Dependency Graph:", this.dependencyGraph);
@@ -148,10 +148,15 @@ handleParentFieldChange(parentFieldId, value) {
               : value === dependency.condition;
 
             // Toggle visibility based on the condition
-            const inputBlock = observerElement.closest('.input-block');
-            if (inputBlock) {
-              inputBlock.style.display = conditionMet ? 'block' : 'none';
-            }
+const inputBlock = ['input-block', 'radio-group', 'checkbox-group', 'form-select']
+  .map(className => observerElement.closest(`.${className}`))
+  .find(element => element !== null);
+
+if (inputBlock) {
+  inputBlock.style.display = conditionMet ? 'block' : 'none';
+}
+
+            
           }
         });
       }
