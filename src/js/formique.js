@@ -10,8 +10,6 @@ class FormBuilder
   
 }
 
-
-
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
  constructor (formParams = {}, formSchema, formSettings={}) {
@@ -3051,7 +3049,7 @@ renderSubmitButton(type, name, label, attributes) {
   // Define id attribute or fallback to name
   const id = attributes.id || name;
 
-  // Handle additional attributes
+  // Handle additional attributes§
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
     if (key !== 'id' && key !== 'class' && value !== undefined) {
