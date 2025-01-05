@@ -86,13 +86,18 @@ if (attributes.dependents) {
     const dependentElement = document.querySelector(`#${dependentName}`);
     if (dependentElement) {
       // Find the closest element with one of the specified class names
-      const inputBlock = ['input-block', 'radio-group', 'checkbox-group', 'form-select']
-        .map(className => dependentElement.closest(`.${className}`))
-        .find(element => element !== null);
+
+            const inputBlock = dependentElement.closest('.input-block, .radio-group, .checkbox-group, .form-select');
+      
+      //const inputBlock = ['input-block', 'radio-group', 'checkbox-group', 'form-select']
+       // .map(className => dependentElement.closest(`.${className}`))
+        // .find(element => element !== null);
 
       if (inputBlock) {
         inputBlock.style.display = 'none'; // Hide dependent field by default
       }
+
+
     }
   });
 }
