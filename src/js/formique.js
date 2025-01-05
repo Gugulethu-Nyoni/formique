@@ -64,9 +64,12 @@ initDependencyGraph() {
         );
 
         if (dependentField) {
+          const dependentAttributes = dependentField[4] || {};
+          const dependentFieldId = dependentAttributes.id || dependentName; // Get dependent field ID
+
           return {
-            dependent: dependentName,
-            condition: dependentField[4]?.condition || null, // Keep function as-is
+            dependent: dependentFieldId,
+            condition: dependentAttributes.condition || null,
           };
         } else {
           console.warn(`Dependent field "${dependentName}" not found in schema.`);
@@ -76,42 +79,38 @@ initDependencyGraph() {
       // Add state tracking for the parent field
       this.dependencyGraph[fieldId].push({ state: null });
 
+      console.log("Graph", this.dependencyGraph[fieldId]);
+
       // Attach the input change event listener to the parent field
       this.attachInputChangeListener(fieldId);
     }
 
     // Hide dependent fields initially
-if (attributes.dependents) {
-  attributes.dependents.forEach((dependentName) => {
-    const dependentElement = document.querySelector(`#${dependentName}`);
-    if (dependentElement) {
-      // Find the closest element with one of the specified class names
+    if (attributes.dependents) {
+      attributes.dependents.forEach((dependentName) => {
+        const dependentField = this.formSchema.find(
+          ([, depName]) => depName === dependentName
+        );
+        const dependentAttributes = dependentField ? dependentField[4] || {} : {};
+        const dependentFieldId = dependentAttributes.id || dependentName;
 
-            const inputBlock = dependentElement.closest('.input-block, .radio-group, .checkbox-group, .form-select');
-      
-      //const inputBlock = ['input-block', 'radio-group', 'checkbox-group', 'form-select']
-       // .map(className => dependentElement.closest(`.${className}`))
-        // .find(element => element !== null);
-
-      if (inputBlock) {
-        inputBlock.style.display = 'none'; // Hide dependent field by default
-      }
-
-
+        const inputBlock = document.querySelector(`#${dependentFieldId}-block`);
+        if (inputBlock) {
+          inputBlock.style.display = 'none'; // Hide dependent field by default
+        }
+      });
     }
-  });
-}
-
-
-
   });
 
   console.log("Dependency Graph:", this.dependencyGraph);
 }
 
+
+
 // Attach Event Listeners
 attachInputChangeListener(parentField) {
   const fieldElement = document.getElementById(parentField);
+  //alert(parentField);
 
   if (fieldElement) {
     fieldElement.addEventListener('input', (event) => {
@@ -122,7 +121,6 @@ attachInputChangeListener(parentField) {
 }
 
 
-// Handle Parent Field Changes and Notify Observers
 handleParentFieldChange(parentFieldId, value) {
   const dependencies = this.dependencyGraph[parentFieldId];
 
@@ -137,40 +135,41 @@ handleParentFieldChange(parentFieldId, value) {
     // Log the updated dependency graph for the parent field
     console.log(`Updated Dependency Graph for ${parentFieldId}:`, this.dependencyGraph[parentFieldId]);
 
-    // Optionally, log the entire dependency graph to verify state changes
-    console.log("Complete Dependency Graph:", this.dependencyGraph);
-
-    // Now notify all observers (dependent fields)
+    // Notify all observers (dependent fields)
     dependencies.forEach((dependency) => {
-      if (dependency.observers) {
-        dependency.observers.forEach((observerId) => {
-          const observerElement = document.getElementById(observerId);
+      if (dependency.dependent) {
+        const observerId = dependency.dependent + "-block"; // Ensure we're targeting the wrapper
+        const inputBlock = document.getElementById(observerId); // Find the wrapper element
 
-          if (observerElement) {
-            // Check if the condition for the observer is satisfied
-            const conditionMet = typeof dependency.condition === 'function'
-              ? dependency.condition(value)
-              : value === dependency.condition;
+        if (inputBlock) {
+          // Check if the condition for the observer is satisfied
+          const conditionMet = typeof dependency.condition === 'function'
+            ? dependency.condition(value)
+            : value === dependency.condition;
 
-            // Toggle visibility based on the condition
-const inputBlock = ['input-block', 'radio-group', 'checkbox-group', 'form-select']
-  .map(className => observerElement.closest(`.${className}`))
-  .find(element => element !== null);
+          // Debug the condition evaluation
+          console.log(`Checking condition for ${observerId}: `, value, "==", dependency.condition, "Result:", conditionMet);
 
-  console.log("CHECK",inputBlock);
+          // Toggle visibility based on the condition
+          inputBlock.style.display = conditionMet ? 'block' : 'none';
 
-if (inputBlock) {
-  inputBlock.style.display = conditionMet ? 'block' : 'none';
-}
-
-
-          }
-        });
+          // Adjust the 'required' attribute for all inputs within the block based on visibility
+          const inputs = inputBlock.querySelectorAll('input, select, textarea');
+          inputs.forEach((input) => {
+            if (conditionMet) {
+              input.required = input.getAttribute('data-original-required') === 'true'; // Restore original required state
+            } else {
+              input.setAttribute('data-original-required', input.required); // Save original required state
+              input.required = false; // Remove required attribute when hiding
+            }
+          });
+        } else {
+          console.warn(`Wrapper block with ID ${observerId} not found.`);
+        }
       }
     });
   }
 }
-
 
 // Register observers for each dependent field
 registerObservers() {
@@ -205,9 +204,8 @@ registerObservers() {
     }
   });
 
-  console.log("Observers Registered:", this.dependencyGraph);
+  console.log("Observers Registered:", JSON.stringify(this.dependencyGraph,null,2));
 }
-
 
 
 
@@ -418,7 +416,7 @@ if (attributes.binding === 'bind:value' && name) {
   }
 // Construct the final HTML string
  let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}
         ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
       </label>
@@ -539,7 +537,7 @@ if (attributes.binding === 'bind:value' && name) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}"> 
+    <div class="${this.divClass}" id="${id + '-block'}"> 
       <label for="${id}">${label}
         ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
       </label>
@@ -670,7 +668,7 @@ if (attributes.binding === 'bind:value' && name) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}"> 
+    <div class="${this.divClass}" id="${id + '-block'}"> 
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -808,7 +806,7 @@ if (attributes.binding === 'bind:value' && name) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}"> 
+    <div class="${this.divClass}" id="${id + '-block'}"> 
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -944,7 +942,7 @@ renderTelField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1064,7 +1062,7 @@ renderDateField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}"> 
+    <div class="${this.divClass}" id="${id + '-block'}"> 
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1184,7 +1182,7 @@ renderTimeField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}"> 
+    <div class="${this.divClass}" id="${id + '-block'}"> 
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1304,7 +1302,7 @@ renderDateTimeField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}"> 
+    <div class="${this.divClass}" id="${id + '-block'}"> 
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1428,7 +1426,7 @@ renderMonthField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1548,7 +1546,7 @@ renderWeekField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1664,7 +1662,7 @@ renderUrlField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1779,7 +1777,7 @@ renderSearchField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1888,7 +1886,7 @@ renderColorField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -1997,7 +1995,7 @@ renderFileField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -2108,7 +2106,7 @@ renderHiddenField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
     <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -2210,7 +2208,7 @@ renderImageField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -2305,7 +2303,7 @@ renderImageField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <input 
         type="${type}"
@@ -2403,13 +2401,13 @@ renderTextareaField(type, name, label, validate, attributes) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <div class="${this.divClass}">
+    <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <textarea 
         name="${name}"
         ${bindingDirective}
         ${dimensionAttrs}
-        id="${id}"
+        id="${id + '-block'}"
         class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
@@ -2533,7 +2531,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
 
     // Construct the final HTML string
     let formHTML = `
-    <fieldset class="${this.radioGroupClass}">
+    <fieldset class="${this.radioGroupClass}" id="${id + '-block'}">
         <legend>
         ${label} 
         ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
@@ -2643,7 +2641,7 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
 
   // Construct the final HTML string
   let formHTML = `
-    <fieldset class="${this.checkboxGroupClass}">
+    <fieldset class="${this.checkboxGroupClass}" id="${id + '-block'}">
       <legend>
       ${label}  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
       </legend>
@@ -2787,7 +2785,7 @@ renderSingleSelectField(type, name, label, validate, attributes, options, subCat
 
     // Construct the final HTML string
     let formHTML = `
-    <fieldset class="${this.selectGroupClass}">
+    <fieldset class="${this.selectGroupClass}" id="${id + '-block'}">
         <legend>${labelDisplay} 
             ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
         </legend>
@@ -2901,7 +2899,7 @@ subCategoriesOptions.forEach(subCategory => {
         <select name="${id}"
             ${bindingDirective}
             ${dimensionAttrs}
-            id="${id}"
+            id="${id + '-block'}"
             class="${inputClass}"
             ${additionalAttrs}
             ${validationAttrs}
@@ -3012,7 +3010,7 @@ renderMultipleSelectField(type, name, label, validate, attributes, options) {
   }
 // Construct the final HTML string
   let formHTML = `
-    <fieldset class="${this.selectGroupClass}">
+    <fieldset class="${this.selectGroupClass}" id="${id + '-block'}">
       <label for="${id}">${label}</label>
       <select name="${name}"
         ${bindingDirective}
@@ -3092,7 +3090,7 @@ renderSubmitButton(type, name, label, attributes) {
   // Construct the final HTML string
   const formHTML = `
     <input type="${type}"
-      id="${id}"
+      id="${id + '-block'}"
       class="${submitButtonClass}"
       value="${label}"
       ${additionalAttrs}
