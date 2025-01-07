@@ -3172,7 +3172,7 @@ this.formMarkUp+= '</form>';
 //console.log(this.formMarkUp);
 const formContainer = document.getElementById(this.formContainerId);
 if (!formContainer) {
-  console.error('Error: formContainer not found. Please ensure an element with id "formique" exists in the HTML.');
+  console.error(`Error: formContainer not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
 } else {
   formContainer.innerHTML = this.formMarkUp;
 }
