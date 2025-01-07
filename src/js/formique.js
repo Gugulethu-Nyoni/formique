@@ -23,13 +23,15 @@ class Formique extends FormBuilder {
     this.submitButtonClass='form-submit-btn';
     this.formParams=formParams;
     this.formMarkUp='';
-    this.formContainerId = formSettings.containerId || 'formique';
+    this.formContainerId = formSettings.formContainerId || 'formique';
     this.dependencyGraph = {};
     document.addEventListener('DOMContentLoaded', () => {
     this.initDependencyGraph();
     this.registerObservers();
 
     });
+
+    alert(this.formContainerId);
 
 
     this.formSettings = {
@@ -679,7 +681,6 @@ renderNumberField(type, name, label, validate, attributes) {
     });
   }
 
-  // Handle the binding syntax
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
@@ -3171,6 +3172,7 @@ renderSubmitButton(type, name, label, attributes) {
 this.formMarkUp+= '</form>'; 
 //console.log(this.formMarkUp);
 const formContainer = document.getElementById(this.formContainerId);
+alert(this.formContainerId);
 if (!formContainer) {
   console.error(`Error: formContainer not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
 } else {
