@@ -730,7 +730,9 @@ if (attributes.binding === 'bind:value' && name) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}"> 
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -868,7 +870,9 @@ if (attributes.binding === 'bind:value' && name) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}"> 
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1004,7 +1008,9 @@ renderTelField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1124,7 +1130,9 @@ renderDateField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}"> 
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1244,7 +1252,9 @@ renderTimeField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}"> 
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1364,7 +1374,9 @@ renderDateTimeField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}"> 
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1488,7 +1500,9 @@ renderMonthField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1608,7 +1622,9 @@ renderWeekField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1724,7 +1740,9 @@ renderUrlField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1839,7 +1857,9 @@ renderSearchField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -1948,7 +1968,9 @@ renderColorField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -2057,7 +2079,9 @@ renderFileField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -2168,7 +2192,9 @@ renderHiddenField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-    <label for="${id}">${label}</label>
+    <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -2270,7 +2296,9 @@ renderImageField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -2365,7 +2393,9 @@ renderImageField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <input 
         type="${type}"
         name="${name}"
@@ -2463,7 +2493,9 @@ renderTextareaField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <textarea 
         name="${name}"
         ${bindingDirective}
@@ -3072,7 +3104,9 @@ renderMultipleSelectField(type, name, label, validate, attributes, options) {
 // Construct the final HTML string
   let formHTML = `
     <fieldset class="${this.selectGroupClass}" id="${id + '-block'}">
-      <label for="${id}">${label}</label>
+      <label for="${id}">${label}
+  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+</label>
       <select name="${name}"
         ${bindingDirective}
         ${dimensionAttrs}
