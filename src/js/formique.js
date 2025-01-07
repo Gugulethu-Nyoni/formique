@@ -208,6 +208,55 @@ registerObservers() {
 }
 
 
+applyTheme(theme, formContainerId) {
+  const stylesheet = document.querySelector('link[formique-style]');
+  
+  if (!stylesheet) {
+    console.error("Stylesheet with 'formique-style' not found!");
+    return;
+  }
+
+  fetch(stylesheet.href)
+    .then(response => response.text())
+    .then(cssText => {
+      // Extract theme-specific CSS rules
+      const themeRules = cssText.match(new RegExp(`\\.${theme}-theme\\s*{([^}]*)}`, 'i'));
+
+      if (!themeRules) {
+        console.error(`Theme rules for ${theme} not found in the stylesheet.`);
+        return;
+      }
+
+      // Extract CSS rules for the theme
+      const themeCSS = themeRules[1].trim();
+
+      // Find the form container element
+      const formContainer = document.getElementById(formContainerId);
+
+      if (formContainer) {
+        // Append the theme class to the form container
+        formContainer.classList.add(`${theme}-theme`);
+
+        // Create a <style> tag with the extracted theme styles
+        const clonedStyle = document.createElement('style');
+        clonedStyle.textContent = `
+          #${formContainerId} {
+            ${themeCSS}
+          }
+        `;
+
+        // Insert the <style> tag above the form container
+        formContainer.parentNode.insertBefore(clonedStyle, formContainer);
+
+        console.log(`Applied ${theme} theme to form container: ${formContainerId}`);
+      } else {
+        console.error(`Form container with ID ${formContainerId} not found.`);
+      }
+    })
+    .catch(error => {
+      console.error('Error loading the stylesheet:', error);
+    });
+}
 
 
 // renderFormElement method
