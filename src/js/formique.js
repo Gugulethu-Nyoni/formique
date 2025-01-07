@@ -31,7 +31,7 @@ class Formique extends FormBuilder {
 
     });
 
-    alert(this.formContainerId);
+    //alert(this.formContainerId);
 
 
     this.formSettings = {
@@ -3172,7 +3172,7 @@ renderSubmitButton(type, name, label, attributes) {
 this.formMarkUp+= '</form>'; 
 //console.log(this.formMarkUp);
 const formContainer = document.getElementById(this.formContainerId);
-alert(this.formContainerId);
+//alert(this.formContainerId);
 if (!formContainer) {
   console.error(`Error: formContainer not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
 } else {
