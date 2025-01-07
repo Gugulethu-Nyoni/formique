@@ -43,7 +43,7 @@ class Formique extends FormBuilder {
 
    if (this.formSettings.theme) {
   let theme = this.formSettings.theme;
-  if (theme === 'dark') theme = 'default'; // Adjust if necessary
+  if (theme === 'default') theme = 'dark'; // Adjust if necessary
   this.applyTheme(theme, this.formContainerId);
   } else {
   // Fallback to dark theme if no theme is set
