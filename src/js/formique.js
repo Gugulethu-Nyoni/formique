@@ -247,7 +247,8 @@ applyTheme(theme, formContainerId) {
 
       if (formContainer) {
         // Append the theme class to the form container
-        formContainer.classList.add(`${theme}-theme`);
+        formContainer.classList.add(`${theme}-theme`, 'formique');
+
 
         // Create a <style> tag with the extracted theme styles
         const clonedStyle = document.createElement('style');
