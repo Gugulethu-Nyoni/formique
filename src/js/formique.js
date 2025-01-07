@@ -322,62 +322,43 @@ renderForm() {
 }
 
 
+// Simplified renderField method to separate rendering logic for different field types
 renderField(type, name, label, validate, attributes, options) {
-    switch (type) {
-      case 'text':
-        return this.renderTextField(type, name, label, validate, attributes);
-      case 'email':
-        return this.renderEmailField(type, name, label, validate, attributes);
-      case 'number':
-        return this.renderNumberField(type, name, label, validate, attributes);
-      case 'password':
-        return this.renderPasswordField(type, name, label, validate, attributes);
-      case 'tel': // New case for tel field
-        return this.renderTelField(type, name, label, validate, attributes);
-      case 'date':
-        return this.renderDateField(type, name, label, validate, attributes);
-      case 'time':
-        return this.renderTimeField(type, name, label, validate, attributes);
-      case 'datetime-local':
-        return this.renderDateTimeField(type, name, label, validate, attributes);
-      case 'month':
-        return this.renderMonthField(type, name, label, validate, attributes);
-      case 'week':
-        return this.renderWeekField(type, name, label, validate, attributes);
-      case 'url':
-        return this.renderUrlField(type, name, label, validate, attributes);
-      case 'search':
-        return this.renderSearchField(type, name, label, validate, attributes);
-      case 'color':
-        return this.renderColorField(type, name, label, validate, attributes);
-      case 'checkbox':
-       return this.renderCheckboxField(type, name, label, validate, attributes, options);
-      case 'radio':
-        return this.renderRadioField(type, name, label, validate, attributes, options);
-      case 'file':
-        return this.renderFileField(type, name, label, validate, attributes);
-      case 'hidden':
-        return this.renderHiddenField(type, name, label, validate, attributes);
-      case 'image':
-        return this.renderImageField(type, name, label, validate, attributes);
-      case 'textarea':
-        return this.renderTextareaField(type, name, label, validate, attributes);
-      case 'singleSelect':
-        return this.renderSingleSelectField(type, name, label, validate, attributes, options);
-      case 'multipleSelect':
-        return this.renderMultipleSelectField(type, name, label, validate, attributes, options);
-      case 'dynamicSingleSelect':
-       return this.renderDynamicSingleSelectField(type, name, label, validate, attributes, options);
-      case 'submit':
-        return this.renderSubmitButton(type, name, label, attributes);
-      default:
+    const fieldRenderMap = {
+        'text': this.renderTextField,
+        'email': this.renderEmailField,
+        'number': this.renderNumberField,
+        'password': this.renderPasswordField,
+        'tel': this.renderTelField,
+        'date': this.renderDateField,
+        'time': this.renderTimeField,
+        'datetime-local': this.renderDateTimeField,
+        'month': this.renderMonthField,
+        'week': this.renderWeekField,
+        'url': this.renderUrlField,
+        'search': this.renderSearchField,
+        'color': this.renderColorField,
+        'checkbox': this.renderCheckboxField,
+        'radio': this.renderRadioField,
+        'file': this.renderFileField,
+        'hidden': this.renderHiddenField,
+        'image': this.renderImageField,
+        'textarea': this.renderTextareaField,
+        'singleSelect': this.renderSingleSelectField,
+        'multipleSelect': this.renderMultipleSelectField,
+        'dynamicSingleSelect': this.renderDynamicSingleSelectField,
+        'submit': this.renderSubmitButton,
+    };
+
+    const renderMethod = fieldRenderMap[type];
+
+    if (renderMethod) {
+        return renderMethod.call(this, type, name, label, validate, attributes, options);
+    } else {
         console.warn(`Unsupported field type '${type}' encountered.`);
         return ''; // or handle gracefully
     }
-
-
-  
-  }
+}
 
 
  
