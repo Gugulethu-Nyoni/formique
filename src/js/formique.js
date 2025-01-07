@@ -322,7 +322,6 @@ renderForm() {
 }
 
 
-// Simplified renderField method to separate rendering logic for different field types
 renderField(type, name, label, validate, attributes, options) {
     const fieldRenderMap = {
         'text': this.renderTextField,
@@ -359,7 +358,6 @@ renderField(type, name, label, validate, attributes, options) {
         return ''; // or handle gracefully
     }
 }
-
 
  
 
@@ -3133,7 +3131,7 @@ renderMultipleSelectField(type, name, label, validate, attributes, options) {
 
 
 
-renderSubmitButton(type, name, label, attributes) {
+renderSubmitButton(type, name, label, validate, attributes) {
   // Define id attribute or fallback to name
   const id = attributes.id || name;
 
