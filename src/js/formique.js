@@ -22,9 +22,9 @@ class Formique extends FormBuilder {
     this.selectGroupClass='form-select';
     this.submitButtonClass='form-submit-btn';
     this.formParams=formParams;
-    //this.formMarkUp='';
-    this.formMarkup = this.renderFormHTML();
+    this.formMarkUp='';
     this.formContainerId = formSettings.formContainerId || 'formique';
+    //this.formMarkup = this.renderFormHTML();
     this.dependencyGraph = {};
     this.themes = [
       "dark-theme",
@@ -40,7 +40,8 @@ class Formique extends FormBuilder {
     document.addEventListener('DOMContentLoaded', () => {
     this.initDependencyGraph();
     this.registerObservers();
-    this.renderForm();
+    this.formMarkup = this.renderFormHTML(); 
+    this.renderForm(); 
 
     });
 
@@ -3206,7 +3207,7 @@ if (!formContainer) {
   formContainer.innerHTML = this.formMarkUp;
 }
 
-//return this.formMarkUp;
+return this.formMarkUp;
 
 
  }
