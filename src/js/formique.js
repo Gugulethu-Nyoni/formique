@@ -1321,16 +1321,23 @@ renderDateTimeField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
+   // Handle the binding syntax
   let bindingDirective = '';
+  if (attributes.binding) {
   if (attributes.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (attributes.binding.startsWith('::') && name) {
+   bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
+  }
+
+
+  
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
