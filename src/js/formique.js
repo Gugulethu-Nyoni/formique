@@ -26,15 +26,15 @@ class Formique extends FormBuilder {
     this.formMarkUp='';
     this.dependencyGraph = {};
     this.themes = [
-      "dark-theme",
-      "light-theme",
-      "pink-theme",
-      "light-blue-theme",
-      "indigo-theme",
-      "dark-blue-theme",
-      "dark-orange-theme",
-      "green-theme",
-      "purple-theme"
+      "dark",
+      "light",
+      "pink",
+      "light",
+      "indigo",
+      "dark-blue",
+      "dark-orange",
+      "green",
+      "purple"
     ];
     document.addEventListener('DOMContentLoaded', () => {
     this.initDependencyGraph();
