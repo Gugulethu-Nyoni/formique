@@ -22,9 +22,8 @@ class Formique extends FormBuilder {
     this.selectGroupClass='form-select';
     this.submitButtonClass='form-submit-btn';
     this.formParams=formParams;
-    this.formMarkUp='';
     this.formContainerId = formSettings.formContainerId || 'formique';
-    //this.formMarkup = this.renderFormHTML();
+    this.formMarkUp='';
     this.dependencyGraph = {};
     this.themes = [
       "dark-theme",
@@ -40,11 +39,9 @@ class Formique extends FormBuilder {
     document.addEventListener('DOMContentLoaded', () => {
     this.initDependencyGraph();
     this.registerObservers();
-    this.formMarkup = this.renderFormHTML(); 
-    this.renderForm(); 
+    this.renderFormHTML();
 
     });
-
 
     //alert(this.formContainerId);
 
@@ -56,14 +53,13 @@ class Formique extends FormBuilder {
       ...formSettings
     };
 
-   if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
-      let theme = this.formSettings.theme;
-      this.applyTheme(theme, this.formContainerId);
+    if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
+    let theme = this.formSettings.theme;
+    this.applyTheme(theme, this.formContainerId);
     } else {
       // Fallback to dark theme if no theme is set or invalid theme
       this.applyTheme('dark', this.formContainerId);
     }
-
 
     
     if (Object.keys(this.formParams).length > 0) {
@@ -71,7 +67,7 @@ class Formique extends FormBuilder {
      }
     
 
-    //this.renderForm();
+    this.renderForm();
     }
 
 
@@ -3207,7 +3203,7 @@ if (!formContainer) {
   formContainer.innerHTML = this.formMarkUp;
 }
 
-return this.formMarkUp;
+//return this.formMarkUp;
 
 
  }
