@@ -1337,7 +1337,7 @@ renderDateTimeField(type, name, label, validate, attributes) {
   }
 
 
-  
+
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2917,8 +2917,8 @@ renderSingleSelectField(type, name, label, validate, attributes, options, subCat
 if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
 
 
-// Find the target div with id "formique"
-const targetDiv = document.getElementById('formique');
+// Find the target div with id this.formContainerId
+const targetDiv = document.getElementById(this.formContainerId);
 
 let categoryId = attributes.id || name;
 
@@ -2946,7 +2946,7 @@ if (targetDiv) {
   // Append the script element to the target div
   targetDiv.appendChild(scriptElement);
 } else {
-  console.error('Target div with id "formique" not found.');
+  console.error(`Target div with id "${this.formContainerId}" not found.`);
 }
 
 subCategoriesOptions.forEach(subCategory => {
