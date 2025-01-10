@@ -22,7 +22,8 @@ class Formique extends FormBuilder {
     this.selectGroupClass='form-select';
     this.submitButtonClass='form-submit-btn';
     this.formParams=formParams;
-    this.formMarkUp='';
+    //this.formMarkUp='';
+    this.formMarkup = this.renderFormHTML();
     this.formContainerId = formSettings.formContainerId || 'formique';
     this.dependencyGraph = {};
     document.addEventListener('DOMContentLoaded', () => {
