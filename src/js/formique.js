@@ -34,12 +34,23 @@ class Formique extends FormBuilder {
       "dark-blue",
       "dark-orange",
       "green",
-      "purple"
+      "purple",
+      "midnight-blush"
     ];
     document.addEventListener('DOMContentLoaded', () => {
     this.renderFormHTML();
     this.initDependencyGraph();
     this.registerObservers();
+
+
+        if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
+    let theme = this.formSettings.theme;
+    this.applyTheme(theme, this.formContainerId);
+    } else {
+      // Fallback to dark theme if no theme is set or invalid theme
+      this.applyTheme('dark', this.formContainerId);
+    }
+
 
     });
 
@@ -53,13 +64,6 @@ class Formique extends FormBuilder {
       ...formSettings
     };
 
-    if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
-    let theme = this.formSettings.theme;
-    this.applyTheme(theme, this.formContainerId);
-    } else {
-      // Fallback to dark theme if no theme is set or invalid theme
-      this.applyTheme('dark', this.formContainerId);
-    }
 
     
     if (Object.keys(this.formParams).length > 0) {
