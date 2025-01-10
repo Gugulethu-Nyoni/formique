@@ -37,9 +37,9 @@ class Formique extends FormBuilder {
       "purple"
     ];
     document.addEventListener('DOMContentLoaded', () => {
+    this.renderFormHTML();
     this.initDependencyGraph();
     this.registerObservers();
-    this.renderFormHTML();
 
     });
 
@@ -109,6 +109,7 @@ initDependencyGraph() {
 
     // Hide dependent fields initially
     if (attributes.dependents) {
+
       attributes.dependents.forEach((dependentName) => {
         const dependentField = this.formSchema.find(
           ([, depName]) => depName === dependentName
@@ -116,8 +117,14 @@ initDependencyGraph() {
         const dependentAttributes = dependentField ? dependentField[4] || {} : {};
         const dependentFieldId = dependentAttributes.id || dependentName;
 
+        //alert(dependentFieldId);
+
         const inputBlock = document.querySelector(`#${dependentFieldId}-block`);
+        //alert(inputBlock);
+        
+
         if (inputBlock) {
+         // alert(dependentName);
           inputBlock.style.display = 'none'; // Hide dependent field by default
         }
       });
