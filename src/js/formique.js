@@ -1,4 +1,4 @@
-import '../css/formique.css'; // Ensure this line is present
+///import '../css/formique.css'; // Ensure this line is present
 
 // Base class for form rendering self 
 
