@@ -263,10 +263,10 @@ const formHTML = form.renderFormHTML();
         };
 
         const formSchema = [
-            ['text', 'name', 'Name', { required: true }, {}, ''],
-            ['email', 'email', 'Email', { required: true }, {}, ''],
+            ['text', 'name', 'Name', { required: true }],
+            ['email', 'email', 'Email', { required: true }],
             [
-                'singleSelect', 'diet', 'Dietary Requirements', {required: true}, {}, '', 
+                'singleSelect', 'diet', 'Dietary Requirements', {required: true}, {}, 
                 [
                     {value: 'gluten-free', label: 'Gluten-free'},
                     {value: 'dairy-free', label: 'Dairy-free'},
@@ -282,7 +282,7 @@ const formHTML = form.renderFormHTML();
                     {value: 'flexitarian', label: 'Flexitarian'}
                 ]
             ],
-            ['submit', 'submitButton', 'Submit', {}, {}, ''],
+            ['submit', 'submitButton', 'Submit'],
         ];
 
         const form = new Formique(formParams, formSchema);
