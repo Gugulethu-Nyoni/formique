@@ -222,7 +222,7 @@ const formHTML = form.renderFormHTML();
 
        
         const form = new Formique(formParams, formSchema);
-        const formHTML = form.renderFormHTML();
+        
         
 
     </script> 
@@ -286,7 +286,7 @@ const formHTML = form.renderFormHTML();
         ];
 
         const form = new Formique(formParams, formSchema);
-        const formHTML = form.renderFormHTML();
+        
 
     </script>
     ```
