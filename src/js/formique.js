@@ -30,9 +30,9 @@
  * const formique = new Formique(formParams, formSchema, formSettings);
  * formique.renderForm();
  * 
- * Author: [Your Name]
+ * Author: Gugulethu Nyoni
  * Version: 1.0.0
- * License: [Specify your license here]
+ * License: Open-source & MIT licensed.
  */
 
 
