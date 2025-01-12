@@ -398,7 +398,7 @@ renderField(type, name, label, validate, attributes, options) {
         'file': this.renderFileField,
         'hidden': this.renderHiddenField,
         'image': this.renderImageField,
-        'textarea': this.renderTextareaField,
+        'textarea': this.renderTextAreaField,
         'singleSelect': this.renderSingleSelectField,
         'multipleSelect': this.renderMultipleSelectField,
         'dynamicSingleSelect': this.renderDynamicSingleSelectField,
@@ -945,68 +945,102 @@ if (attributes.binding === 'bind:value' && name) {
 
 
 // Textarea field rendering
+
 renderTextAreaField(type, name, label, validate, attributes) {
-  const textAreaValidationAttributes = [
-    'required',
-    'minlength',
-    'maxlength'
-  ];
+  const textInputValidationAttributes = [
+  'required',
+  'minlength',
+  'maxlength',
+  'pattern',
+];
 
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (textAreaValidationAttributes.includes(key)) {
+      if (textInputValidationAttributes.includes(key)) {
         if (typeof value === 'boolean' && value) {
           validationAttrs += `  ${key}\n`;
         } else {
-          validationAttrs += `  ${key}="${value}"\n`;
+          switch (key) {
+            case 'pattern':
+            case 'minlength':
+            case 'maxlength':
+              validationAttrs += `  ${key}="${value}"\n`;
+              break;
+            default:
+              if (!textInputValidationAttributes.includes(key)) {
+              console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'number'.\x1b[0m`);
+               }
+              break;
+          }
         }
       } else {
-        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'textarea'.\x1b[0m`);
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'text'.\x1b[0m`);
       }
     });
   }
 
+
+
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
-    if (attributes.binding === 'bind:value' && name) {
-      bindingDirective = `bind:value="${name}"\n`;
-    }
-    if (attributes.binding.startsWith('::') && name) {
-      bindingDirective = `bind:value="${name}"\n`;
-    }
-    if (attributes.binding && !name) {
-      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} textarea field.`);
-      return;
-    }
+if (attributes.binding === 'bind:value' && name) {
+    bindingDirective = `bind:value="${name}"\n`;
   }
+  if (attributes.binding.startsWith('::') && name) {
+   bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (attributes.binding && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+    return;
+  }
+  }
+
+
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
+  // Determine if semanti is true based on formSettings
+  const framework = this.formSettings?.framework || false;
 
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
-      if (key.startsWith('on')) {
-        const eventValue = value.endsWith('()') ? value : `${value}()`;
-        additionalAttrs += `  ${key}="${eventValue}"\n`;
+  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
+        // Handle event attributes
+        if (framework === 'semantq') {
+          const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+          additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+        } else {
+          // Add parentheses if not present
+          const eventValue = value.endsWith('()') ? value : `${value}()`;
+          additionalAttrs += `  ${key}="${eventValue}"\n`;
+        }
       } else {
+        // Handle boolean attributes
         if (value === true) {
           additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
         } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
           additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
         }
       }
     }
   }
 
-  let inputClass = attributes.class || this.inputClass;
 
-  // Construct the final HTML string
-  let formHTML = `
+
+  let inputClass; 
+  if ('class' in attributes) {
+    inputClass = attributes.class; 
+  } else {
+        inputClass = this.inputClass; 
+  }
+
+// Construct the final HTML string for textarea
+let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}
         ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
@@ -1023,18 +1057,18 @@ renderTextAreaField(type, name, label, validate, attributes) {
     </div>
 `.replace(/^\s*\n/gm, '').trim();
 
-  let formattedHtml = formHTML;
+let formattedHtml = formHTML;
 
-  // Apply vertical layout to the <textarea> element only
-  formattedHtml = formattedHtml.replace(/<textarea\s+([^>]*)>\s*<\/textarea>/, (match, p1) => {
-    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
-    return `<textarea\n${attributes}\n></textarea>`;
-  });
+// Apply vertical layout to the <textarea> element only
+formattedHtml = formattedHtml.replace(/<textarea\s+([^>]*)>\s*<\/textarea>/, (match, p1) => {
+  // Reformat attributes into a vertical layout
+  const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+  return `<textarea\n${attributes}\n></textarea>`;
+});
 
-  this.formMarkUp += formattedHtml;
+this.formMarkUp += formattedHtml;
+
 }
-
-
 
 
 // New method for rendering tel fields
