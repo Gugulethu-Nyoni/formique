@@ -2561,29 +2561,28 @@ renderImageField(type, name, label, validate, attributes) {
   return formattedHtml;
 }
 
-renderTextareaField(type, name, label, validate, attributes) {
-  // Define valid validation attributes for textarea
-  const textareaValidationAttributes = [
+
+
+
+
+
+// Textarea field rendering
+renderTextAreaField(type, name, label, validate, attributes) {
+  const textAreaValidationAttributes = [
     'required',
     'minlength',
-    'maxlength',
-    'rows',
-    'cols',
+    'maxlength'
   ];
 
-  // Construct validation and dimension attributes
+  // Construct validation attributes
   let validationAttrs = '';
-  let dimensionAttrs = '';
-
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (textareaValidationAttributes.includes(key)) {
-        if (key === 'required') {
-          validationAttrs += `required\n`;
-        } else if (['minlength', 'maxlength'].includes(key)) {
-          validationAttrs += `${key}="${value}"\n`;
-        } else if (['rows', 'cols'].includes(key)) {
-          dimensionAttrs += `${key}="${value}"\n`;
+      if (textAreaValidationAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          validationAttrs += `  ${key}="${value}"\n`;
         }
       } else {
         console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
@@ -2593,8 +2592,17 @@ renderTextareaField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' || bindingSyntax.startsWith('::')) {
-    bindingDirective = `bind:value="${name}"\n`;
+  if (attributes.binding) {
+    if (attributes.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes.binding.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
   }
 
   // Get the id from attributes or fall back to name
@@ -2603,65 +2611,50 @@ renderTextareaField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
-        // Handle event attributes
-        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+      if (key.startsWith('on')) {
+        const eventValue = value.endsWith('()') ? value : `${value}()`;
+        additionalAttrs += `  ${key}="${eventValue}"\n`;
       } else {
-        // Handle boolean attributes
         if (value === true) {
           additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
         } else if (value !== false) {
-          // Convert underscores to hyphens and set the attribute
           additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
         }
       }
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
-  } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
+  let inputClass = attributes.class || this.inputClass;
+
+  // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
       <label for="${id}">${label}
-  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-</label>
+        ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+      </label>
       <textarea 
         name="${name}"
         ${bindingDirective}
-        ${dimensionAttrs}
-        id="${id + '-block'}"
+        id="${id}"
         class="${inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
-      ></textarea>
+        ${additionalAttrs.includes('placeholder') ? '' : (this.formSettings.placeholders ? `placeholder="${label}"` : '')}>
+      </textarea>
     </div>
-  `.replace(/^\s*\n/gm, '').trim();
+`.replace(/^\s*\n/gm, '').trim();
 
-  let formattedHtml = formHTML; 
+  let formattedHtml = formHTML;
 
   // Apply vertical layout to the <textarea> element only
-  formattedHtml = formattedHtml.replace(/<textarea\s+([^>]*)<\/textarea>/, (match, p1) => {
-    // Reformat attributes into a vertical layout
+  formattedHtml = formattedHtml.replace(/<textarea\s+([^>]*)>\s*<\/textarea>/, (match, p1) => {
     const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
     return `<textarea\n${attributes}\n></textarea>`;
   });
 
-  // Ensure the <div> block starts on a new line and remove extra blank lines
-  formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
-    // Ensure <div> starts on a new line
-    return `\n${match}\n`;
-  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
-
-  //return formattedHtml;
-  this.formMarkUp +=formattedHtml;
+  this.formMarkUp += formattedHtml;
 }
-
 
 
 
