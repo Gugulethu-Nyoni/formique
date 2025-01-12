@@ -945,7 +945,7 @@ if (attributes.binding === 'bind:value' && name) {
 
 
 // Textarea field rendering
-renderTextAreaField(name, label, validate, attributes) {
+renderTextAreaField(type, name, label, validate, attributes) {
   const textAreaValidationAttributes = [
     'required',
     'minlength',
