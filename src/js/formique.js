@@ -1,6 +1,40 @@
-///import '../css/formique.css'; // Ensure this line is present
+/**
+ * FormiqueJS Class Library
+ * 
+ * This library provides an extension of the FormBuilder class, allowing for dynamic form rendering, theming, 
+ * and dependency management. The key functionalities include:
+ * 
+ * - Dynamic form rendering based on a provided schema (`formSchema`).
+ * - Theming support with predefined themes that can be applied to the form container.
+ * - Dependency management to show/hide fields based on parent field values.
+ * - Initialization of event listeners to handle form input changes.
+ * - **Dynamic dropdowns**: Automatically populate dropdown fields based on other form inputs.
+ * - **ARIA labels and WCAG compliance**: Generates forms with accessibility features, including ARIA labels for improved accessibility and compliance with Web Content Accessibility Guidelines (WCAG).
+ * 
+ * Key Methods:
+ * - `constructor(formParams, formSchema, formSettings)`: Initializes the form with the provided parameters, schema, and settings.
+ * - `renderForm()`: Renders the form using the schema and appends it to the DOM.
+ * - `initDependencyGraph()`: Sets up the dependency graph for managing field visibility based on dependencies.
+ * - `attachInputChangeListener(parentField)`: Attaches input change listeners to parent fields for dependency management.
+ * - `handleParentFieldChange(parentFieldId, value)`: Handles changes in parent fields and updates dependent fields.
+ * - `registerObservers()`: Registers observers for dependent fields to manage their state based on parent field values.
+ * - `applyTheme(theme, formContainerId)`: Applies a specified theme to the form container.
+ * - `renderFormElement()`: Renders the form element with the necessary attributes and CSRF token if applicable.
+ * - `renderField(type, name, label, validate, attributes, options)`: Renders individual form fields based on type and attributes, including dynamic dropdowns and ARIA attributes.
+ * 
+ * Dependencies:
+ * - The library depends on a DOM structure to initialize and manipulate form elements.
+ * - Requires a CSS stylesheet with theme definitions.
+ * 
+ * Example Usage:
+ * const formique = new Formique(formParams, formSchema, formSettings);
+ * formique.renderForm();
+ * 
+ * Author: [Your Name]
+ * Version: 1.0.0
+ * License: [Specify your license here]
+ */
 
-// Base class for form rendering self 
 
 class FormBuilder 
 {

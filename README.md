@@ -425,7 +425,7 @@ const formParams = {
   enctype: 'multipart/form-data', // Encoding type for file uploads
   target: '_blank', // Where to open the form result (e.g., '_self', '_blank')
   novalidate: true, // Disable form validation
-  accept_charset: 'UTF-8' // this will be transformed to: accept-charset: 'UTF-8'  Character set for form data
+  accept_charset: 'UTF-8' // this will be transformed to: accept-charset: 'UTF-8' Character set for form data
 };
 ```
 
