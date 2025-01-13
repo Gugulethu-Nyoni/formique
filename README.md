@@ -1,6 +1,8 @@
 # Formique
 
-FormiqueJS is a lightweight, declarative JavaScript syntax library for generating WCAG accessibility and usability compliant forms. The library is suited for vanilla js and Semantq JS framework. Formique simplifies the process of using JavaScript to create and manage forms with a variety of input types, built-in validation, and customizable attributes and styling. 
+FormiqueJS is a robust and elegant WCAG and ARIA compliant form-building library tailored for JavaScript enthusiasts. It supports a wide array of input types, features JS-driven themes, and offers advanced functionalities like nested conditional logic and dynamic dropdowns. Highly customizable and extensible, Formique is built for the Semantq JS Framework but seamlessly integrates with Vanilla JS, React, Vue, Angular, and Svelte.
+
+
 
 Formique is Open-source &amp; MIT licensed.
 
