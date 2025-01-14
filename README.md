@@ -169,7 +169,7 @@ There are two ways to install and use Formique in your project:
 1. Include the CSS and JavaScript in the head section of your HTML file:
 
     ```html
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.1/formique.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.1/formique.min.css" formique-style>
     ```
 
 2. Insert the js script tag just before the closing tag ```html </body> ``` of your html file.
@@ -272,7 +272,7 @@ const form = new Formique(formParams, formSchema, formSettings);
 2. Include the CSS and import Formique in the head section of your HTML file:
 
     ```html
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.1/formique.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.1/formique.min.css" formique-style>
     ```
 3. Define form container somewhere in the html body: 
 
