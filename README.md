@@ -162,76 +162,47 @@ In the example above:
 
 ## Installation
 
-There are two ways to install and use Formique in your project:
+There are two primary ways to install and use Formique in your project: 
 
-## Option A: Use Formique as a Universal Module Definition (UMD) Module
+### Option A: Use Formique in a Browser Context (No Bundler Required)
 
-1. Include the CSS and JavaScript in the head section of your HTML file:
+1. **Include the CSS** in the head section of your HTML file:
 
     ```html
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.1/formique.min.css" formique-style>
     ```
 
-2. Insert the js script tag just before the closing tag ```html </body> ``` of your html file.
+2. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
     ```html
     <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
     ```
-## Usage Example
 
-1. Define the form container somewhere in the html body: 
+### Usage Example:
 
-```html
-<div id="formique"></div>
-```
+1. Define the form container somewhere in the HTML body:
 
-Alternatively, you can also define your container element with a different ID value instead of the default 'formique'. To do this, set containerId: 'someelementid' in the formSettings object.
-2. Define your form parameters (formParams), form schema (formSchema) and then initialize Formique in script which should go below this script tag: 
+    ```html
+    <div id="formique"></div>
+    ```
 
-## Example:
+    Alternatively, you can use a different container ID by setting `containerId: 'someelementid'` in the `formSettings` object.
 
-```javascript
-const formSettings={
-  requiredFieldIndicator: true,
-  framework: 'semantq',
-  placeholders: true,
-  containerid:'form-div'
-}
+2. Define your `formParams`, `formSchema`, and initialize Formique in a `<script>` block (placed below the previous script tag):
 
-
-const form = new Formique(formParams, formSchema, formSettings);
-```
-
-
-```html
-    <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
-
+    ```html
     <script>
-        
         const formSchema = [
             ['text', 'name', 'Name', { required: true }, {}],
             ['email', 'email', 'Email', { required: true }, {}],
-            [
-                'singleSelect', 'diet', 'Dietary Requirements', {required: true}, {}, 
-                [
-                    {value: 'gluten-free', label: 'Gluten-free'},
-                    {value: 'dairy-free', label: 'Dairy-free'},
-                    {value: 'keto', label: 'Ketogenic'},
-                    {value: 'low-carb', label: 'Low-carb'},
-                    {value: 'pescatarian', label: 'Pescatarian'},
-                    {value: 'halal', label: 'Halal'},
-                    {value: 'kosher', label: 'Kosher'},
-                    {value: 'vegetarian', label: 'Vegetarian'},
-                    {value: 'lacto-ovo-vegetarian', label: 'Lacto-ovo-vegetarian'},
-                    {value: 'raw-food', label: 'Raw food'},
-                    {value: 'macrobiotic', label: 'Macrobiotic'},
-                    {value: 'flexitarian', label: 'Flexitarian'}
-                ]
-            ],
+            ['singleSelect', 'diet', 'Dietary Requirements', { required: true }, {}, [
+                { value: 'gluten-free', label: 'Gluten-free' },
+                { value: 'vegetarian', label: 'Vegetarian' },
+                // Additional options here...
+            ]],
             ['submit', 'submitButton', 'Submit']
         ];
 
-  // optional
         const formParams = {
             method: 'post',
             action: 'submit.js',
@@ -239,35 +210,57 @@ const form = new Formique(formParams, formSchema, formSettings);
             class: 'form',
             style: 'width: 100%; font-size: 14px;'
         };
-// optional 
 
-        const formSettings={
-          requiredFieldIndicator: true,
-          framework: 'semantq',
-          placeholders: true,
-          containerid:'form-div'
-        }  
+        const formSettings = {
+            requiredFieldIndicator: true,
+            framework: 'semantq',
+            placeholders: true,
+            containerid: 'form-div'
+        };
 
-
+        // Initialize the form
         const form = new Formique(formSchema, formParams, formSettings);
-  
-  // OR       
-  
-        const form = new Formique(formSchema);
-      // this would still work with formParams and formSettings left out 
-     // With this approach, the default dark theme will be applied, and the form inputs will be rendered without the surrounding <form> element. 
-    // Also - this Instantiation assumpes a vanilla js context without any specific framework specs to be factored in
+    </script>
+    ```
 
-    </script> 
-```
+    **Note:** You can also use this instantiation with just the `formSchema`, leaving out the `formParams` and `formSettings`. This will apply the default dark theme and render the form inputs without the surrounding `<form>` element.
 
-## Option B: Use Formique as an ESM Module
+---
 
-1. Install Formique via npm:
+### Option B: Use Formique in a Node.js (Bundler) Environment
+
+1. **Install Formique via npm:**
 
     ```bash
     npm install formique
     ```
+
+2. **Import and Use Formique in Your JavaScript File:**
+
+    ```javascript
+    import Formique from 'formique';
+
+    const formSchema = [
+        // Define your schema as shown above...
+    ];
+
+    const formParams = {
+        // Optional parameters...
+    };
+
+    const formSettings = {
+        // Optional settings...
+    };
+
+    const form = new Formique(formSchema, formParams, formSettings);
+    ```
+
+---
+
+### Other Formats
+
+Formique is also available in additional formats like **ESM (ES Modules)** and **IIFE (Immediately Invoked Function Expression)** for specific use cases. For most projects, we recommend using **UMD** for browser contexts and **ESM** for Node.js environments. Refer to the Formique CDN for all available formats.
+
 
 2. Include the CSS and import Formique in the head section of your HTML file:
 
