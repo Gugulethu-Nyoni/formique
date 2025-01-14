@@ -1,17 +1,24 @@
 {
   "name": "formique",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Formique Declarative Form Syntax JavaScript Library",
-  "main": "dist/formique.umd.js",
-  "module": "dist/formique.esm.js",
+  "main": "formique.cjs.js",
+  "module": "formique.mjs",
+  "browser": "formique.umd.js",
   "exports": {
-    ".": "./dist/formique.esm.js"
+    ".": {
+      "require": "./formique.cjs.js",
+      "import": "./formique.mjs",
+      "default": "./formique.umd.js"
+    }
   },
   "files": [
     "dist/*",
     "README.md"
   ],
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": ["form", "javascript", "forms", "library"],
+  "author": "Gugulethu Nyoni",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
 }
