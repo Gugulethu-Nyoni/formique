@@ -250,8 +250,13 @@ const form = new Formique(formParams, formSchema, formSettings);
 
 
         const form = new Formique(formSchema, formParams, formSettings);
-        
-        
+  
+  // OR       
+  
+        const form = new Formique(formSchema);
+      // this would still work with formParams and formSettings left out 
+     // With this approach, the default dark theme will be applied, and the form inputs will be rendered without the surrounding <form> element. 
+    // Also - this Instantiation assumpes a vanilla js context without any specific framework specs to be factored in
 
     </script> 
 ```
