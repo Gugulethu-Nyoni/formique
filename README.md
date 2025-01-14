@@ -18,7 +18,7 @@ Formique is Open-source &amp; MIT licensed.
 
 ## Accessibility Compliance - 
 
-Formique is designed with a laser focus on usability and accessibility, ensuring that the generated form HTML markup meets the highest standards of web accessibility, such as the Web Content Accessibility Guidelines (WCAG) 2.1.
+Formique is designed with a laser focus on WAI-ARIA and WCAG usability and accessibility, ensuring that the generated form HTML markup meets the highest standards of web accessibility.
 
 With minimal declarative form input definitions, Formique takes care of the rest to ensure the final markup is comprehensive enough to meet [official](https://www.w3.org/WAI/tutorials/forms/) usability and accessibility standards. 
 
@@ -27,24 +27,31 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 
 ## Key Features
 
-  - Declarative Syntax: Define forms using a simple and intuitive schema.
-  - Wide Range of Inputs: Supports text, email, number, password, date, time, file uploads, and more.
-  - Validation and Attributes: Easily specify validation rules and attributes for each form field.
-  - Dynamic Form Generation: Generate forms dynamically based on your schema.
-  - Framework Agnostic: Currently works Semantq and vanilla JS.
-  - Accessibility and usabality compliant: Formique yields form mark compliant with WCAG.
-  - Mobile responsive
-
+- **Declarative Syntax:** Define forms using a simple and intuitive schema.
+- **Wide Range of Inputs:** Supports text, email, number, password, date, time, file uploads, and more.
+- **Validation and Attributes:** Easily specify validation rules and attributes for each form field.
+- **Dynamic Form Generation:** Generate forms dynamically based on your schema.
+- **Framework Agnostic:** Currently works with Semantq and vanilla JS. (More frameworks to be added)
+- **Accessibility and Usability Compliant:** Formique yields form markup compliant with WCAG.
+- **Mobile Responsive:** Forms are mobile responsive out of the box.
+- **Nested Dynamic Conditional Logic:** Implement complex conditional logic to show or hide form fields based on user input.
+- **Dynamic Dropdowns:** Create dropdowns whose options change dynamically based on other field selections.
+- **JavaScript-Driven Themes:** Apply themes dynamically using JavaScript for a customizable user interface.
+- **WAI-ARIA and WCAG-Compliant HTML:** Ensure all form elements are accessible and meet WCAG standards.
+- **Progressive Enhancement:** Forms function with or without JavaScript, ensuring accessibility and functionality across all environments.
 
 ## Why Choose Formique?
 
-   - Vanilla JS: No dependencies; works seamlessly with vanilla JS and Semantq JS framework.(More frameworks to be added)
-   - Lightweight: Minimal footprint optimized for performance.
-   - Customizable: Adapt the library to fit your project's unique needs for functionality and style.
-   - Declarative: Write your forms in JavaScript and define forms with a concise schema for better readability and maintainability.
-   - Usability and Accessibility compliant: You just need to focus on defining form fields data. Formique handles WCAG compliance for you. 
-   - Mobile responsive: Formique forms are mobile responsive off the bat
-   
+- **Vanilla JS:** No dependencies; works seamlessly with vanilla JS and Semantq JS framework. (More frameworks to be added)
+- **Lightweight:** Minimal footprint optimized for performance.
+- **Customizable:** Adapt the library to fit your project's unique needs for functionality and style.
+- **Declarative:** Write your forms in JavaScript and define forms with a concise schema for better readability and maintainability.
+- **Usability and Accessibility Compliant:** You just need to focus on defining form fields data. Formique handles WCAG compliance for you.
+- **Mobile Responsive:** Formique forms are mobile responsive out of the box.
+- **Dynamic Features:** Implement nested conditional logic, dynamic dropdowns, and JavaScript-driven themes to enhance user experience.
+- **Progressive Enhancement:** Forms are designed to function with or without JavaScript, ensuring broad compatibility.
+
+
 
 ## Form Input Types Covered
 
