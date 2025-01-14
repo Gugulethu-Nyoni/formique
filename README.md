@@ -238,9 +238,15 @@ const form = new Formique(formParams, formSchema, formSettings);
             ['submit', 'submitButton', 'Submit']
         ];
 
+        const formSettings={
+          requiredFieldIndicator: true,
+          framework: 'semantq',
+          placeholders: true,
+          containerid:'form-div'
+        }  
 
-       
-        const form = new Formique(formParams, formSchema);
+
+        const form = new Formique(formParams, formSchema,formSettings);
         
         
 

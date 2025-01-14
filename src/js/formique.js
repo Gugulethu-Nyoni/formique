@@ -46,7 +46,7 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
- constructor (formParams = {}, formSchema, formSettings={}) {
+ constructor (formSchema, formParams = {}, formSettings={}) {
     super();
     this.formSchema=formSchema;
     this.divClass='input-block';
