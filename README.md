@@ -207,14 +207,7 @@ const form = new Formique(formParams, formSchema, formSettings);
     <script src="https://cdn.jsdelivr.net/npm/formique@1.0.1/formique.umd.js"></script>
 
     <script>
-        const formParams = {
-            method: 'post',
-            action: 'submit.js',
-            id: 'myForm',
-            class: 'form',
-            style: 'width: 100%; font-size: 14px;'
-        };
-
+        
         const formSchema = [
             ['text', 'name', 'Name', { required: true }, {}],
             ['email', 'email', 'Email', { required: true }, {}],
@@ -238,6 +231,15 @@ const form = new Formique(formParams, formSchema, formSettings);
             ['submit', 'submitButton', 'Submit']
         ];
 
+
+        const formParams = {
+            method: 'post',
+            action: 'submit.js',
+            id: 'myForm',
+            class: 'form',
+            style: 'width: 100%; font-size: 14px;'
+        };
+
         const formSettings={
           requiredFieldIndicator: true,
           framework: 'semantq',
@@ -246,7 +248,7 @@ const form = new Formique(formParams, formSchema, formSettings);
         }  
 
 
-        const form = new Formique(formParams, formSchema,formSettings);
+        const form = new Formique(formSchema, formParams, formSettings);
         
         
 
