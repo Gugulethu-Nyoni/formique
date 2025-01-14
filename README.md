@@ -706,7 +706,46 @@ The code below goes into your
 ```
 
 
+## Nested Conditionality Logic - Schema Definition
 
+Formique allows for dynamic form generation with powerful conditional logic based on the values of other form fields. This allows you to create forms where the options in one field depend on the selection made in another field.
+
+### Key Features:
+- **Dynamic Field Display**: Show or hide fields based on previous selections.
+- **Conditional Logic**: Use conditions such as specific values in other fields to control the availability of options or visibility of fields.
+- **Multiple Dependencies**: Fields can have more than one dependents 
+
+### Schema Definition Example:
+
+The following schema demonstrates how to implement dynamic dropdowns with nested conditional logic in Formique.
+
+```js
+[
+  // Role field - Single Select (required)
+  ['singleSelect', 'role', 'Role', { required: true }, { dependents: ['topic', 'mode'] }, 
+    // in the attributes object of the parent field add dependents (array) by field names to the dependents: item
+    [
+      { value: 'conference attendee', label: 'Conference Attendee' },
+      { value: 'conference presenter', label: 'Conference Presenter' }
+    ]
+  ],
+
+  // Topic field - Text input (dependent on 'role' being 'conference presenter')
+  ['text', 'topic', 'Topic', {}, { dependsOn: 'role', condition: 'conference presenter' }],
+  // in the attributes object of the child field add the dependsOn: 'role' item where the key is dependsOn: and the value is name of the parent field: e.g. 'role in this case'
+  // also add the condition this way:  condition: 'conference presenter' 
+  // you can use the string 'conference presenter' as the condition to be met
+  // so this if the user select Conference Presenter in the role field - then dependents of that field (mode and topic) will be displayed. If the selected is changed to something else that doesn't meet the defined condtion - the dependents will be hidden. 
+
+  // Mode field - Single Select (required, dependent on 'role' being 'conference presenter')
+  ['singleSelect', 'mode', 'Mode', { required: true }, { dependsOn: 'role', condition: (value) => value === 'conference presenter' }, // you can use an arrow function to evaluate the condition - this is useful for more comprex evaluations 
+    [
+      { value: 'physical', label: 'Physical' },
+      { value: 'virtual', label: 'Virtual' }
+    ]
+  ]
+]
+```
 
 ## Styling the Form
 
