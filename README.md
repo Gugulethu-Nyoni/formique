@@ -645,6 +645,69 @@ By customizing these parameters, you can control various aspects of the form's b
 </div>
 ```
 
+
+## Dynamic Drop-Down Schema
+
+The `dynamicSingleSelect` input type in Formique is used for generating dynamic dropdowns based on predefined options. It allows you to define multi-level select options (e.g., categories and subcategories) that change based on user selections. Below is an example of the schema format for implementing dynamic drop-downs.
+
+
+### Common Use Cases:
+
+- **Country-State Dropdowns**: A common implementation where selecting a country dynamically updates the list of states/provinces.
+- **Product Categories**: A dropdown where the first selection (e.g., a product category) updates the second dropdown to show relevant product subcategories.
+- **Job Roles & Departments**: Selecting a department dynamically shows job roles related to that department (e.g., selecting "IT" shows job roles like "Software Developer", "Network Engineer", etc.).
+- **Course & Subjects**: In educational systems, choosing a course can display relevant subjects or modules available for that course.
+- **Location-Based Services**: When selecting a country or city, a second dropdown can list local services or offices relevant to the location chosen.
+
+
+### Dynamic Drop Downs Schema Definition:
+
+The code below goes into your 
+```javascript
+[
+  'dynamicSingleSelect',       // Input type (required)
+  'languages',                 // Field name (required)
+  'Programming Scope-Programming Languages', // Labels for both primary drop down and secondary (dynamic) drop down seperated by a hyphen - e.g. Country-States
+  { required: true },          // Validation rules (optional) but the curly braces {} must always be included  
+  {},                          // Field attributes (optional) but the curly braces {} must always be included  
+  
+  // Dropdown Options
+  [
+    {
+      id: 'frontend',           // Option group ID (required)
+      label: 'Front End',       // Option group label (required)
+      options: [                // List of options (required)
+        { value: 'javascript', label: 'JavaScript' },
+        { value: 'html', label: 'HTML' },
+        { value: 'css', label: 'CSS' },
+        { value: 'typescript', label: 'TypeScript' },
+        { value: 'semantq', label: 'Semantq' },
+        { value: 'svelte', label: 'Svelte' },
+        { value: 'vue', label: 'Vue' },
+        { value: 'react', label: 'React' },
+        { value: 'angular', label: 'Angular' },
+      ]
+    },
+    {
+      id: 'backend',            // Option group ID (required)
+      label: 'Back End',        // Option group label (required)
+      options: [                // List of options (required)
+        { value: 'nodejs', label: 'Node.js' },
+        { value: 'python', label: 'Python' },
+        { value: 'java', label: 'Java' },
+        { value: 'php', label: 'PHP' },
+        { value: 'ruby', label: 'Ruby' },
+        { value: 'csharp', label: 'C#' },
+        { value: 'golang', label: 'Go' }
+      ]
+    }
+  ]
+]
+```
+
+
+
+
 ## Styling the Form
 
 Formique provides a set of CSS classes to facilitate the styling of various form elements. The default class names for different form components are as follows:
