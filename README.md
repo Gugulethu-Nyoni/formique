@@ -114,7 +114,6 @@ In the example above:
  ```
 
 
-
 ## Input Validation
 - **Validation**: Object specifying validation rules. This can include:
   - **Required**: Boolean to specify if the field is mandatory.
@@ -142,8 +141,12 @@ In the example above:
   - Example: `{ id: 'username', class: 'form-input', style: 'font-size: 13px;' }`
 
 ## Binding
-- **Binding**: Optional binding syntax for dynamic data. It can use `bind:value` or `::inputName`.
-  - Example: `'bind:value'` or `'::inputName'`  - inputName must be the value defined as the input name (second item) in the input definition object. 
+
+- **Binding:** Optional binding syntax for dynamic data. The binding object has been moved to the attributes object, allowing for inclusion directly within the attributes. Two syntax formats are supported:
+  - `binding: '::nameOfField'`
+  - `binding: 'bind-value'`
+  - Example: `'::inputName'` or `'bind-value'`  
+    *Note:* `inputName` must be the value defined as the input name (the second item) in the input definition object.
 
 ## Options
 - **Options**: For singleSelect,, multipleSelect, radio, and checkbox inputs. This is an array of options, each with a `value` and `label`.
