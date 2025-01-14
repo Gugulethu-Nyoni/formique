@@ -86,8 +86,7 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 The form schema is an array of field definitions. Each field is defined by an array containing:
 - Input definition (required)
 - Input validation (optional)
-- Input attributes (optional)
-- Binding syntax (optional)
+- Input attributes (optional, including binding attribute (optional)
 - Options (applicable to single select, multiple select, radio and check box inputs)
 
 ## Input Definition
@@ -98,12 +97,21 @@ The form schema is an array of field definitions. Each field is defined by an ar
 You don't need to use the type, name and label keys to define these parameters.
 **Example Input Definition:**
 
-`{ 'text', 'firstname', 'First Name' }`
+`['text', 'firstname', 'First Name' ]`
 
 In the example above:
- - The first item (text) defines the type of the input - this will yield: `<input type="text"` 
- - The second item (firstname) defines the name value of the input - this will yield: `<input name="firstname"`
+ - The first item (text) defines the type of the input - this will yield: `<input type="text" ...` 
+ - The second item (firstname) defines the name value of the input - this will yield: `<input name="firstname" ...`
  - The third item (First Name) defines the Label value- this will yield:  `<label for="firstname">First Name</label>`
+ - Final html output will be:
+
+ ```html
+ <div class="input-block" id="firstname-block">
+      <label for="firstname">First Name</label>
+      <input type="text" name="firstname" id="firstname" class="form-input" placeholder="First
+  Name">
+    </div>
+ ```
 
 
 
