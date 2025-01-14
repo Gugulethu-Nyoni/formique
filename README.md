@@ -231,7 +231,7 @@ const form = new Formique(formParams, formSchema, formSettings);
             ['submit', 'submitButton', 'Submit']
         ];
 
-
+  // optional
         const formParams = {
             method: 'post',
             action: 'submit.js',
@@ -239,6 +239,7 @@ const form = new Formique(formParams, formSchema, formSettings);
             class: 'form',
             style: 'width: 100%; font-size: 14px;'
         };
+// optional 
 
         const formSettings={
           requiredFieldIndicator: true,
