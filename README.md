@@ -200,7 +200,6 @@ const formSettings={
 
 
 const form = new Formique(formParams, formSchema, formSettings);
-const formHTML = form.renderFormHTML();
 ```
 
 
@@ -327,7 +326,6 @@ const formSchema = [
     'First Name', 
     { minlength: 2, maxlength: 5, required: true, disabled: true }, // Validation options
     { value: "John", id: 'firstNameInput', class: 'form-input', style: 'width: 100%;', oninput: "incrementer()" }, // Attributes
-    '::firstName' // Binding syntax
   ],
 
   // URL Input Field
@@ -336,8 +334,7 @@ const formSchema = [
     'websiteUrl', 
     'Website URL', 
     { required: true }, // Validation options
-    { id: 'websiteUrlInput', class: 'form-control', style: 'width: 100%;' }, // Attributes
-    'bind:value' // Binding syntax
+    { id: 'websiteUrlInput', class: 'form-control', style: 'width: 100%;', binding: 'bind:value'  }
   ],
 
   // Radio Input Field
@@ -346,8 +343,7 @@ const formSchema = [
     'gender', 
     'Gender', 
     { required: true }, // Validation options
-    { id: 'genderRadio', class: 'form-radio-input', style: 'margin-left: 1rem;', onchange: 'actioner()' }, // Attributes
-    '::gender', // Binding syntax
+    { id: 'genderRadio', class: 'form-radio-input', style: 'margin-left: 1rem;', onchange: 'actionFunction()' }
     [
       { value: 'male', label: 'Male' }, // Options
       { value: 'female', label: 'Female' },
@@ -361,8 +357,7 @@ const formSchema = [
     'preferences', 
     'Preferences', 
     { required: true }, // Validation options
-    { id: 'preferencesCheckbox', class: 'form-checkbox-input', style: 'margin-left: 1rem;', onchange: 'submit' }, // Attributes
-    '::preferences', // Binding syntax
+    { id: 'preferencesCheckbox', binding: '::preferences', class: 'form-checkbox-input', style: 'margin-left: 1rem;', onchange: 'submit' }
     [
       { value: 'news', label: 'Newsletter' }, // Options
       { value: 'updates', label: 'Product Updates' },
@@ -376,8 +371,7 @@ const formSchema = [
     'colors', 
     'Colors', 
     { required: true }, // Validation options
-    { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'trigger' }, // Attributes
-    '::colors', // Binding syntax
+    { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'trigger' }, // the onchange: 'trigger' format works with (framework: semantq) set in your formSettings object so that the syntax can be transformed as per framework specs 
     [
       { value: 'red', label: 'Red' }, // Options
       { value: 'green', label: 'Green' },
@@ -391,8 +385,7 @@ const formSchema = [
     'colors', // Name/identifier of the field
     'Colors', // Label of the field
     { required: true, min: 2, max: 3 }, // Validation options
-    { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'alerter' }, // Attributes
-    '::colors', // Binding syntax
+    { id: 'colorsSelect', class: 'form-select-input', style: 'margin-left: 1rem;', onchange: 'alerter' }
     [
       { value: 'red', label: 'Red' }, // Options
       { value: 'green', label: 'Green' },
@@ -406,8 +399,8 @@ const formSchema = [
     'submit',
     'submitButton',
     'Submit',
-    { required: true }, // Validation options
-    { id: 'submitBtn', class: 'form-submit-btn', style: 'margin-top: 1rem;' } // Attributes
+    {}, // Validation options
+    { id: 'submitBtn', class: 'form-submit-btn', style: 'margin-top: 1rem; width: 100%;' } 
   ]
 ];
 
