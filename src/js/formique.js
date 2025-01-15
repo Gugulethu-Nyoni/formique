@@ -464,7 +464,7 @@ if (formContainer) {
   successMessageDiv.classList.add('success-message', 'message-container');
 
   // Set the success message text
-  successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details has been successfully submitted!';
+  successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
 
   // Replace the content of the form container with the success message div
   formContainer.innerHTML = ''; // Clear existing content
