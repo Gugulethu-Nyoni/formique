@@ -90,9 +90,10 @@ class Formique extends FormBuilder {
    //
 
    document.getElementById(`${this.formParams.id}`).addEventListener('submit', (event) => {
-      if (this.formSettings.onPageSubmit) {
+      if (this.formSettings.onPageSubmission) {
         event.preventDefault(); // Prevent the default form submission
         this.handleOnPageFormSubmission(this.formParams.id);
+        console.warn("listener fired at least",this.formParams.id,this.method);
       }
     });
 
@@ -434,6 +435,9 @@ renderField(type, name, label, validate, attributes, options) {
 // Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
   const formElement = document.getElementById(formId);
+
+  console.warn("handler fired also",formId,this.method,this.formAction);
+
 
   if (formElement) {
     // Gather form data
