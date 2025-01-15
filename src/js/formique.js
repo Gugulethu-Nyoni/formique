@@ -1,5 +1,5 @@
 /**
- * FormiqueJS Class Library
+ * Formique Class Library
  * 
  * This library provides an extension of the FormBuilder class, allowing for dynamic form rendering, theming, 
  * and dependency management. The key functionalities include:
@@ -24,14 +24,14 @@
  * 
  * Dependencies:
  * - The library depends on a DOM structure to initialize and manipulate form elements.
- * - Requires a CSS stylesheet with theme definitions.
+ * - Requires a CSS stylesheet with theme definitions.- there are plans to internalise css themes within js
  * 
  * Example Usage:
- * const formique = new Formique(formParams, formSchema, formSettings);
- * formique.renderForm();
+ * const form = new Formique(formSchema,formParams,formSettings);
+ * - formParams and formSettings parameters are optional
  * 
  * Author: Gugulethu Nyoni
- * Version: 1.0.0
+ * Version: 1.0.6
  * License: Open-source & MIT licensed.
  */
 
