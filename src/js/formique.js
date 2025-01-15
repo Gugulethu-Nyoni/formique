@@ -87,6 +87,19 @@ class Formique extends FormBuilder {
         // Fallback to dark theme if no theme is set or invalid theme
         this.applyTheme('dark', this.formContainerId);
       }
+   //
+
+   document.getElementById(`${this.formSettings.id}`).addEventListener('submit', (event) => {
+      if (this.formSettings.onPageSubmit) {
+        event.preventDefault(); // Prevent the default form submission
+        this.handleOnPageFormSubmission(this.formSettings.id);
+      }
+    });
+
+
+
+   //
+
     });
 
     this.formSettings = {
@@ -102,13 +115,7 @@ class Formique extends FormBuilder {
 
     this.renderForm();
 
-    document.getElementById(`${this.formSettings.id}`).addEventListener('submit', (event) => {
-      if (this.formSettings.onPageSubmit) {
-        event.preventDefault(); // Prevent the default form submission
-        this.handleOnPageFormSubmission(this.formSettings.id);
-      }
-    });
-
+    
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
 
