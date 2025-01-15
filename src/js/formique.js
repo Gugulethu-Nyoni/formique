@@ -452,6 +452,7 @@ handleOnPageFormSubmission(formId) {
       .then(data => {
         console.log('Success:', data);
         // Handle the response data here, e.g., show a success message
+        
       })
       .catch(error => {
         console.error('Error:', error);
