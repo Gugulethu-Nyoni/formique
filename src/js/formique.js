@@ -58,6 +58,7 @@ class Formique extends FormBuilder {
     this.formParams = formParams;
     this.formContainerId = formSettings.formContainerId || 'formique';
     this.formAction = formSettings.action || 'https://httpbin.org/post';
+    this.method= formParams.method.toUpperCase() || 'POST';
     this.formMarkUp = '';
     this.dependencyGraph = {};
     this.themes = [
@@ -433,7 +434,7 @@ handleOnPageFormSubmission(formId) {
 
     // Submit form data using fetch to a test endpoint
     fetch(this.formAction, {
-      method: 'POST',
+      method: this.method,
       body: formData
     })
       .then(response => response.json())
