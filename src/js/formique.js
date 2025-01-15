@@ -89,10 +89,10 @@ class Formique extends FormBuilder {
       }
    //
 
-   document.getElementById(`${this.formSettings.id}`).addEventListener('submit', (event) => {
+   document.getElementById(`${this.formParams.id}`).addEventListener('submit', (event) => {
       if (this.formSettings.onPageSubmit) {
         event.preventDefault(); // Prevent the default form submission
-        this.handleOnPageFormSubmission(this.formSettings.id);
+        this.handleOnPageFormSubmission(this.formParams.id);
       }
     });
 
