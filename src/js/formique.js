@@ -46,18 +46,19 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
- constructor (formSchema, formParams = {}, formSettings={}) {
+  constructor(formSchema, formParams = {}, formSettings = {}) {
     super();
-    this.formSchema=formSchema;
-    this.divClass='input-block';
-    this.inputClass='form-input';
-    this.radioGroupClass='radio-group';
-    this.checkboxGroupClass='checkbox-group';
-    this.selectGroupClass='form-select';
-    this.submitButtonClass='form-submit-btn';
-    this.formParams=formParams;
+    this.formSchema = formSchema;
+    this.divClass = 'input-block';
+    this.inputClass = 'form-input';
+    this.radioGroupClass = 'radio-group';
+    this.checkboxGroupClass = 'checkbox-group';
+    this.selectGroupClass = 'form-select';
+    this.submitButtonClass = 'form-submit-btn';
+    this.formParams = formParams;
     this.formContainerId = formSettings.formContainerId || 'formique';
-    this.formMarkUp='';
+    this.formAction = formSettings.action || 'https://httpbin.org/post';
+    this.formMarkUp = '';
     this.dependencyGraph = {};
     this.themes = [
       "dark",
@@ -66,30 +67,26 @@ class Formique extends FormBuilder {
       "light",
       "indigo",
       "dark-blue",
+      "light-blue",
       "dark-orange",
       "green",
       "purple",
       "midnight-blush"
     ];
+
     document.addEventListener('DOMContentLoaded', () => {
-    this.renderFormHTML();
-    this.initDependencyGraph();
-    this.registerObservers();
+      this.renderFormHTML();
+      this.initDependencyGraph();
+      this.registerObservers();
 
-
-        if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
-    let theme = this.formSettings.theme;
-    this.applyTheme(theme, this.formContainerId);
-    } else {
-      // Fallback to dark theme if no theme is set or invalid theme
-      this.applyTheme('dark', this.formContainerId);
-    }
-
-
+      if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
+        let theme = this.formSettings.theme;
+        this.applyTheme(theme, this.formContainerId);
+      } else {
+        // Fallback to dark theme if no theme is set or invalid theme
+        this.applyTheme('dark', this.formContainerId);
+      }
     });
-
-    //alert(this.formContainerId);
-
 
     this.formSettings = {
       requiredFieldIndicator: true,
@@ -98,15 +95,24 @@ class Formique extends FormBuilder {
       ...formSettings
     };
 
-
-    
     if (Object.keys(this.formParams).length > 0) {
       this.formMarkUp += this.renderFormElement();
-     }
-    
+    }
 
     this.renderForm();
-    }
+
+    document.getElementById(`${this.formSettings.id}`).addEventListener('submit', (event) => {
+      if (this.formSettings.onPageSubmit) {
+        event.preventDefault(); // Prevent the default form submission
+        this.handleOnPageFormSubmission(this.formSettings.id);
+      }
+    });
+
+// CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
+  }
+
+
+
 
 
 initDependencyGraph() {
@@ -413,6 +419,33 @@ renderField(type, name, label, validate, attributes, options) {
         console.warn(`Unsupported field type '${type}' encountered.`);
         return ''; // or handle gracefully
     }
+}
+
+
+
+// Method to handle on-page form submissions
+handleOnPageFormSubmission(formId) {
+  const formElement = document.getElementById(formId);
+
+  if (formElement) {
+    // Gather form data
+    const formData = new FormData(formElement);
+
+    // Submit form data using fetch to a test endpoint
+    fetch(this.formAction, {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+        // Handle the response data here, e.g., show a success message
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        // Handle the error here, e.g., show an error message
+      });
+  }
 }
 
 
