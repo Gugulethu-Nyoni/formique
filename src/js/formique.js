@@ -452,7 +452,26 @@ handleOnPageFormSubmission(formId) {
       .then(data => {
         console.log('Success:', data);
         // Handle the response data here, e.g., show a success message
-        
+
+        // Get the form container element
+const formContainer = document.getElementById(this.formContainerId);
+
+if (formContainer) {
+  // Create a new div element for the success message
+  const successMessageDiv = document.createElement('div');
+
+  // Add custom classes for styling the success message
+  successMessageDiv.classList.add('success-message', 'message-container');
+
+  // Set the success message text
+  successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details has been successfully submitted!';
+
+  // Replace the content of the form container with the success message div
+  formContainer.innerHTML = ''; // Clear existing content
+  formContainer.appendChild(successMessageDiv); // Append the new success message div
+}
+
+
       })
       .catch(error => {
         console.error('Error:', error);
