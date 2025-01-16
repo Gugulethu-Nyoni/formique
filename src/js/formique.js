@@ -90,7 +90,7 @@ class Formique extends FormBuilder {
    //
 
    document.getElementById(`${this.formParams.id}`).addEventListener('submit', (event) => {
-      if (this.formSettings.onPageSubmission) {
+      if (this.formSettings.submitOnPage) {
         event.preventDefault(); // Prevent the default form submission
         this.handleOnPageFormSubmission(this.formParams.id);
         console.warn("listener fired at least",this.formParams.id,this.method);
