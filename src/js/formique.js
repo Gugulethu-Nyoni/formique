@@ -474,9 +474,30 @@ if (formContainer) {
 
       })
       .catch(error => {
-        console.error('Error:', error);
-        // Handle the error here, e.g., show an error message
-      });
+  console.error('Error:', error);
+
+  const formContainer = document.getElementById(this.formContainerId);
+  if (formContainer) {
+    // Check if an error message div already exists and remove it
+    let existingErrorDiv = formContainer.querySelector('.error-message');
+    if (existingErrorDiv) {
+      existingErrorDiv.remove();
+    }
+
+    // Create a new div element for the error message
+    const errorMessageDiv = document.createElement('div');
+
+    // Add custom classes for styling the error message
+    errorMessageDiv.classList.add('error-message', 'message-container');
+
+    // Set the error message text
+    errorMessageDiv.innerHTML = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+
+    // Append the new error message div to the form container
+    formContainer.appendChild(errorMessageDiv);
+  }
+});
+
   }
 }
 
