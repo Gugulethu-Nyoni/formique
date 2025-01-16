@@ -436,7 +436,7 @@ renderField(type, name, label, validate, attributes, options) {
 handleOnPageFormSubmission(formId) {
   const formElement = document.getElementById(formId);
 
-  console.warn("handler fired also",formId,this.method,this.formAction);
+  //console.warn("handler fired also",formId,this.method,this.formAction);
 
 
   if (formElement) {
