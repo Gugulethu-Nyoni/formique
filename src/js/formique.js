@@ -491,7 +491,9 @@ if (formContainer) {
     errorMessageDiv.classList.add('error-message', 'message-container');
 
     // Set the error message text
-    errorMessageDiv.innerHTML = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+    err = `${err}<br/>Details: ${error.message}`;
+    errorMessageDiv.innerHTML = err; 
 
     // Append the new error message div to the form container
     formContainer.appendChild(errorMessageDiv);
