@@ -4,7 +4,9 @@
 [![NPM Downloads](https://img.shields.io/npm/dt/formique.svg)](https://www.npmjs.com/package/formique)
 [![GitHub Stars](https://img.shields.io/github/stars/Gugulethu-Nyoni/formique.svg)](https://github.com/Gugulethu-Nyoni/formique/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/Gugulethu-Nyoni/formique.svg)](https://github.com/Gugulethu-Nyoni/formique/issues)
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/Gugulethu-Nyoni/formique/blob/main/LICENSE)
+<a href="https://github.com/Gugulethu-Nyoni/formique/blob/main/LICENSE">
+  <img alt="Formique uses the MIT license" src="https://img.shields.io/github/license/Gugulethu-Nyoni/formique" style="max-width: 100%;">
+</a>
 [![GitHub Workflow](https://img.shields.io/github/workflow/status/Gugulethu-Nyoni/formique/CI/main.svg)](https://github.com/Gugulethu-Nyoni/formique/actions)
 
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/images/formique-js-form-builder-anyframework.png" alt="Formique JS Form Builder Example">
