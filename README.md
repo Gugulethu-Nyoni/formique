@@ -462,19 +462,38 @@ By customizing these parameters, you can control various aspects of the form's b
 
 The `formSettings` object allows you to customize the behavior and appearance of your form. Below is a comprehensive list of all possible settings:
 
+# Form Settings
+
 ```javascript
 const formSettings = {
-  theme: "dark-blue", // Set the form's theme. Options include "dark-blue", "light", etc.
-  submitOnPage: true, // Enable or disable form submission on the current page.
-  successMessage: "Your registration details have been captured successfully!", // Message displayed upon successful form submission.
-  errorMessage: "There was an error in submitting your details. Please try again!", // Message displayed on submission error. Actual JSON response errors are appended in real-time.
-  requiredFieldIndicator: true, // Displays a red asterisk (*) next to all required fields.
-  framework: 'semantq', // Specify the framework if applicable. Supported frameworks: 'semantq', 'svelte', 'vue', 'angular', 'react'. Omit for vanilla JS.
-  placeholders: true, // Enable labels to be displayed as placeholders within input fields.
-  containerId: 'form-div', // Target a specific container by ID. If the container ID is 'formique', this parameter is not needed.
+  theme: "dark-blue", // Form theme: see section below on complete list of themes
+  submitOnPage: true, // Enable form submission on the same page
+  successMessage: "Your registration details have been captured successfully!", // Success message
+  errorMessage: "There was an error in submitting your details. Please try again!", // Error message
+  requiredFieldIndicator: true, // Display asterisk for required fields
+  framework: 'semantic', // Specify framework (optional)
+  placeholders: true, // Use labels as placeholders
+  containerId: 'form-div', // Target container by ID (optional)
 };
 ```
 
+## Detailed Explanation of Form Settings
+
+- **theme**: Defines the appearance of the form. Options include `"dark-blue"`, `"light"`, and more, allowing for customization based on your application's UI.
+
+- **submitOnPage**: Controls whether the form submission should happen on the same page (`true`) - omit if you don't need this feature. 
+
+- **successMessage**: The message displayed to the user after a successful form submission in the context of enabled submitOnPage. This can be customized to fit the context of the form. If submitOnPage is enabled and the successMessage parameter is not defined, Formique will display the default success message upon form submission: "Your details have been submitted successfully!"
+
+- **errorMessage**: The message displayed when there is an error in form submission. The actual JSON response error is appended for detailed feedback. If submitOnPage is enabled and the errorMessage parameter is not defined, Formique will display the default error message upon form submission: "An error occurred while submitting the form. Please try again."
+
+- **requiredFieldIndicator**: When set to `true`, a red asterisk (`*`) will appear next to fields marked as required, helping users easily identify mandatory fields.
+
+- **framework**: Specifies the front-end framework used, such as `'semantq'`, `'svelte'`, `'vue'`, `'angular'`, or `'react'`. If you are not using any framework, this parameter can be omitted.
+
+- **placeholders**: Enables labels to be shown as placeholders inside input fields, providing a cleaner look and saving space.
+
+- **containerId**: Allows targeting a specific container by its ID where the form will be rendered. If the container ID is `'formique'`, this parameter can be omitted.
 
 **All settings are optional:** You can use only the settings that are relevant to your needs.
 
@@ -760,7 +779,7 @@ The following schema demonstrates how to implement dynamic dropdowns with nested
 
 ## Styling the Form
 
-Formique provides a set of CSS classes to facilitate the styling of various form elements. The default class names for different form components are as follows:
+Additionally, Formique provides a set of CSS classes to facilitate the styling of various form elements. The default class names for different form components are as follows:
 
 - **Wrapper (div) for Input Elements:** `input-block`
 - **Input Fields:** `form-input`
@@ -768,7 +787,11 @@ Formique provides a set of CSS classes to facilitate the styling of various form
 - **Checkbox Groups:** `checkbox-group`
 - **Select Dropdowns:** `form-select`
 
-These classes are predefined in the `formique.css` stylesheet. Developers can either use this stylesheet for consistent styling or create their own custom CSS based on these class names to suit their design preferences. Also, Formique implements these class names by default. The input class can be overidden by defining your preferred class names in the input attributes object e.g.
+These classes are predefined in the `formique.css` stylesheet. Developers can either use this stylesheet for consistent styling or create their own custom CSS based on these class names to suit their design preferences. Also, Formique implements these class names by default. 
+
+
+
+The input class can be overidden by defining your preferred class names in the input attributes object e.g.
 
 ```javascript
 { class: 'form-control' }
