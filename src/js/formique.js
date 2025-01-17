@@ -219,7 +219,7 @@ handleParentFieldChange(parentFieldId, value) {
     });
 
     // Log the updated dependency graph for the parent field
-    console.log(`Updated Dependency Graph for ${parentFieldId}:`, this.dependencyGraph[parentFieldId]);
+   // console.log(`Updated Dependency Graph for ${parentFieldId}:`, this.dependencyGraph[parentFieldId]);
 
     // Notify all observers (dependent fields)
     dependencies.forEach((dependency) => {
@@ -234,7 +234,7 @@ handleParentFieldChange(parentFieldId, value) {
             : value === dependency.condition;
 
           // Debug the condition evaluation
-          console.log(`Checking condition for ${observerId}: `, value, "==", dependency.condition, "Result:", conditionMet);
+         // console.log(`Checking condition for ${observerId}: `, value, "==", dependency.condition, "Result:", conditionMet);
 
           // Toggle visibility based on the condition
           inputBlock.style.display = conditionMet ? 'block' : 'none';
@@ -290,7 +290,7 @@ registerObservers() {
     }
   });
 
-  console.log("Observers Registered:", JSON.stringify(this.dependencyGraph,null,2));
+  // console.log("Observers Registered:", JSON.stringify(this.dependencyGraph,null,2));
 }
 
 
@@ -335,7 +335,7 @@ applyTheme(theme, formContainerId) {
         // Insert the <style> tag above the form container
         formContainer.parentNode.insertBefore(clonedStyle, formContainer);
 
-        console.log(`Applied ${theme} theme to form container: ${formContainerId}`);
+       // console.log(`Applied ${theme} theme to form container: ${formContainerId}`);
       } else {
         console.error(`Form container with ID ${formContainerId} not found.`);
       }
