@@ -76,9 +76,12 @@ class Formique extends FormBuilder {
     ];
 
     document.addEventListener('DOMContentLoaded', () => {
+
       this.renderFormHTML();
       this.initDependencyGraph();
       this.registerObservers();
+
+      
 
       if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
         let theme = this.formSettings.theme;
@@ -87,13 +90,14 @@ class Formique extends FormBuilder {
         // Fallback to dark theme if no theme is set or invalid theme
         this.applyTheme('dark', this.formContainerId);
       }
-   //
+
+   
 
    document.getElementById(`${this.formParams.id}`).addEventListener('submit', (event) => {
       if (this.formSettings.submitOnPage) {
         event.preventDefault(); // Prevent the default form submission
         this.handleOnPageFormSubmission(this.formParams.id);
-        console.warn("listener fired at least",this.formParams.id,this.method);
+        //console.warn("listener fired at least",this.formParams.id,this.method);
       }
     });
 
@@ -154,7 +158,7 @@ initDependencyGraph() {
       // Add state tracking for the parent field
       this.dependencyGraph[fieldId].push({ state: null });
 
-      console.log("Graph", this.dependencyGraph[fieldId]);
+      // console.log("Graph", this.dependencyGraph[fieldId]);
 
       // Attach the input change event listener to the parent field
       this.attachInputChangeListener(fieldId);
@@ -184,7 +188,7 @@ initDependencyGraph() {
     }
   });
 
-  console.log("Dependency Graph:", this.dependencyGraph);
+ // console.log("Dependency Graph:", this.dependencyGraph);
 }
 
 
