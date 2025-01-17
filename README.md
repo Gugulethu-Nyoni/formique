@@ -807,6 +807,28 @@ const formParams = {
 };
 ```
 
+## Configuration Steps:
+
+- **Omit the `action` parameter** in the `formSettings`. This way, Formique will serialize the form data upon submission and send it to the `https://httpbin.org/post` endpoint.
+
+- **Console Logging**: The response, along with the actual form data, will be logged in the browser's console, allowing you to review and verify the submission process.
+
+## How It Works:
+
+- **Fetch API-Based Form Submission**: By omitting the `action` parameter, Formique uses the Fetch API to send the form data to `https://httpbin.org/post`. This sets up a functional testing environment where you can observe the data handling without needing an immediate backend setup.
+
+- **Transition to Custom Endpoints**: Once you've tested the form submission, you can define your own `action` URL or endpoint in the `formParams` object. This allows you to direct the form data to your specified backend and handle it according to your application's needs.
+
+### Example for Custom Endpoint:
+
+```javascript
+const formParams = {
+    method: "POST",
+    action: "https://your-custom-endpoint.com/submit"
+};
+```
+This approach helps you smoothly transition from testing to production, giving you control over where and how your form data is processed.
+
 ### Inline Styling
 
 In addition to external stylesheets, individual form elements can be styled directly via attributes specified in the form schema. This allows for fine grained control (inline styling) over the appearance of each element. 
