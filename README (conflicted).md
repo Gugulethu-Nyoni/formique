@@ -812,4 +812,3 @@ Formique is licensed under the MIT License.
 ## Keywords
 
 Javascript forms, declarative form syntax, js form library, formique
-
