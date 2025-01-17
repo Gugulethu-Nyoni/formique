@@ -458,6 +458,22 @@ const formParams = {
 By customizing these parameters, you can control various aspects of the form's behavior and appearance.
 
 
+# Complete List of Form Settings
+
+The `formSettings` object allows you to customize the behavior and appearance of your form. Below is a comprehensive list of all possible settings:
+
+```javascript
+const formSettings = {
+  theme: "dark-blue", // Set the form's theme. Options include "dark-blue", "light", etc.
+  submitOnPage: true, // Enable or disable form submission on the current page.
+  successMessage: "Your registration details have been captured successfully!", // Message displayed upon successful form submission.
+  errorMessage: "There was an error in submitting your details. Please try again!", // Message displayed on submission error. Actual JSON response errors are appended in real-time.
+  requiredFieldIndicator: true, // Displays a red asterisk (*) next to all required fields.
+  framework: 'semantq', // Specify the framework if applicable. Supported frameworks: 'semantq', 'svelte', 'vue', 'angular', 'react'. Omit for vanilla JS.
+  placeholders: true, // Enable labels to be displayed as placeholders within input fields.
+  containerId: 'form-div', // Target a specific container by ID. If the container ID is 'formique', this parameter is not needed.
+};
+```
 
 
 ## Example HTML Output
