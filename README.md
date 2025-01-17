@@ -794,7 +794,18 @@ The input class can be overidden by defining your preferred class names in the i
 ```javascript
 { class: 'form-control' }
 ```
+## Testing Form Submission with `submitOnPage`
 
+For testing purposes, you can define the `method` as `"POST"` in the `formParams` object. This allows you to simulate and test form submissions using Formique's built-in functionality.
+
+### Example:
+
+```javascript
+const formParams = {
+    method: "POST",
+    // other params
+};
+```
 
 ### Inline Styling
 
