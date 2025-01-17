@@ -2,6 +2,7 @@
 
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/images/formique-js-form-builder-anyframework.png" alt="Formique JS Form Builder Example">
 
+## About Formique
 
 Formique is a robust and elegant WCAG and ARIA compliant form-building library tailored for JavaScript enthusiasts. It supports a wide array of input types, features JS-driven themes, and offers advanced functionalities like nested conditional logic and dynamic dropdowns. Highly customizable and extensible, Formique is built for the Semantq JS Framework but seamlessly integrates with Vanilla JS, React, Vue, Angular, and Svelte.
 
@@ -823,7 +824,7 @@ const formParams = {
 
 ```javascript
 const formParams = {
-    method: "POST",
+    method: "POST", // OR GET, ETC 
     action: "https://your-custom-endpoint.com/submit"
 };
 ```
