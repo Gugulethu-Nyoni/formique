@@ -861,3 +861,5 @@ Formique is licensed under the MIT License.
 
 Javascript forms, declarative form syntax, js form library, formique
 
+[![Get Started with FormiqueJS](https://img.shields.io/badge/Get_Started-FormiqueJS-blue)](https://www.formiquejs.com)
+
