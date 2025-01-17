@@ -476,6 +476,15 @@ const formSettings = {
 ```
 
 
+**All settings are optional:** You can use only the settings that are relevant to your needs.
+
+Default Invocation: Just like the formParams object, if no formSettings object is provided, you can simply initialize Formique with the form schema as follows:
+
+```javascript
+const form = new Formique(formSchema);
+```
+
+
 ## Example HTML Output
 
 ```html
