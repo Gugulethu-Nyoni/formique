@@ -1,6 +1,20 @@
-# Formique
+# Formique Documentation
 
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/images/formique-js-form-builder-anyframework.png" alt="Formique JS Form Builder Example">
+
+## Table of Contents
+- [About Formique](#about-formique)
+- [Why Choose Formique?](#why-choose-formique)
+- [Form Input Types Covered](#form-input-types-covered)
+- [How to Write Form Schema](#how-to-write-form-schema)
+- [Installation](#installation)
+- [Form Schema Example](#form-schema-example)
+- [Dynamic Drop-Down Schema](#dynamic-drop-down-schema)
+- [Nested Conditionality Logic - Schema Definition](#nested-conditionality-logic---schema-definition)
+- [Styling the Form](#styling-the-form)
+- [Testing Form Submission with submitOnPage](#testing-form-submission-with-submitonpage)
+- [Contribute](#contribute)
+
 
 ## About Formique
 
