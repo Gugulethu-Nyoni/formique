@@ -192,7 +192,7 @@ There are two primary ways to install and use Formique in your project:
 2. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
     ```html
-      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.7/formique.umd.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.8/formique.umd.min.js"></script>
     ```
 
 ### Usage Example:
