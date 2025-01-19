@@ -1,6 +1,15 @@
 # Ignore archive dir
 archive/
 
+# Ignore integrations dir
+integrations/
+
+# Ignore integrations dir
+node_modules/
+
+# Ignore integrations dir
+dist/
+
 # Ingore node serv dir
 server/
 

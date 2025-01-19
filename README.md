@@ -192,7 +192,7 @@ There are two primary ways to install and use Formique in your project:
 2. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
     ```html
-      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.6/formique.umd.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.7/formique.umd.min.js"></script>
     ```
 
 ### Usage Example:
@@ -870,5 +870,5 @@ Formique is licensed under the MIT License.
 
 Javascript forms, declarative form syntax, js form library, formique
 
-[![Get Started with FormiqueJS](https://img.shields.io/badge/Get_Started-FormiqueJS-blue)](https://www.formiquejs.com)
+[![Get Started with Formique](https://img.shields.io/badge/Get_Started-FormiqueJS-blue)](https://www.formiquejs.com)
 
