@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Formique Class Library
  * 
