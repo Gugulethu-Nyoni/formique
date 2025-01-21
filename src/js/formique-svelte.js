@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Formique Class Library
  * 
@@ -49,6 +50,12 @@ class Formique extends FormBuilder {
   constructor(formSchema, formParams = {}, formSettings = {}) {
     super();
     this.formSchema = formSchema;
+    this.formSettings = {
+      requiredFieldIndicator: true,
+      placeholders: true,
+      asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
+      ...formSettings
+    };
     this.divClass = 'input-block';
     this.inputClass = 'form-input';
     this.radioGroupClass = 'radio-group';
@@ -59,7 +66,7 @@ class Formique extends FormBuilder {
     this.formContainerId = formSettings.formContainerId || 'formique';
     this.formAction = formParams.action || 'https://httpbin.org/post';
     this.method= formParams.method.toUpperCase() || 'POST';
-    this.formMarkUp = '';
+    this.formMarkUp = ''; // '<form>';
     this.dependencyGraph = {};
     this.themes = [
       "dark",
@@ -77,11 +84,16 @@ class Formique extends FormBuilder {
 
     //document.addEventListener('DOMContentLoaded', () => {
 
+
+    if (this.formParams && Object.keys(this.formParams).length > 0) {
+  this.formMarkUp += this.renderFormElement();
+  //console.log("received",this.formMarkUp);
+}
+
+      this.renderForm();
       this.renderFormHTML();
       this.initDependencyGraph();
       this.registerObservers();
-
-      
 
       if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
         let theme = this.formSettings.theme;
@@ -91,22 +103,23 @@ class Formique extends FormBuilder {
         this.applyTheme('dark', this.formContainerId);
       }
 
-   
+  
 
-   document.getElementById(`${this.formParams.id}`).addEventListener('submit', (event) => {
-      if (this.formSettings.submitOnPage) {
-        event.preventDefault(); // Prevent the default form submission
-        this.handleOnPageFormSubmission(this.formParams.id);
-        //console.warn("listener fired at least",this.formParams.id,this.method);
-      }
-    });
+   document.getElementById(`${this.formParams.id}`).addEventListener('submit', function(event) {
+  if (this.formSettings.submitOnPage) {
+    event.preventDefault(); // Prevent the default form submission
+    this.handleOnPageFormSubmission(this.formParams.id);
+    //console.warn("listener fired at least>>", this.formParams.id, this.method);
+  }
+}.bind(this)); // Bind `this` to ensure it's correct inside the event listener
+
 
 
 
    //
 
    // });
-
+   /*
     this.formSettings = {
       requiredFieldIndicator: true,
       placeholders: true,
@@ -114,11 +127,10 @@ class Formique extends FormBuilder {
       ...formSettings
     };
 
-    if (Object.keys(this.formParams).length > 0) {
-      this.formMarkUp += this.renderFormElement();
-    }
+    */
 
-    this.renderForm();
+    
+
 
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
@@ -350,41 +362,49 @@ applyTheme(theme, formContainerId) {
 
 // renderFormElement method
   renderFormElement() {
-    let formHTML = '<form\n';
-    
-    // Use this.formParams directly
-    const paramsToUse = this.formParams || {};
+  let formHTML = '<form';
 
-    // Dynamically add attributes if they are present in the parameters
-    for (const [key, value] of Object.entries(paramsToUse)) {
-      if (value !== undefined && value !== null) {
-        // Handle boolean attributes
-        if (typeof value === 'boolean') {
-          if (value) {
-            formHTML += `  ${key}\n`;
-          }
-        } else {
-          // Handle other attributes
-          const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
-          formHTML += `  ${formattedKey}="${value}"\n`;
-        }
+  // Ensure `this.formParams` is being passed in as the source of form attributes
+  const paramsToUse = this.formParams || {};
+  console.log(paramsToUse);
+
+  // Dynamically add attributes if they are present in the parameters
+Object.keys(paramsToUse).forEach(key => {
+  const value = paramsToUse[key];
+  if (value !== undefined && value !== null) {
+    // Handle boolean attributes (without values, just their presence)
+    if (typeof value === 'boolean') {
+      if (value) {
+        formHTML += ` ${key}`;  // Simply add the key as the attribute
       }
+    } else {
+      // Handle other attributes (key-value pairs)
+      const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
+      formHTML += ` ${formattedKey}="${value}"`;
+      console.log("HERE",formHTML);
     }
-
-    // Close the <form> tag
-    formHTML += '>\n';
-
-   // Conditionally add CSRF token if 'laravel' is true
-    if (paramsToUse.laravel) {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        formHTML += `<input type="hidden" name="_token" value="${csrfToken}">`;
-    }
-
-
-    // Manually ensure vertical formatting of the HTML string
-    formHTML = formHTML.replace(/\n\s*$/, '\n'); // Remove trailing whitespace/newline if necessary
-    return formHTML;
   }
+});
+
+  // Conditionally add CSRF token if 'laravel' is true
+  if (paramsToUse.laravel) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+      formHTML += `<input type="hidden" name="_token" value="${csrfToken}">`;
+    }
+  }
+
+  // Close the <form> tag
+  formHTML += '>\n';
+
+  // Return the generated form HTML
+  return formHTML;
+}
+
+
+
+
+
 
 
   // Main renderForm method
@@ -442,7 +462,7 @@ renderField(type, name, label, validate, attributes, options) {
 handleOnPageFormSubmission(formId) {
   const formElement = document.getElementById(formId);
 
-  //console.warn("handler fired also",formId,this.method,this.formAction);
+  console.warn("handler fired also",formId,this.method,this.formAction);
 
 
   if (formElement) {
@@ -3468,6 +3488,7 @@ if (!formContainer) {
   console.error(`Error: formContainer not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
 } else {
   formContainer.innerHTML = this.formMarkUp;
+  //console.log(this.formMarkUp);
 }
 
 //return this.formMarkUp;
@@ -3484,14 +3505,3 @@ if (!formContainer) {
 
 
 export default Formique;
-
-
-
-
-
-
-
-
-
-
-
