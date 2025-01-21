@@ -86,6 +86,7 @@ class Formique extends FormBuilder {
 
     document.addEventListener('DOMContentLoaded', () => {
 
+      this.renderForm();
       this.renderFormHTML();
       this.initDependencyGraph();
       this.registerObservers();
@@ -121,7 +122,6 @@ class Formique extends FormBuilder {
       this.formMarkUp += this.renderFormElement();
     }
 
-    this.renderForm();
 
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
