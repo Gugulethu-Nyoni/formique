@@ -86,13 +86,16 @@ class Formique extends FormBuilder {
 
     document.addEventListener('DOMContentLoaded', () => {
 
+      if (this.formParams && Object.keys(this.formParams).length > 0) {
+      this.formMarkUp += this.renderFormElement();
+      }
+
       this.renderForm();
       this.renderFormHTML();
       this.initDependencyGraph();
       this.registerObservers();
 
       
-
       if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
         let theme = this.formSettings.theme;
         this.applyTheme(theme, this.formContainerId);
@@ -117,11 +120,11 @@ class Formique extends FormBuilder {
 
     });
 
-
+  /*
     if (Object.keys(this.formParams).length > 0) {
       this.formMarkUp += this.renderFormElement();
     }
-
+  */
 
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
