@@ -50,13 +50,21 @@ class Formique extends FormBuilder {
   constructor(formSchema, formParams = {}, formSettings = {}) {
     super();
     this.formSchema = formSchema;
+    this.formParams = formParams;
+    this.formSettings = {
+      requiredFieldIndicator: true,
+      placeholders: true,
+      asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
+      ...formSettings
+    };
+
+
     this.divClass = 'input-block';
     this.inputClass = 'form-input';
     this.radioGroupClass = 'radio-group';
     this.checkboxGroupClass = 'checkbox-group';
     this.selectGroupClass = 'form-select';
     this.submitButtonClass = 'form-submit-btn';
-    this.formParams = formParams;
     this.formContainerId = formSettings.formContainerId || 'formique';
     this.formAction = formParams.action || 'https://httpbin.org/post';
     this.method= formParams.method.toUpperCase() || 'POST';
@@ -108,12 +116,6 @@ class Formique extends FormBuilder {
 
     });
 
-    this.formSettings = {
-      requiredFieldIndicator: true,
-      placeholders: true,
-      asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
-      ...formSettings
-    };
 
     if (Object.keys(this.formParams).length > 0) {
       this.formMarkUp += this.renderFormElement();
