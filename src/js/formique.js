@@ -31,8 +31,11 @@
  * const form = new Formique(formSchema,formParams,formSettings);
  * - formParams and formSettings parameters are optional
  * 
+ * This package is suited for Vanilla Js implementations. Formique has different versions 
+ * applicable to these frameworks: Svelte, Vue JS, React and Angular. 
+ * 
  * Author: Gugulethu Nyoni
- * Version: 1.0.6
+ * Version: 1.0.8
  * License: Open-source & MIT licensed.
  */
 
