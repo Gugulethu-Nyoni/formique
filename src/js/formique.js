@@ -60,7 +60,6 @@ class Formique extends FormBuilder {
       asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
       ...formSettings
     };
-
     this.divClass = 'input-block';
     this.inputClass = 'form-input';
     this.radioGroupClass = 'radio-group';
@@ -358,7 +357,7 @@ applyTheme(theme, formContainerId) {
 
   // Ensure `this.formParams` is being passed in as the source of form attributes
   const paramsToUse = this.formParams || {};
-  console.log(paramsToUse);
+  //console.log(paramsToUse);
 
   // Dynamically add attributes if they are present in the parameters
 Object.keys(paramsToUse).forEach(key => {
@@ -373,7 +372,7 @@ Object.keys(paramsToUse).forEach(key => {
       // Handle other attributes (key-value pairs)
       const formattedKey = key === 'accept_charset' ? 'accept-charset' : key.replace(/_/g, '-');
       formHTML += ` ${formattedKey}="${value}"`;
-      console.log("HERE",formHTML);
+      //console.log("HERE",formHTML);
     }
   }
 });
