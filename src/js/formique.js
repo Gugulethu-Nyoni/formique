@@ -412,7 +412,7 @@ renderField(type, name, label, validate, attributes, options) {
         'email': this.renderEmailField,
         'number': this.renderNumberField,
         'password': this.renderPasswordField,
-        'password': this.renderTextAreaField,
+        'textarea': this.renderTextAreaField,
         'tel': this.renderTelField,
         'date': this.renderDateField,
         'time': this.renderTimeField,
