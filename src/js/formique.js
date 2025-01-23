@@ -296,7 +296,7 @@ applyTheme(theme, formContainerId) {
   const stylesheet = document.querySelector('link[href*="formique-css"]');
   
   if (!stylesheet) {
-    console.error("Stylesheet with 'formique-style' not found!");
+    console.error("Stylesheet with 'formique-css' in the name not found!");
     return;
   }
 
