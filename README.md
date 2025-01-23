@@ -177,7 +177,7 @@ In the example above:
   In the example given: the blue option will be selected by default.
 
 
-## Installation
+## Installation (Vanilla JS)
 
 There are two primary ways to install and use Formique in your project: 
 
@@ -526,6 +526,11 @@ Default Invocation: Just like the formParams object, if no formSettings object i
 ```javascript
 const form = new Formique(formSchema);
 ```
+
+## Installation Guide for Svelte
+
+https://www.npmjs.com/package/svelte-formique
+
 
 
 ## Example HTML Output
