@@ -117,13 +117,6 @@ class Formique extends FormBuilder {
 
     });
 
-  /*
-    if (Object.keys(this.formParams).length > 0) {
-      this.formMarkUp += this.renderFormElement();
-    }
-  */
-
-    
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
 
@@ -1171,8 +1164,7 @@ this.formMarkUp += formattedHtml;
 // New method for rendering tel fields
 renderTelField(type, name, label, validate, attributes) {
   
-
-  const telInputValidationAttributes = [
+const telInputValidationAttributes = [
   'required',
   'pattern',
   'minlength',
@@ -1283,8 +1275,6 @@ renderTelField(type, name, label, validate, attributes) {
 
   return formattedHtml;
 }
-
-
 
 renderDateField(type, name, label, validate, attributes) {
   // Define valid attributes for the date input type
@@ -1575,7 +1565,6 @@ renderDateTimeField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
   if (attributes.binding === 'bind:value' && name) {
@@ -1657,11 +1646,6 @@ renderDateTimeField(type, name, label, validate, attributes) {
   //return formattedHtml;
   this.formMarkUp +=formattedHtml;
 }
-
-
-
-
-
 
 
 renderMonthField(type, name, label, validate, attributes) {
