@@ -529,7 +529,8 @@ const form = new Formique(formSchema);
 
 ## Installation Guide for Svelte
 
-https://www.npmjs.com/package/svelte-formique
+To implement Formique in your Svelte project please follow this guide: 
+[https://www.npmjs.com/package/svelte-formique](Svelte Formique guide).
 
 
 
