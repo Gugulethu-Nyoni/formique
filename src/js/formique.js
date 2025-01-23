@@ -689,7 +689,6 @@ const emailInputValidationAttributes = [
   }
 
   // Handle the binding syntax
-  // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
 if (attributes.binding === 'bind:value' && name) {
@@ -1042,10 +1041,6 @@ if (attributes.binding === 'bind:value' && name) {
 }
 
 
-
-
-
-
 // Textarea field rendering
 
 renderTextAreaField(type, name, label, validate, attributes) {
@@ -1175,23 +1170,7 @@ this.formMarkUp += formattedHtml;
 
 // New method for rendering tel fields
 renderTelField(type, name, label, validate, attributes) {
-  // Define valid attributes for the tel input type
-  /*
-  const telInputAttributes = [
-  'required',
-  'pattern',
-  'placeholder',
-  'readonly',
-  'disabled',
-  'size',
-  'autocomplete',
-  'spellcheck',
-  'inputmode',
-  'title',
-  'minlength',
-  'maxlength',
-];
-*/
+  
 
   const telInputValidationAttributes = [
   'required',
