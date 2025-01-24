@@ -3368,6 +3368,96 @@ renderMultipleSelectField(type, name, label, validate, attributes, options) {
 }
 
 
+renderRangeField(type, name, label, validate, attributes) {
+  const rangeValidationAttributes = ['required', 'min', 'max', 'step'];
+
+  // Construct validation attributes
+  let validationAttrs = '';
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (rangeValidationAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          validationAttrs += `  ${key}="${value}"\n`;
+        }
+      } else {
+        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'range'.\x1b[0m`);
+      }
+    });
+  }
+
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (attributes.binding) {
+    if (attributes.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    } else if (attributes.binding.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    } else if (attributes.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
+  }
+
+  // Get the id from attributes or fall back to name
+  let id = attributes.id || name;
+
+  // Construct additional attributes dynamically
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && key !== 'class' && value !== undefined) {
+      if (key.startsWith('on')) {
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
+      } else {
+        if (value === true) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
+      }
+    }
+  }
+
+  // Handle class attribute
+  let inputClass = attributes.class || this.inputClass;
+
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}" id="${id}-block">
+      <label for="${id}">${label}
+        ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+      </label>
+      <input 
+        type="${type}"
+        name="${name}"
+        ${bindingDirective}
+        id="${id}"
+        class="${inputClass}"
+        ${additionalAttrs}
+        ${validationAttrs}
+        ${additionalAttrs.includes('placeholder') ? '' : (this.formSettings.placeholders ? `placeholder="${label}"` : '')}
+      />
+      <span id="${id}-value">50</span> <!-- Displays the range value dynamically -->
+    </div>
+  `.replace(/^\s*\n/gm, '').trim();
+
+  // Apply vertical layout to the <input> element only
+  formHTML = formHTML.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
+    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+    return `<input\n${attributes}\n/>`;
+  });
+
+  this.formMarkUp += formHTML;
+}
+
+
+
+
+
+
+
 /* DYNAMIC SINGLE SELECT BLOCK */
 
 
