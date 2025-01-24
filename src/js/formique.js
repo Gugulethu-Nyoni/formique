@@ -548,8 +548,6 @@ renderTextField(type, name, label, validate, attributes) {
     });
   }
 
-
-
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
