@@ -443,9 +443,7 @@ renderField(type, name, label, validate, attributes, options) {
 // Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
   const formElement = document.getElementById(formId);
-
   //console.warn("handler fired also",formId,this.method,this.formAction);
-
 
   if (formElement) {
     // Gather form data
