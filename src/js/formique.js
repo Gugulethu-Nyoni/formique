@@ -3456,9 +3456,6 @@ renderRangeField(type, name, label, validate, attributes) {
 
 
 
-
-
-
 /* DYNAMIC SINGLE SELECT BLOCK */
 
 
