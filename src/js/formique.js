@@ -424,6 +424,7 @@ renderField(type, name, label, validate, attributes, options) {
         'singleSelect': this.renderSingleSelectField,
         'multipleSelect': this.renderMultipleSelectField,
         'dynamicSingleSelect': this.renderDynamicSingleSelectField,
+        'range': this.renderRangeField,
         'submit': this.renderSubmitButton,
     };
 
