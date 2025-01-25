@@ -439,7 +439,6 @@ renderField(type, name, label, validate, attributes, options) {
 }
 
 
-
 // Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
   const formElement = document.getElementById(formId);
