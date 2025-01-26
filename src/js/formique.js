@@ -894,22 +894,7 @@ if (attributes.binding === 'bind:value' && name) {
 // New method for rendering password fields
 renderPasswordField(type, name, label, validate, attributes) {
   // Define valid attributes for the password input type
-  /*
-  const passwordInputAttributes = [
-    'required',
-    'minlength',
-    'maxlength',
-    'pattern',
-    'placeholder',
-    'readonly',
-    'disabled',
-    'size',
-    'autocomplete',
-    'spellcheck',
-    'inputmode',
-    'title',
-  ];
-*/
+
 
   const passwordInputValidationAttributes = [
   'required',
