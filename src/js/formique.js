@@ -188,7 +188,6 @@ initDependencyGraph() {
 }
 
 
-
 // Attach Event Listeners
 attachInputChangeListener(parentField) {
   const fieldElement = document.getElementById(parentField);
