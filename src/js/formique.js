@@ -553,7 +553,7 @@ if (attributes.binding === 'bind:value' && name) {
    bindingDirective = `bind:value="${name}"\n`;
   }
   if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+    console.log(`\x1b[31m%s\x1b[0m`,`You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
   }
