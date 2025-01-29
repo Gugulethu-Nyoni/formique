@@ -121,7 +121,6 @@ class Formique extends FormBuilder {
   }
 
 
-
 initDependencyGraph() {
   this.dependencyGraph = {};
 
