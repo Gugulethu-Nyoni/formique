@@ -3359,7 +3359,7 @@ renderRangeField(type, name, label, validate, attributes) {
           validationAttrs += `  ${key}="${value}"\n`;
         }
       } else {
-        console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type 'range'.\x1b[0m`);
+        console.warn(`Unsupported validation attribute '${key}' for field '${name}' of type 'range'.`);
       }
     });
   }
@@ -3372,7 +3372,7 @@ renderRangeField(type, name, label, validate, attributes) {
     } else if (attributes.binding.startsWith('::') && name) {
       bindingDirective = `bind:value="${name}"\n`;
     } else if (attributes.binding && !name) {
-      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      console.log(`You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
       return;
     }
   }
