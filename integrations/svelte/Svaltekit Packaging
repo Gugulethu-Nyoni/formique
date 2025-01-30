@@ -1,0 +1,32 @@
+Svaltekit Packaging 
+
+::install app
+npx sv create name-of-app
+
+::select these options 
+Options:
+
+
+SvelteKit minimal
+
+Type checking with Typescript
+
+ESLint
+
+npm
+
+
+::run these commands
+cd svelte-formique
+npm run dev -- --open
+
+
+svelte-formique/
+├── src/
+│   ├── components/
+│   │   └── Formique.svelte
+│   └── lib/
+│       └── Formique.mjs
+├── package.json
+└── README.md
+

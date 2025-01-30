@@ -1,0 +1,55 @@
+<script>
+    import { onMount } from 'svelte';
+    import { browser } from '$app/environment';
+
+    let formique;
+
+onMount(() => {
+    if (browser) {
+        import('formique').then(Formique => {
+            console.log('Formique loaded', Formique);
+            //console.log('Form container element:', formContainer);
+
+            const formSchema = [
+                ['text', 'name', 'Name', { required: true }, {}],
+                ['email', 'email', 'Email', { required: true }, {}],
+                ['singleSelect', 'diet', 'Dietary Requirements', { required: true }, {}, [
+                    { value: 'gluten-free', label: 'Gluten-free' },
+                    { value: 'vegetarian', label: 'Vegetarian' },
+                ]],
+                ['submit', 'submitButton', 'Submit']
+            ];
+
+            const formParams = {
+                method: 'post',
+                action: 'submit.js',
+                id: 'myForm',
+                class: 'form',
+                style: 'width: 100%; font-size: 14px;'
+            };
+
+            const formSettings = {
+                requiredFieldIndicator: true,
+                framework: 'semantq',
+                placeholders: true,
+                
+            };
+
+            // Initialize the Formique form
+            const form = new Formique.default(formSchema, formParams, formSettings);
+            console.log('Form initialized', form);
+            // debug logging
+    const formContainer = document.getElementById('formique');
+    console.log('Form container element:', formContainer);
+    console.log('Form container HTML:', formContainer.innerHTML);
+
+        }).catch(error => {
+            console.error('Error loading Formique', error);
+        });
+    }
+});
+
+</script>
+
+<h1>Users Reg Form Here</h1>
+<div id="formique"></div>

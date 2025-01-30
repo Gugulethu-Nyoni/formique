@@ -2,7 +2,7 @@
 archive/
 
 # Ignore integrations dir
-integrations/
+#integrations/
 
 # Ignore integrations dir
 node_modules/

@@ -1,0 +1,8 @@
+
+USING THE cdn 
+
+https://svelte.dev/docs/kit/creating-a-project
+Using NPM 
+
+install
+npm init svelte@next sveltekit

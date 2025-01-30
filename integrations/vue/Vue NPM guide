@@ -1,0 +1,26 @@
+Vue NPM guide 
+
+
+installation 
+
+https://vuejs.org/guide/quick-start.html
+
+npm create vue@latest
+
+cd <your-project-name>
+npm install
+npm run dev
+
+
+
+my-vue-app/
+├── node_modules/
+├── public/
+│   └── index.html
+├── src/
+│   ├── components/
+│   │   └── UserForm.vue
+│   ├── App.vue
+│   └── main.js
+├── package.json
+└── README.md

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>React and Formique Integration</title>
+
+  <!-- Include Formique CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/formique-css@1.0.6/formique.min.css"
+    formique-style
+  />
+
+  <!-- Include Formique CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/formique@1.0.8/formique.umd.min.js"></script>
+
+  <!-- React and Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="react-container"></div>
+  <div id="formique"></div>
+
+  <script type="text/babel">
+    // React component to initialize Formique
+    function FormiqueForm() {
+      React.useEffect(() => {
+        // Ensure the DOM is available before initializing Formique
+        const formSchema = [
+          ['text', 'name', 'Name', { required: true }, {}],
+          ['email', 'email', 'Email', { required: true }, {}],
+          ['singleSelect', 'diet', 'Dietary Requirements', { required: true }, {}, [
+            { value: 'gluten-free', label: 'Gluten-free' },
+            { value: 'vegetarian', label: 'Vegetarian' },
+          ]],
+          ['submit', 'submitButton', 'Submit']
+        ];
+
+        const formParams = {
+          method: 'post',
+          action: 'submit.js',
+          id: 'myForm',
+          class: 'form',
+          style: 'width: 100%; font-size: 14px;',
+        };
+
+        const formSettings = {
+          requiredFieldIndicator: true,
+          framework: 'semantq',
+          placeholders: true,
+        };
+
+        // Ensure the Formique form is created only when the container is available
+        if (window.Formique) {
+          const formContainer = document.getElementById('formique');
+          // Initialize Formique form inside the formique container
+          new window.Formique(formSchema, formParams, formSettings, formContainer);
+        } else {
+          console.error('Formique is not loaded');
+        }
+      }, []); // This runs only once when the component is mounted
+
+      return <div>Loading form...</div>; // You can render a loading message until the form is initialized
+    }
+
+    // Render the React component
+    ReactDOM.createRoot(document.getElementById('formique')).render(<FormiqueForm />);
+  </script>
+</body>
+</html>

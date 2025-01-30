@@ -1,0 +1,143 @@
+1. Create a New Project:
+Open your terminal and create a new directory for your project:
+
+mkdir vue-component-wrapper
+cd vue-component-wrapper
+
+2. Initialize a package.json File:
+Run the following command to create a package.json file:
+
+npm init -y
+
+Step 2: Install Vue.js
+
+    Install Vue.js:
+    Install Vue.js as a dependency:
+
+npm install vue
+
+
+
+Install Your Pre-Bundled Component:
+Install the npm package that contains your pre-bundled JavaScript:
+
+npm install your-pre-bundled-package
+
+Step 3: Create Your Vue Component
+
+    Create the Component:
+    Create a src directory and add your Vue component file (e.g., MyWrapperComponent.vue):
+
+mkdir src
+touch src/MyWrapperComponent.vue
+
+
+Write the Component Code:
+
+Open src/MyWrapperComponent.vue and write the Vue wrapper for your pre-bundled component:
+
+<template>
+  <div>
+    <!-- Use your pre-bundled component here -->
+    <div id="pre-bundled-component-container"></div>
+  </div>
+</template>
+
+<script>
+import YourPreBundledComponent from 'your-pre-bundled-package';
+
+export default {
+  name: 'MyWrapperComponent',
+  mounted() {
+    // Initialize your pre-bundled component
+    YourPreBundledComponent.init('#pre-bundled-component-container');
+  },
+  beforeDestroy() {
+    // Clean up your pre-bundled component (if needed)
+    YourPreBundledComponent.destroy();
+  },
+};
+</script>
+
+<style scoped>
+/* Add any styles here */
+</style>
+
+
+Step 4: Create an Entry Point
+
+    Create an Entry File:
+    Create an index.js file in the src directory:
+
+
+
+ touch src/index.js
+
+ Export the Component:
+Open src/index.js and export your Vue wrapper component:
+
+import MyWrapperComponent from './MyWrapperComponent.vue';
+
+export default MyWrapperComponent;
+
+// Optional: Export as a plugin for global registration
+export const MyPlugin = {
+  install(Vue) {
+    Vue.component('MyWrapperComponent', MyWrapperComponent);
+  },
+};
+
+
+Step 5: Bundle the Vue Component
+
+Since your pre-bundled JavaScript is already packaged, you only need to bundle the Vue wrapper component. You can use a simple bundler like Vite or Vue CLI for this.
+Option 1: Using Vite
+
+    Install Vite:
+
+
+    npm install --save-dev vite
+
+Create a vite.config.js File:
+
+touch vite.config.js
+
+
+Add Vite Configuration:
+Open vite.config.js and add the following configuration:
+
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  build: {
+    lib: {
+      entry: './src/index.js',
+      name: 'MyWrapperComponent',
+      fileName: 'my-wrapper-component',
+    },
+    rollupOptions: {
+      external: ['vue'],
+      output: {
+        globals: {
+          vue: 'Vue',
+        },
+      },
+    },
+  },
+});
+
+
+
+Add a Build Script:
+Open package.json and add a build script:
+
+"scripts": {
+  "build": "vite build"
+}
+
+npm run build
+
+
+
