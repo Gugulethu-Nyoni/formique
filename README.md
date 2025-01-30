@@ -863,6 +863,11 @@ This approach helps you smoothly transition from testing to production, giving y
 
 In addition to external stylesheets, individual form elements can be styled directly via attributes specified in the form schema. This allows for fine grained control (inline styling) over the appearance of each element. 
 
+# Other Implementation Guide
+
+## Implementing Formique in Vue.js  
+For Vue-specific integration details, check out the [Vue.js Guide](docs/vue-guide.md).
+
 
 ## Contribute
 
