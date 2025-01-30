@@ -1,4 +1,4 @@
-# test_vue_formique
+# vue-test-formique
 
 ## Project setup
 ```

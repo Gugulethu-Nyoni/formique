@@ -1,15 +1,19 @@
 {
   "name": "vue-formique",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "1.0.2",
+  "main": "dist/vue-formique.umd.js",
+  "exports": {
+    "import": "./dist/vue-formique.es.js",
+    "require": "./dist/vue-formique.umd.js"
+  },
   "scripts": {
     "build": "vite build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["vue", "formique"],
+  "author": "Gugulethu Nyoni",
   "license": "ISC",
-  "description": "",
+  "description": "A Vue wrapper around the Formique form library.",
   "dependencies": {
     "formique": "^1.0.8",
     "vue": "^3.5.13"

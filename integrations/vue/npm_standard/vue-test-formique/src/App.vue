@@ -1,6 +1,6 @@
 <template>
-  <div id="app">
-    <h1>Testing vue-formique</h1>
+  <div>
+    <h1>Test Vue Formique</h1>
     <VueFormique />
   </div>
 </template>
@@ -15,5 +15,3 @@ export default {
   },
 };
 </script>
-
-

@@ -1,0 +1,17 @@
+# Ignore development-related files and directories
+node_modules/
+src/
+tests/
+__tests__/
+*.log
+*.md
+.git/
+*.yarn.lock
+package-lock.json
+vite.config.js
+
+# Include necessary files
+!dist/
+!package.json
+!README.md
+!LICENSE
