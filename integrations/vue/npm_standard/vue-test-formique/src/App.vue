@@ -6,12 +6,7 @@
 </template>
 
 <script>
-import { VueFormique } from 'vue-formique';
-
 export default {
   name: 'App',
-  components: {
-    VueFormique,
-  },
 };
 </script>
