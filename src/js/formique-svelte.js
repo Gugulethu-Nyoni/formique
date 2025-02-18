@@ -459,76 +459,87 @@ renderField(type, name, label, validate, attributes, options) {
 
 
 // Method to handle on-page form submissions
+// Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
   const formElement = document.getElementById(formId);
 
-  console.warn("handler fired also",formId,this.method,this.formAction);
-
+  console.warn("handler fired also", formId, this.method, this.formAction);
 
   if (formElement) {
     // Gather form data
     const formData = new FormData(formElement);
+    const jsonObject = {};
+
+    formData.forEach((value, key) => {
+      jsonObject[key] = value;
+    });
+
+    // Log the data before sending
+    console.log("Form Data as JSON:", jsonObject);
 
     // Submit form data using fetch to a test endpoint
     fetch(this.formAction, {
       method: this.method,
-      body: formData
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(jsonObject),
     })
       .then(response => response.json())
       .then(data => {
-        console.log('Success:', data);
+        console.log("Success:", data);
         // Handle the response data here, e.g., show a success message
 
         // Get the form container element
-const formContainer = document.getElementById(this.formContainerId);
+        const formContainer = document.getElementById(this.formContainerId);
 
-if (formContainer) {
-  // Create a new div element for the success message
-  const successMessageDiv = document.createElement('div');
+        if (formContainer) {
+          // Create a new div element for the success message
+          const successMessageDiv = document.createElement("div");
 
-  // Add custom classes for styling the success message
-  successMessageDiv.classList.add('success-message', 'message-container');
+          // Add custom classes for styling the success message
+          successMessageDiv.classList.add("success-message", "message-container");
 
-  // Set the success message text
-  successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
+          // Set the success message text
+          successMessageDiv.innerHTML =
+            this.formSettings.successMessage ||
+            "Your details have been successfully submitted!";
 
-  // Replace the content of the form container with the success message div
-  formContainer.innerHTML = ''; // Clear existing content
-  formContainer.appendChild(successMessageDiv); // Append the new success message div
-}
-
-
+          // Replace the content of the form container with the success message div
+          formContainer.innerHTML = ""; // Clear existing content
+          formContainer.appendChild(successMessageDiv); // Append the new success message div
+        }
       })
       .catch(error => {
-  console.error('Error:', error);
+        console.error("Error:", error);
 
-  const formContainer = document.getElementById(this.formContainerId);
-  if (formContainer) {
-    // Check if an error message div already exists and remove it
-    let existingErrorDiv = formContainer.querySelector('.error-message');
-    if (existingErrorDiv) {
-      existingErrorDiv.remove();
-    }
+        const formContainer = document.getElementById(this.formContainerId);
+        if (formContainer) {
+          // Check if an error message div already exists and remove it
+          let existingErrorDiv = formContainer.querySelector(".error-message");
+          if (existingErrorDiv) {
+            existingErrorDiv.remove();
+          }
 
-    // Create a new div element for the error message
-    const errorMessageDiv = document.createElement('div');
+          // Create a new div element for the error message
+          const errorMessageDiv = document.createElement("div");
 
-    // Add custom classes for styling the error message
-    errorMessageDiv.classList.add('error-message', 'message-container');
+          // Add custom classes for styling the error message
+          errorMessageDiv.classList.add("error-message", "message-container");
 
-    // Set the error message text
-    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
-    err = `${err}<br/>Details: ${error.message}`;
-    errorMessageDiv.innerHTML = err; 
+          // Set the error message text
+          let err =
+            this.formSettings.errorMessage ||
+            "An error occurred while submitting the form. Please try again.";
+          err = `${err}<br/>Details: ${error.message}`;
+          errorMessageDiv.innerHTML = err;
 
-    // Append the new error message div to the form container
-    formContainer.appendChild(errorMessageDiv);
-  }
-});
-
+          // Append the new error message div to the form container
+          formContainer.appendChild(errorMessageDiv);
+        }
+      });
   }
 }
-
 
 
 
