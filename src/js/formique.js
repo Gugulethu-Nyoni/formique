@@ -458,8 +458,9 @@ handleOnPageFormSubmission(formId) {
 const formContainer = document.getElementById(this.formContainerId);
 
 if (this.redirect) {
-
-window.location = this.redirectURL;
+  if (this.redirectURL) {
+    window.location = this.redirectURL;
+  }
 }
 
 if (formContainer) {
