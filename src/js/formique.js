@@ -71,6 +71,8 @@ class Formique extends FormBuilder {
     this.method= formParams.method.toUpperCase() || 'POST';
     this.formMarkUp = '';
     this.dependencyGraph = {};
+    this.redirect = formSettings.redirect ||'';
+    this.redirectURL = formSettings.redirectURL ||'';
     this.themes = [
       "dark",
       "light",
