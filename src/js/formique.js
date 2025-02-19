@@ -457,6 +457,11 @@ handleOnPageFormSubmission(formId) {
         // Get the form container element
 const formContainer = document.getElementById(this.formContainerId);
 
+if (this.redirect) {
+
+window.location = this.redirectURL;
+}
+
 if (formContainer) {
   // Create a new div element for the success message
   const successMessageDiv = document.createElement('div');
