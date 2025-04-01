@@ -12,6 +12,8 @@ dist/
 
 # Ingore node serv dir
 server/
+#ignore the api dir
+api/
 
 # Ignore screencasts dir
 screencasts/
