@@ -41,24 +41,90 @@ submitMode: email
 sendTo: contact@example.com  
 ```  
 
-### **2.2 Form Properties**  
-Form properties can be:  
-- **Standard HTML attributes** (applied to the `<form>` element)  
-- **Form settings** (control form behavior)  
+## **2.2 Form Properties & Settings**
 
-#### **Common Properties**  
-| **Type**       | **Example Properties**                     | **Description** |
-|---------------|------------------------------------------|----------------|
-| **HTML Attributes** | `id`, `class`, `action`, `method`, `enctype` | Standard form attributes |
-| **Form Settings** | `theme`, `submitMode`, `successMessage` | Controls form behavior |
-| **Validation** | `requiredFieldIndicator`, `minSelections` | Validation rules |
+### 1. Standard Form Attributes (formParams)
+These standard HTML form attributes will be added directly to your `<form>` element:
 
----
+```ffdl
+@form: contact-form
+id: main-contact         # Form ID
+class: responsive-form   # CSS classes
+action: /submit          # Submission endpoint
+method: post             # HTTP method
+enctype: multipart/form-data  # For file uploads
+target: _blank           # Open response in new tab
+autocomplete: off        # Browser autocomplete
+```
+
+**Common Standard Attributes:**
+| Attribute | Examples | Description |
+|-----------|----------|-------------|
+| `id` | `user-registration` | Unique form identifier |
+| `class` | `compact-form dark-theme` | CSS classes |
+| `action` | `/api/submit` | Submission URL |
+| `method` | `get`, `post` | HTTP method |
+| `enctype` | `multipart/form-data` | For file uploads |
+| `target` | `_blank`, `_self` | Where to open response |
+| `autocomplete` | `on`, `off` | Browser autofill |
+
+### 2. Special Form Settings (formSettings)
+These control Formique-specific behavior and appearance:
+
+```ffdl
+@form: event-registration
+theme: dark-blue                # Color scheme
+submitMode: email               # Submission type
+sendTo: events@example.com      # Recipient email
+successMessage: "Thank you!"    # Success confirmation
+requiredFieldIndicator: true    # Show * for required fields
+framework: semantq              # JS framework or Laravel
+```
+
+**Key Special Settings:**
+| Setting | Example Values | Description |
+|---------|----------------|-------------|
+| `theme` | `light`, `dark-blue` | Predefined color schemes |
+| `submitMode` | `email`, `ajax`, `page` | How form submits |
+| `successMessage` | Custom text | Post-submission message |
+| `errorMessage` | Custom text | Form error message |
+| `framework` | `tailwind`, `bootstrap` | Styling framework |
+| `placeholders` | `true`, `false` | Use labels as placeholders |
+
+### 3. Combined Example
+Mix both types in any order:
+
+```ffdl
+@form: job-application
+id: app-form
+theme: corporate-blue
+method: post
+action: /careers/submit
+submitMode: ajax
+successMessage: "Application received!"
+requiredFieldIndicator: true
+enctype: multipart/form-data
+```
+
+### How It Works:
+1. **Standard attributes** (`id`, `class`, `action`, etc.) → Become HTML attributes
+2. **Special settings** (`theme`, `submitMode`, etc.) → Control Formique behavior
+3. **All properties** can be mixed together in any order
+
+> 💡 **Tip**: Don't worry about categorization - Formique automatically sorts them into the right place during processing.
+
 
 ## **3. Field Definitions**  
 
 ### **3.1 Basic Field Syntax**  
 Fields are defined with `-` followed by a name and optional attributes.  
+FFDL uses inference to determine the name for of the field for example if the field is:
+
+```ffdl
+- name 
+```
+
+FFDL will infer that this will be text field type with "name" as id and name attributes.  
 
 #### **Syntax**  
 ```ffdl
@@ -83,10 +149,20 @@ Fields are defined with `-` followed by a name and optional attributes.
 - `!` → **Field with validation**  
 - `*!` or `!*` → **Required + validated**  
 
-#### **Rules**  
-✅ `*field`, `field*`, `!field`, `field!`  
-✅ `* field`, `field *` (spaces optional)  
-✅ `*!field`, `!*field` (combine markers)  
+There are no strict rules for placing these markers (**`!`** and **`*`**). You can:  
+
+- Use either **`!`** or **`*`** as needed.  
+- Place them on **either side** of the field name—or on **both sides**.  
+- Arrange them in **any order** (e.g., `!*field`, `field*!`, `*field!`, etc.).  
+- **Include spaces** between the markers and the field name (`! field *`, `* field !`), as this is completely acceptable.  
+- **Omit them entirely** if not needed.  
+
+This flexibility ensures a **user-friendly low-code approach**, making form creation as intuitive as possible. 
+
+#### ** Examples **  
+`*field`, `field*`, `!field`, `field!`  
+`* field`, `field *` (spaces optional)  
+`* !field`, `! * field` (combine markers)  
 
 #### **Examples**  
 ```ffdl
@@ -117,16 +193,33 @@ Add `:type` after the field name.
 ```  
 
 #### **Supported Types**  
+
 | **Type** | **Example** | **Description** |
 |----------|------------|----------------|
 | `text` | `- full_name:text` | Standard text input |
-| `email` | `- user_email:email` | Email validation |
+| `email` | `- user_email:email` | Email input with validation |
+| `number` | `- age:number` | Numeric input (integers & decimals) |
+| `password` | `- user_password:password` | Password input (masked text) |
+| `textarea` | `- comments:textarea` | Multi-line text input |
+| `tel` | `- phone_number:tel` | Telephone number input |
 | `date` | `- birth_date:date` | Date picker |
-| `file` | `- upload:file` | File input |
-| `radio` | `- gender:radio` | Radio buttons |
-| `checkbox` | `- subscribe:checkbox` | Checkbox |
+| `time` | `- appointment_time:time` | Time picker |
+| `datetime-local` | `- event_datetime:datetime-local` | Date & time picker (local) |
+| `month` | `- billing_month:month` | Month picker |
+| `week` | `- work_week:week` | Week picker |
+| `url` | `- website:url` | URL input with validation |
+| `search` | `- query:search` | Search input field |
+| `color` | `- favorite_color:color` | Color picker |
+| `checkbox` | `- subscribe:checkbox` | Checkbox input |
+| `radio` | `- gender:radio` | Radio buttons (single choice) |
+| `file` | `- upload:file` | File upload input |
+| `hidden` | `- user_id:hidden` | Hidden input field |
+| `image` | `- profile_picture:image` | Image upload input |
+| `singleSelect` | `- country:singleSelect` | Dropdown with single selection |
+| `multipleSelect` | `- interests:multipleSelect` | Dropdown with multiple selection |
+| `dynamicSingleSelect` | `- city:dynamicSingleSelect` | Dynamic single-choice dropdown |
+| `range` | `- volume:range` | Slider input for range selection |
 
----
 
 ## **6. Selection Fields (Dropdowns, Radio, Checkbox)**  
 
