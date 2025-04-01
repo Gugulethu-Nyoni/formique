@@ -1,0 +1,59 @@
+FFDL (Formique Form Definition Language)
+
+mode Login / email 
+if mode login - include action: and redirectURL 
+elements
+id, class, action 
+
+@form: user-registration
+theme: dark
+mode: email 
+
+
+
+# Basic info (required fields)
+Grammar for FormField 
+- full_name* 
+ id: full-name
+ class: block
+ disabled
+
+Note that FormField attributes are optional
+
+
+
+FormField with Type definition
+- dob:date
+ id
+
+
+- email!
+- password!
+- dob:date
+
+# Preferences
+- newsletter? > frequency
+  - Weekly
+  - Monthly
+  - Never
+
+# Conditional tech stack
+- role > stack
+  - Developer
+    - languages*
+      - JavaScript
+      - Python
+      - Ruby
+    - frameworks
+      - React
+      - Django
+      - Rails
+  - Designer
+    - tools*
+      - Figma
+      - Sketch
+      - Adobe XD
+
+# Submission
+- terms*:checkbox
+- submit: "Join Now"

@@ -1,0 +1,263 @@
+# **Formique Low-Code Form Syntax Guide**  
+
+## **1. Introduction**  
+
+Formique is a lightweight, declarative JavaScript library for building accessible, WCAG-compliant forms. It enables both developers and non-technical users to create forms quickly and efficiently.  
+
+### **Low-Code Form Definition Language (FFDL)**  
+
+At the heart of Formique is the **Formique Form Definition Language (FFDL)**—a simple yet powerful **low-code syntax** that allows users to define forms without writing HTML or JavaScript.  
+
+FFDL is designed for:  
+**Non-technical users** – Easily create forms with minimal syntax  
+**Developers** – Define forms using a structured, human-readable format  
+**Accessibility & Compliance** – Automatically ensures usability and best practices  
+
+Formique supports two approaches:  
+
+- **JavaScript Schema Definition Language (SDL)** – For developers. You explore the SDL guide here:[Formique SDL](https://github.com/Gugulethu-Nyoni/formique)
+- **FFDL (Low-Code Syntax)** – For non-technical users (covered in this guide)  
+
+This guide will walk you through **FFDL**, making form creation effortless and intuitive. 
+
+
+## **2. Form Definition Basics**  
+
+### **2.1 The `@form` Directive**  
+Every form starts with the `@form` directive, followed by a name and optional properties.  
+
+#### **Basic Syntax**  
+```ffdl
+@form: form-name  
+property1: value1  
+property2: value2  
+```  
+
+#### **Example**  
+```ffdl
+@form: user-registration  
+theme: dark  
+submitMode: email  
+sendTo: contact@example.com  
+```  
+
+### **2.2 Form Properties**  
+Form properties can be:  
+- **Standard HTML attributes** (applied to the `<form>` element)  
+- **Form settings** (control form behavior)  
+
+#### **Common Properties**  
+| **Type**       | **Example Properties**                     | **Description** |
+|---------------|------------------------------------------|----------------|
+| **HTML Attributes** | `id`, `class`, `action`, `method`, `enctype` | Standard form attributes |
+| **Form Settings** | `theme`, `submitMode`, `successMessage` | Controls form behavior |
+| **Validation** | `requiredFieldIndicator`, `minSelections` | Validation rules |
+
+---
+
+## **3. Field Definitions**  
+
+### **3.1 Basic Field Syntax**  
+Fields are defined with `-` followed by a name and optional attributes.  
+
+#### **Syntax**  
+```ffdl
+- field_name  
+  attribute1: value1  
+  attribute2: value2  
+```  
+
+#### **Example**  
+```ffdl
+- email  
+  required  
+  placeholder: "Enter your email"  
+```  
+
+---
+
+## **4. Field Markers (Required & Validated Fields)**  
+
+### **4.1 Markers Overview**  
+- `*` → **Required field**  
+- `!` → **Field with validation**  
+- `*!` or `!*` → **Required + validated**  
+
+#### **Rules**  
+✅ `*field`, `field*`, `!field`, `field!`  
+✅ `* field`, `field *` (spaces optional)  
+✅ `*!field`, `!*field` (combine markers)  
+
+#### **Examples**  
+```ffdl
+- *email           # Required  
+- password!        # Validated (e.g., min-length)  
+- *!phone          # Required + validated  
+- age*             # Required (right side)  
+```  
+
+---
+
+## **5. Field Types**  
+
+### **5.1 Automatic Type Detection**  
+If no type is specified, Formique defaults to `text`.  
+
+#### **Example**  
+```ffdl
+- username   # Treated as text input  
+```  
+
+### **5.2 Explicit Type Declaration**  
+Add `:type` after the field name.  
+
+#### **Syntax**  
+```ffdl
+- field_name:type  
+```  
+
+#### **Supported Types**  
+| **Type** | **Example** | **Description** |
+|----------|------------|----------------|
+| `text` | `- full_name:text` | Standard text input |
+| `email` | `- user_email:email` | Email validation |
+| `date` | `- birth_date:date` | Date picker |
+| `file` | `- upload:file` | File input |
+| `radio` | `- gender:radio` | Radio buttons |
+| `checkbox` | `- subscribe:checkbox` | Checkbox |
+
+---
+
+## **6. Selection Fields (Dropdowns, Radio, Checkbox)**  
+
+### **6.1 Radio Buttons (`oneof`)**  
+For single-choice selections.  
+
+#### **Syntax**  
+```ffdl
+- field_name  
+  oneof  
+  options: Option1, Option2, Option3  
+```  
+
+#### **Example**  
+```ffdl
+- payment_method  
+  oneof  
+  options: Credit Card, PayPal, Bank Transfer  
+```  
+
+### **6.2 Checkboxes (`manyof`)**  
+For multi-selection.  
+
+#### **Syntax**  
+```ffdl
+- field_name  
+  manyof  
+  options: Option1, Option2  
+```  
+
+#### **Example**  
+```ffdl
+- hobbies  
+  manyof  
+  options: Music, Sports, Reading  
+```  
+
+### **6.3 Dropdown Select (`selectOne` / `selectMany`)**  
+For single or multiple selections in a dropdown.  
+
+#### **Single Select**  
+```ffdl
+- country  
+  selectOne  
+  options: USA, Canada, Mexico  
+```  
+
+#### **Multi-Select**  
+```ffdl
+- skills  
+  selectMany  
+  options: HTML, CSS, JavaScript  
+```  
+
+---
+
+## **7. Advanced Field Attributes**  
+
+### **7.1 Common Attributes**  
+| **Attribute** | **Example** | **Description** |
+|--------------|------------|----------------|
+| `required` | `- email (required)` | Makes field mandatory |
+| `default` | `default: "USA"` | Pre-selects a value |
+| `min` / `max` | `min: 2` (for checkboxes) | Minimum/maximum selections |
+| `pattern` | `pattern: "\d{3}-\d{3}-\d{4}"` | Regex validation |
+
+### **7.2 File Upload Example**  
+```ffdl
+- profile_pic:file  
+  accept: image/*  
+  max-size: 2MB  
+```  
+
+---
+
+## **8. Complete Examples**  
+
+### **8.1 Registration Form**  
+```ffdl
+@form: user-signup  
+theme: light  
+submitMode: ajax  
+
+- *full_name  
+  placeholder: "First & Last Name"  
+
+- *!email:email  
+  required  
+  pattern: ".+@.+\..+"  
+
+- *password  
+  min-length: 8  
+
+- *country  
+  selectOne  
+  options: USA, Canada, UK  
+
+- subscribe:checkbox  
+  default: true  
+```  
+
+### **8.2 Survey Form**  
+```ffdl
+@form: customer-feedback  
+theme: dark  
+
+- *rating  
+  oneof  
+  options: Poor, Good, Excellent  
+
+- comments:textarea  
+  placeholder: "Tell us more..."  
+
+- contact_me:checkbox  
+  label: "Can we follow up?"  
+```  
+
+---
+
+## **9. Summary**  
+✅ **Simple syntax** – No HTML/JS required  
+✅ **Flexible markers** – `*` (required) and `!` (validation)  
+✅ **Multiple field types** – Text, email, date, file, dropdowns  
+✅ **Selection fields** – Radio (`oneof`), Checkbox (`manyof`), Dropdown (`selectOne`/`selectMany`)  
+✅ **Real-world examples** – Registration forms, surveys, file uploads  
+
+---
+
+### **Next Steps**  
+- Try the [Formique Playground] to experiment  
+- Explore [Advanced Validation Rules]  
+- Learn [Dynamic Form Binding]  
+
+Would you like a **PDF version** of this guide? Let us know! 🚀

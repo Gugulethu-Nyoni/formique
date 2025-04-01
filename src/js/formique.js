@@ -50,7 +50,7 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
-  constructor(formSchema, formParams = {}, formSettings = {}) {
+  constructor(formSchema, formSettings = {}, formParams = {}, ) {
     super();
     this.formSchema = formSchema;
     this.formParams = formParams;
@@ -66,13 +66,15 @@ class Formique extends FormBuilder {
     this.checkboxGroupClass = 'checkbox-group';
     this.selectGroupClass = 'form-select';
     this.submitButtonClass = 'form-submit-btn';
-    this.formContainerId = formSettings.formContainerId || 'formique';
-    this.formAction = formParams.action || 'https://httpbin.org/post';
-    this.method= formParams.method.toUpperCase() || 'POST';
+    this.formContainerId = formSettings?.formContainerId || 'formique';
+    this.formId = this.formParams?.id || this.generateFormId();
+    console.log(this.formId);
+    this.formAction = formParams?.action || 'https://httpbin.org/post';
+    this.method = 'POST';    
     this.formMarkUp = '';
     this.dependencyGraph = {};
-    this.redirect = formSettings.redirect ||'';
-    this.redirectURL = formSettings.redirectURL ||'';
+    this.redirect = formSettings?.redirect ||'';
+    this.redirectURL = formSettings?.redirectURL ||'';
     this.themes = [
       "dark",
       "light",
@@ -87,11 +89,18 @@ class Formique extends FormBuilder {
       "midnight-blush"
     ];
 
+    //this.formiqueEndpoint = "http://localhost:3000/api/send-email";
+    this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
+
     document.addEventListener('DOMContentLoaded', () => {
 
+      /*
       if (this.formParams && Object.keys(this.formParams).length > 0) {
       this.formMarkUp += this.renderFormElement();
-      }
+      } */
+
+      this.formMarkUp += this.renderFormElement();
+
 
       this.renderForm();
       this.renderFormHTML();
@@ -107,10 +116,18 @@ class Formique extends FormBuilder {
         this.applyTheme('dark', this.formContainerId);
       }
 
-    document.getElementById(`${this.formParams.id}`).addEventListener('submit', function(event) {
+     document.getElementById(`${this.formId}`).addEventListener('submit', function(event) {
+ 
+      if (this.formSettings.submitMode === 'email') {
+      event.preventDefault(); // Prevent the default form submission
+      this.handleEmailSubmission(this.formId);
+      }
+
+
     if (this.formSettings.submitOnPage) {
     event.preventDefault(); // Prevent the default form submission
-    this.handleOnPageFormSubmission(this.formParams.id);
+
+    this.handleOnPageFormSubmission(this.formId);
     //console.warn("listener fired at least>>", this.formParams.id, this.method);
     }
     }.bind(this)); // Bind `this` to ensure it's correct inside the event listener
@@ -121,6 +138,12 @@ class Formique extends FormBuilder {
 
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
+
+
+generateFormId() {
+  return `fmq-${Math.random().toString(36).substr(2, 10)}`;
+}
+
 
 
 initDependencyGraph() {
@@ -350,6 +373,11 @@ applyTheme(theme, formContainerId) {
   const paramsToUse = this.formParams || {};
   //console.log(paramsToUse);
 
+if (!paramsToUse.id) {
+  paramsToUse.id = this.formId;
+}
+
+
   // Dynamically add attributes if they are present in the parameters
 Object.keys(paramsToUse).forEach(key => {
   const value = paramsToUse[key];
@@ -435,6 +463,143 @@ renderField(type, name, label, validate, attributes, options) {
         return ''; // or handle gracefully
     }
 }
+
+
+
+// Show success/error messages (externalizable)
+showSuccessMessage(message) {
+  const container = document.getElementById(this.formContainerId);
+  container.innerHTML = `
+    <div class="formique-success">✓ ${message}</div>
+    ${this.formSettings.redirectURL 
+      ? `<meta http-equiv="refresh" content="2;url=${this.formSettings.redirectURL}">` 
+      : ""}
+  `;
+}
+
+showErrorMessage(message) {
+  const container = document.getElementById(this.formContainerId);
+  const errorDiv = document.createElement("div");
+  errorDiv.className = "formique-error";
+  errorDiv.textContent = `✗ ${message}`;
+  container.prepend(errorDiv);
+}
+
+// Check if form has file inputs
+hasFileInputs(form) {
+  return Boolean(form.querySelector('input[type="file"]'));
+}
+
+
+
+
+
+async handleEmailSubmission(formId) {
+  console.log(`Starting email submission for form ID: ${formId}`); // Debug log
+  
+  const form = document.getElementById(formId);
+  if (!form) {
+    console.error(`Form with ID ${formId} not found`); // Error log
+    throw new Error(`Form with ID ${formId} not found`);
+  }
+
+  // Validate required settings
+  if (!this.formSettings?.sendTo) {
+    console.error('formSettings.sendTo recipient email is required'); // Error log
+    throw new Error('formSettings.sendTo recipient email is required');
+  }
+
+  // Serialize form data
+  const payload = {
+    formData: {},
+    metadata: {
+      recipient: this.formSettings.sendTo,
+      timestamp: new Date().toISOString()
+    }
+  };
+
+  let senderName = ''; // Track sender's name for reply-to
+  let senderEmail = ''; // Track sender's email
+
+  console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload))); // Debug log
+
+  // Process form fields
+  new FormData(form).forEach((value, key) => {
+    console.log(`Processing form field - Key: ${key}, Value: ${value}`); // Debug log
+    payload.formData[key] = value;
+    
+    // Auto-detect user email and name fields
+    const lowerKey = key.toLowerCase();
+    if ((lowerKey === 'email' || lowerKey.includes('email'))) {
+      senderEmail = value;
+    }
+    if ((lowerKey === 'name' || lowerKey.includes('name'))) {
+      senderName = value;
+    }
+  });
+
+  // Add sender information to metadata (server will handle validation)
+  if (senderEmail) {
+    payload.metadata.sender = senderEmail;
+    payload.metadata.replyTo = senderName 
+      ? `${senderName} <${senderEmail}>` 
+      : senderEmail;
+  }
+
+  console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload))); // Debug log
+
+  try {
+    const endpoint = this.formiqueEndpoint || this.formAction;
+    const method = this.method || 'POST';
+    
+    console.log(`Preparing to send request to: ${endpoint}`); // Debug log
+    console.log(`Request method: ${method}`); // Debug log
+    console.log('Final payload being sent:', payload); // Debug log
+
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Formique-Version': '1.0' 
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log(`Received response with status: ${response.status}`); // Debug log
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API Error Response:', errorData); // Error log
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('API Success Response:', data); // Debug log
+    
+    const successMessage = this.formSettings.successMessage || 
+                         data.message || 
+                         'Your message has been sent successfully!';
+    console.log(`Showing success message: ${successMessage}`); // Debug log
+    this.showSuccessMessage(successMessage);
+
+  } catch (error) {
+    console.error('Email submission failed:', error); // Error log
+    const errorMessage = this.formSettings.errorMessage || 
+                       error.message || 
+                       'Failed to send message. Please try again later.';
+    console.log(`Showing error message: ${errorMessage}`); // Debug log
+    this.showErrorMessage(errorMessage);
+  }
+}
+
+
+// Email validation helper
+validateEmail(email) {
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  console.log(`Validating email ${email}: ${isValid ? 'valid' : 'invalid'}`); // Debug log
+  return isValid;
+}
+
 
 
 // Method to handle on-page form submissions

@@ -1,0 +1,71 @@
+
+
+Radio
+Checkbox
+singleSelect
+MultipleSelect 
+
+DynamicSelect
+Conditional Select 
+
+
+- Country-State
+ Botswana, Malawi 
+ 
+
+- *payment_method
+  options: Credit Card, PayPal, Bank Transfer
+
+Radio 
+- *payment_method
+  type: one of
+  options: "Credit Card", "PayPal", "Bank Transfer"
+or
+
+- *payment_method
+  radio
+  options: "Credit Card", "PayPal", "Bank Transfer"
+or
+- *payment_method
+  one of
+  options: "Credit Card", "PayPal", "Bank Transfer"
+
+
+- *topics
+  type: many of
+  options: "Science", "Math", "History"
+
+or 
+
+- *topics
+  many of
+  options: "Science", "Math", "History"
+
+
+- *country
+  type: select one
+  options: "USA", "Canada", "Mexico"
+or
+
+- *country
+  select one
+  options: "USA", "Canada", "Mexico"
+
+
+
+- *interests
+  type: select many
+  options: "Music", "Sports", "Art"
+
+or 
+
+
+- *interests
+  select many
+  options: "Music", "Sports", "Art"
+
+or
+
+- *interests
+  multiselect
+  options: "Music", "Sports", "Art"
