@@ -233,6 +233,8 @@ For single-choice selections.
   options: Option1, Option2, Option3  
 ```  
 
+**Note** Instead of oneof you can also use radio.
+
 #### **Example**  
 ```ffdl
 - payment_method  
@@ -250,10 +252,13 @@ For multi-selection.
   options: Option1, Option2  
 ```  
 
+**Note** Instead of manyof you can also use checkbox.
+
+
 #### **Example**  
 ```ffdl
 - hobbies  
-  manyof  
+  checkbox  
   options: Music, Sports, Reading  
 ```  
 
@@ -267,11 +272,35 @@ For single or multiple selections in a dropdown.
   options: USA, Canada, Mexico  
 ```  
 
+**Note** Instead of selectOne you can also use select.
+
+
 #### **Multi-Select**  
 ```ffdl
 - skills  
   selectMany  
   options: HTML, CSS, JavaScript  
+```  
+
+**Note** Instead of selectMany you can also use multiSelect.
+
+#### Pre-selected Values (defaults)
+
+#### **Multi-Select**  
+```ffdl
+- skills  
+  selectMany  
+  options: HTML, CSS, JavaScript  
+  default: html,css
+```  
+
+
+#### **Single Select**  
+```ffdl
+- country  
+  selectOne  
+  options: South Africa, Zambia, Algeria  
+  default: South Africa
 ```  
 
 ---

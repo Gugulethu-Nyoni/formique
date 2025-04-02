@@ -36,6 +36,7 @@ Single Select
 -!*country
   selectOne
   options: USA, Canada, Mexico
+  default: USA
 
 
 MultiSelect
@@ -43,9 +44,27 @@ MultiSelect
 - interests
   selectMany
   options: Music, Sports, Art
+  defualt: Music
 
 File Name with Type Reference
 - dob:date 
+
+
+- name*
+- email*
+- !message*!:textarea
+
+
+Simple Contact From Example :: FormiqueCloud Enabled
+
+@form: my-contact-form
+sendTo: gugunnn@gmail.com
+submitMode: email
+
+- name*
+- email*
+- !message*!:textarea
+
 */
 
 
