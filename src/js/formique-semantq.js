@@ -121,13 +121,15 @@ class Formique extends FormBuilder {
  
       if (this.formSettings.submitMode === 'email') {
       event.preventDefault(); // Prevent the default form submission
+      document.getElementById("formiqueSpinner").style.display = "block";
+      return;
       this.handleEmailSubmission(this.formId);
       }
 
 
     if (this.formSettings.submitOnPage) {
     event.preventDefault(); // Prevent the default form submission
-
+    document.getElementById("formiqueSpinner").style.display = "block";
     this.handleOnPageFormSubmission(this.formId);
     //console.warn("listener fired at least>>", this.formParams.id, this.method);
     }
@@ -3745,8 +3747,16 @@ renderSubmitButton(type, name, label, validate, attributes) {
     submitButtonClass=this.submitButtonClass; 
   }
 
+
+const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
+  <div class="formique-spinner"></div>
+  <p class="message">Hang in tight, we are submitting your details…</p>
+</div>
+`;
   // Construct the final HTML string
+
   const formHTML = `
+    ${spinner}
     <input type="${type}"
       id="${id + '-block'}"
       class="${submitButtonClass}"

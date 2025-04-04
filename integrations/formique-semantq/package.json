@@ -25,11 +25,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/formique-semantq.git"
+    "url": "https://github.com/Gugulethu-Nyoni/formique/blob/main/integrations/formique-semantq/README.md"
   },
-  "homepage": "https://github.com/yourusername/formique-semantq#readme",
+  "homepage": "https://github.com/Gugulethu-Nyoni/formique",
   "bugs": {
-    "url": "https://github.com/yourusername/formique-semantq/issues"
+    "url": "https://github.com/Gugulethu-Nyoni/formique-semantq/issues"
   },
   "publishConfig": {
     "access": "public"
