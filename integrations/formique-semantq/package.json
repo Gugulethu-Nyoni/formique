@@ -1,0 +1,40 @@
+{
+  "name": "@formique/semantq",
+  "version": "1.0.0",
+  "description": "Semantq Vue form builder with JSON schema support",
+  "main": "formique.mjs",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "javascript",
+    "form",
+    "form-builder",
+    "semantq",
+    "vue",
+    "vue3",
+    "svelte",
+    "json-schema",
+    "dynamic-forms",
+    "ui",
+    "web-components",
+    "frontend"
+  ],
+  "author": "Gugulethu Nyoni",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/formique-semantq.git"
+  },
+  "homepage": "https://github.com/yourusername/formique-semantq#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/formique-semantq/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  }
+}
