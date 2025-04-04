@@ -3,8 +3,8 @@
 
 <div align="center">
   <p align="center">
-    <a href="https://bundlephobia.com/result?p=Semantq-formique">
-      <img src="https://img.shields.io/bundlephobia/minzip/Semantq-formique?style=for-the-badge" alt="npm size badge" />
+    <a href="https://bundlephobia.com/result?p=formique-semantq">
+      <img src="https://img.shields.io/bundlephobia/minzip/formique-semantq?style=for-the-badge" alt="npm size badge" />
     </a>
     <a href="https://formiquejs.com">
       <img src="https://img.shields.io/badge/website-formiquejs.com-blue.svg?style=for-the-badge" alt="Website badge" />
@@ -16,11 +16,11 @@
 
 
 <!--
-[![npm downloads](https://img.shields.io/npm/dm/Semantq-formique.svg?style=for-the-badge)](https://www.npmjs.com/package/Semantq-formique)
+[![npm downloads](https://img.shields.io/npm/dm/formique-semantq.svg?style=for-the-badge)](https://www.npmjs.com/package/formique-semantq)
 
-[![npm](https://img.shields.io/npm/dt/Semantq-formique.svg?style=for-the-badge)](https://www.npmjs.com/package/Semantq-formique)
+[![npm](https://img.shields.io/npm/dt/formique-semantq.svg?style=for-the-badge)](https://www.npmjs.com/package/formique-semantq)
 
-[![Coverage Status](https://img.shields.io/coveralls/github/Gugulethu-Nyoni/Semantq-formique/master?style=for-the-badge)](https://coveralls.io/github/Gugulethu-Nyoni/Semantq-formique?branch=master)
+[![Coverage Status](https://img.shields.io/coveralls/github/Gugulethu-Nyoni/formique-semantq/master?style=for-the-badge)](https://coveralls.io/github/Gugulethu-Nyoni/formique-semantq?branch=master)
 -->
 
 
@@ -107,13 +107,13 @@ Paste the following Formique CSS in the `<head>` section of `src/app.html`:
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.7/formique.min.css" formique-style>
 ```
 
-## Step 3: Install `Semantq-formique`
+## Step 3: Install `formique-semantq`
 
-To use Formique in your Semantq application, you need to install the `Semantq-formique` package.
+To use Formique in your Semantq application, you need to install the `formique-semantq` package.
 
 
 ```bash
-npm i Semantq-formique
+npm i @formique/semantq
 ```
 
 ### Step 4: Implement the Form in `+page.Semantq`
@@ -124,7 +124,7 @@ Add the following code to +page.Semantq:
 ```Semantq
 <script>
   import { onMount } from 'Semantq';
-  import Formique from 'Semantq-formique';
+  import Formique from 'formique-semantq';
 
   // Define the form schema
   const formSchema = [
