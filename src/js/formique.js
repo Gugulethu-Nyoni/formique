@@ -520,6 +520,7 @@ async handleEmailSubmission(formId) {
 
   let senderName = ''; // Track sender's name for reply-to
   let senderEmail = ''; // Track sender's email
+  let formSubject = ''; // Track subject from form field
 
   console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload))); // Debug log
 
@@ -536,7 +537,18 @@ async handleEmailSubmission(formId) {
     if ((lowerKey === 'name' || lowerKey.includes('name'))) {
       senderName = value;
     }
+    // Check for subject field
+    if ((lowerKey === 'subject' || lowerKey.includes('subject'))) {
+      formSubject = value;
+    }
   });
+
+  // Determine the email subject with fallback logic
+  payload.metadata.subject = formSubject || 
+                           this.formSettings.subject || 
+                           'Message From Contact Form';
+  
+  console.log('Determined email subject:', payload.metadata.subject); // Debug log
 
   // Add sender information to metadata (server will handle validation)
   if (senderEmail) {

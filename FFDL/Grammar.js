@@ -20,6 +20,8 @@ mode: email
  - name
 
 Radio
+
+
 - *payment_method
   oneof / or radio or chooseOne 
   options: Credit Card, PayPal, Bank Transfer
@@ -59,11 +61,46 @@ Simple Contact From Example :: FormiqueCloud Enabled
 
 @form: my-contact-form
 sendTo: gugunnn@gmail.com
+subject: 
 submitMode: email
 
 - name*
 - email*
+- subject! 
 - !message*!:textarea
+
+
+Conditionality
+
+Single Select 
+-!*country
+  selectOne
+  options: USA, Canada, Mexico
+  default: USA
+  dependents: topic, mode
+
+
+- topic:text
+  dependsOn: country, USA
+
+- mode
+ oneof
+ options: virtual,physical,hybrid
+
+
+ - country-state  
+  options: Zambia, South Africa, Zimbabwe  
+  Zambia: Lusaka, Copperbelt  
+  South Africa: Gauteng, North West, Limpopo  
+  Zimbabwe: Midlands, Mashonaland West
+
+  OR
+
+- country-state  
+  country: Zambia, South Africa, Zimbabwe  
+  Zambia: Lusaka, Copperbelt  
+  South Africa: Gauteng, North West, Limpopo  
+  Zimbabwe: Midlands, Mashonaland West
 
 */
 
@@ -96,12 +133,12 @@ submitMode: email
 }
 
 // Main form structure 
-start = formDefinition
+start = formDefinition 
 
 formDefinition
   = formDirective formFields?
 
-formDirective "form directiive must be in this format: @form: form-id"
+formDirective "form directiive must be in this format: @form: form-name"
   = "@form:" _ name:Identifier _ properties:formProperties {
     return createNode('FormDirective', location().start, location().end, {
       name: name,
@@ -110,7 +147,7 @@ formDirective "form directiive must be in this format: @form: form-id"
   }
 
 formProperties
-  = props:(formProperty __)* { 
+  = props:(formProperty _)* { 
       const properties = [];
       for (const prop of props) {
         if (prop[0] && prop[0].type) properties.push(prop[0]);
@@ -129,9 +166,16 @@ formProperty
   }
 
 PropertyValue
-  = StringLiteral / BooleanLiteral / NumberLiteral / Identifier / UnquotedString
+  = UnquotedString / StringLiteral / BooleanLiteral / NumberLiteral / Identifier
 
-StringLiteral
+UnquotedString
+  = [^\s:\r\n]+ {  // Now allows @ symbols
+      return createNode('StringLiteral', location().start, location().end, {
+        value: text()
+      })
+    }
+    
+StringLiteral 
   = '"' [^"]* '"' {
     return createNode('StringLiteral', location().start, location().end, {
       value: text().slice(1, -1)
@@ -152,12 +196,6 @@ NumberLiteral
     })
   }
 
-UnquotedString
-  = [^\s:\r\n]+ {
-    return createNode('StringLiteral', location().start, location().end, {
-      value: text()
-    })
-  }
 
 formFields
   = _ fields:FormField+ {
@@ -174,27 +212,32 @@ FormField
     })
   }
 
+/*
 FieldName
   = _ markers:FieldMarkers? _  name:NamePart _ markers2:FieldMarkers? _ {
     return (markers || '') + name + (markers2 || '')
   }
-  
+ */ 
  
 
-FieldMarkers
-  = [!*]* { return text() }
-
-NamePart
-= NamePartWithType / RegularNamePart
-
-
-RegularNamePart 
-  = [a-zA-Z0-9_-]+ { return text() }
-  
-NamePartWithType
-  = name:[a-zA-Z0-9_-]+ ":" type:[a-zA-Z0-9_-]+ {
-      return name.join('') + ':' + type.join('')
+FieldName 
+  = _ markers:FieldMarkers? _ name:FieldNameContent _ markers2:FieldMarkers? _ {
+      return (markers || '') + name + (markers2 || '')
     }
+
+FieldNameContent
+  = NameWithType / SimpleName
+
+NameWithType
+  = name:FieldMarkers? namePart:[a-zA-Z0-9_-]+ name2:FieldMarkers? ":" type:[a-zA-Z0-9_-]+ {
+      return (name || '') + namePart.join('') + ':' + type.join('')
+    }
+
+SimpleName
+  = [a-zA-Z0-9_-]+ { return text() }
+
+FieldMarkers
+  = [!*]+ { return text() }
 
 FieldAttributes
   = attrs:(_ FieldAttribute)* {
@@ -230,11 +273,12 @@ AttributeFlag
   = [a-zA-Z][a-zA-Z0-9_-]* { return text() }
   
 OptionsAttribute
-  = "options:" _ values:OptionList {
+  = key:Identifier ":" _ values:OptionList {
       return createNode('OptionsAttribute', location().start, location().end, {
         values: values
       })
     }
+
 
 OptionList
   = head:Option tail:(_ "," _ Option)* {
