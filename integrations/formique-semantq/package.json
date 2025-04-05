@@ -1,7 +1,7 @@
 {
   "name": "@formique/semantq",
-  "version": "1.0.0",
-  "description": "Semantq Vue form builder with JSON schema support",
+  "version": "1.0.1",
+  "description": "Formique is a native form builder for the Semantq JS Framework",
   "main": "formique.mjs",
   "type": "module",
   "scripts": {
