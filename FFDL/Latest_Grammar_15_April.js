@@ -135,7 +135,7 @@ Single Select
 }
 
 // Main form structure 
-start = formDefinition 
+start = formDefinition
 
 formDefinition
   = _ directive:formDirective? _ fields:formFields _ {
@@ -254,7 +254,7 @@ FieldAttributes
 
 
 FieldAttribute
-  = key:AttributeKey ":" _ value:(CommaSeparatedValues / SingleValue) {
+  = key:MultiWordKey ":" _ value:(CommaSeparatedValues / SingleValue) {
       return value.isOptions
         ? createNode('OptionsAttribute', location().start, location().end, {
             key: key,
@@ -271,7 +271,21 @@ FieldAttribute
         value: true
       })
     }
-    
+
+MultiWordKey
+  = parts:(Word _)+ {
+      // Join parts with spaces and trim
+      let key = '';
+      for (let i = 0; i < parts.length; i++) {
+        key += parts[i][0];
+        if (i < parts.length - 1) key += ' ';
+      }
+      return key.trim();
+    }
+  / Word
+
+Word
+  = [a-zA-Z0-9_-]+ { return text() }
 
 OptionsAttribute
   = key:AttributeKey ":" _ values:CommaSeparatedValues {
@@ -344,6 +358,7 @@ RegularAttribute
 
 AttributeKey
   = [a-zA-Z][a-zA-Z0-9_-]* { return text() }
+  / MultiWordKey
 
 AttributeValue
   = QuotedOption / UnquotedOption / StringLiteral / BooleanLiteral / NumberLiteral / Identifier / UnquotedString
