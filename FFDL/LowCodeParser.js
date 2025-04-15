@@ -130,6 +130,8 @@ this.ignoreAttributes =[
 ]; 
 
 
+/*
+
 this.selectInputTypes =[
 
 'oneof',
@@ -144,6 +146,25 @@ this.selectInputTypes =[
 'checkbox',
 
 ]; 
+
+*/
+
+
+this.inputTypeMaps = {
+  oneof: 'radio',
+  radio: 'radio',
+  select: 'select',
+  singleSelect: 'select', // optional addition
+  manyof: 'checkbox',
+  checkbox: 'checkbox',
+  'multi-select': 'select-multiple',
+  multiselect: 'select-multiple',
+  multipleselect: 'select-multiple',
+  'multiple-select': 'select-multiple',
+  multiple: 'select-multiple',
+};
+
+
 
  // Exhaustive type inference map
     this.typeInferenceRules = {
@@ -392,6 +413,65 @@ traverse() {
 
 
 
+extractAttributeKeys(nodes) {
+
+  if (!Array.isArray(nodes)) {
+    throw new Error('Input must be an array of nodes');
+  }
+
+  return nodes
+    // Step 1: Filter only FieldAttribute nodes
+    .filter(node => node?.type === 'FieldAttribute')
+    
+    // Step 2: Extract keys safely
+    .map(node => node?.key)
+    
+    // Step 3: Remove any undefined/null keys
+    .filter(Boolean)
+    
+    // Step 4: Remove potential duplicates (optional)
+    .filter((key, index, self) => self.indexOf(key) === index);
+}
+
+
+
+extractOptionValues(attributes) {
+  if (!Array.isArray(attributes)) {
+    throw new Error('Input must be an array of attributes');
+  }
+
+  return attributes
+    // Find the OptionsAttribute node
+    .filter(attr => attr?.type === 'OptionsAttribute' && attr?.key === 'options')
+    // Get the values array
+    .flatMap(attr => attr.values || [])
+    // Extract each option's value
+    .map(option => option?.value)
+    // Remove any undefined/null values
+    .filter(Boolean);
+}
+
+
+inputTypeResolver(fieldName, attributeKeys) {
+
+// first option - explicit field name directive 
+  if (fieldName.includes(':')) {
+    const chunks = fieldName.split(':');
+    return chunks[1]; // e.g., 'date' from 'dob:date'
+  }
+
+// Second option - low code type definition  
+const matchedKey = attributeKeys.find(key => key in this.inputTypeMaps);
+if (matchedKey) {
+  return this.inputTypeMaps[matchedKey];
+}
+
+// option 3: inference with text fall back 
+  return this.inferInputType(fieldName);
+
+  
+}
+
 
 
   // Builder methods - implement these according to your needs
@@ -435,7 +515,20 @@ traverse() {
   //console.log(`Processing FormField: ${node.name} with ${node.attributes.length} attributes`);
   const rawFieldName = node.name;
   const cleanFieldName = this.cleanFieldName(rawFieldName);
-  const fieldType = this.inferInputType(cleanFieldName);
+  //const fieldType = this.inferInputType(cleanFieldName);
+  
+  let attributeKeys;
+  let fieldType;  
+
+  if (node.attributes.length > 0) {
+  attributeKeys = this.extractAttributeKeys(node.attributes);
+  fieldType = this.inputTypeResolver(cleanFieldName, attributeKeys); 
+}  else {
+fieldType = this.inferInputType(cleanFieldName);
+
+}
+
+
   const fieldSchema = []; 
   const fieldLabel = this.toTitleCase(cleanFieldName);
 
@@ -477,10 +570,21 @@ attributes = inputParams.attributes;
    fieldSchema.push(attributes)
 
 
+// now we need to build options schema for select, radio, select-multiple, checkbox
+
+  if (node.attributes.length > 0) {
+
+const optionValues = this.extractOptionValues(node.attributes);
+console.log(optionValues);
+
+
+  }
+
+
  this.formSchema.push(fieldSchema); 
 
  
- //console.log("GET ATTRIBUTES HERE",node);
+ //console.log("fieldType", fieldType);
 
   }
 
@@ -778,8 +882,8 @@ const ast = {
       "column": 1
     },
     "end": {
-      "offset": 218,
-      "line": 21,
+      "offset": 406,
+      "line": 29,
       "column": 2
     },
     "fields": [
@@ -798,7 +902,7 @@ const ast = {
         "name": "!email*",
         "attributes": [
           {
-            "type": "FieldAttribute",
+            "type": "OptionsAttribute",
             "start": {
               "offset": 91,
               "line": 10,
@@ -810,20 +914,23 @@ const ast = {
               "column": 17
             },
             "key": "id",
-            "value": {
-              "type": "Identifier",
-              "start": {
-                "offset": 95,
-                "line": 10,
-                "column": 7
-              },
-              "end": {
-                "offset": 105,
-                "line": 10,
-                "column": 17
-              },
-              "value": "user-email"
-            }
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 95,
+                  "line": 10,
+                  "column": 7
+                },
+                "end": {
+                  "offset": 105,
+                  "line": 10,
+                  "column": 17
+                },
+                "value": "user-email",
+                "quoted": false
+              }
+            ]
           },
           {
             "type": "FieldAttribute",
@@ -841,7 +948,7 @@ const ast = {
             "value": true
           },
           {
-            "type": "FieldAttribute",
+            "type": "OptionsAttribute",
             "start": {
               "offset": 119,
               "line": 12,
@@ -853,20 +960,23 @@ const ast = {
               "column": 21
             },
             "key": "class",
-            "value": {
-              "type": "Identifier",
-              "start": {
-                "offset": 126,
-                "line": 12,
-                "column": 10
-              },
-              "end": {
-                "offset": 137,
-                "line": 12,
-                "column": 21
-              },
-              "value": "input-field"
-            }
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 126,
+                  "line": 12,
+                  "column": 10
+                },
+                "end": {
+                  "offset": 137,
+                  "line": 12,
+                  "column": 21
+                },
+                "value": "input-field",
+                "quoted": false
+              }
+            ]
           }
         ]
       },
@@ -923,21 +1033,21 @@ const ast = {
           "column": 1
         },
         "end": {
-          "offset": 218,
-          "line": 21,
-          "column": 2
+          "offset": 225,
+          "line": 23,
+          "column": 1
         },
-        "name": "location*",
+        "name": "Diet*",
         "attributes": [
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 185,
+              "offset": 181,
               "line": 19,
               "column": 3
             },
             "end": {
-              "offset": 190,
+              "offset": 186,
               "line": 19,
               "column": 8
             },
@@ -947,58 +1057,306 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 193,
+              "offset": 189,
               "line": 20,
               "column": 3
             },
             "end": {
-              "offset": 216,
+              "offset": 222,
               "line": 20,
-              "column": 26
+              "column": 36
             },
             "key": "options",
             "values": [
               {
-                "type": "Identifier",
+                "type": "Option",
                 "start": {
-                  "offset": 202,
+                  "offset": 198,
                   "line": 20,
                   "column": 12
                 },
                 "end": {
-                  "offset": 205,
-                  "line": 20,
-                  "column": 15
-                },
-                "value": "Zim"
-              },
-              {
-                "type": "Identifier",
-                "start": {
-                  "offset": 207,
+                  "offset": 203,
                   "line": 20,
                   "column": 17
                 },
-                "end": {
-                  "offset": 210,
-                  "line": 20,
-                  "column": 20
-                },
-                "value": "RSA"
+                "value": "Vegan",
+                "quoted": false
               },
               {
-                "type": "Identifier",
+                "type": "Option",
                 "start": {
-                  "offset": 212,
+                  "offset": 205,
                   "line": 20,
-                  "column": 22
+                  "column": 19
                 },
                 "end": {
                   "offset": 216,
                   "line": 20,
+                  "column": 30
+                },
+                "value": "Pescitarian",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 218,
+                  "line": 20,
+                  "column": 32
+                },
+                "end": {
+                  "offset": 222,
+                  "line": 20,
+                  "column": 36
+                },
+                "value": "Meat",
+                "quoted": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 225,
+          "line": 23,
+          "column": 1
+        },
+        "end": {
+          "offset": 406,
+          "line": 29,
+          "column": 2
+        },
+        "name": "country-state",
+        "attributes": [
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 245,
+              "line": 24,
+              "column": 3
+            },
+            "end": {
+              "offset": 286,
+              "line": 24,
+              "column": 44
+            },
+            "key": "options",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 254,
+                  "line": 24,
+                  "column": 12
+                },
+                "end": {
+                  "offset": 260,
+                  "line": 24,
+                  "column": 18
+                },
+                "value": "Zambia",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 262,
+                  "line": 24,
+                  "column": 20
+                },
+                "end": {
+                  "offset": 274,
+                  "line": 24,
+                  "column": 32
+                },
+                "value": "South Africa",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 276,
+                  "line": 24,
+                  "column": 34
+                },
+                "end": {
+                  "offset": 286,
+                  "line": 24,
+                  "column": 44
+                },
+                "value": "Zimbabwe",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 289,
+              "line": 25,
+              "column": 3
+            },
+            "end": {
+              "offset": 317,
+              "line": 25,
+              "column": 31
+            },
+            "key": "Zambia",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 297,
+                  "line": 25,
+                  "column": 11
+                },
+                "end": {
+                  "offset": 303,
+                  "line": 25,
+                  "column": 17
+                },
+                "value": "Lusaka",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 305,
+                  "line": 25,
+                  "column": 19
+                },
+                "end": {
+                  "offset": 317,
+                  "line": 25,
+                  "column": 31
+                },
+                "value": "Copperbelt",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 320,
+              "line": 26,
+              "column": 3
+            },
+            "end": {
+              "offset": 325,
+              "line": 26,
+              "column": 8
+            },
+            "key": "South",
+            "value": true
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 326,
+              "line": 26,
+              "column": 9
+            },
+            "end": {
+              "offset": 364,
+              "line": 26,
+              "column": 47
+            },
+            "key": "Africa",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 334,
+                  "line": 26,
+                  "column": 17
+                },
+                "end": {
+                  "offset": 341,
+                  "line": 26,
+                  "column": 24
+                },
+                "value": "Gauteng",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 343,
+                  "line": 26,
                   "column": 26
                 },
-                "value": "Bots"
+                "end": {
+                  "offset": 353,
+                  "line": 26,
+                  "column": 36
+                },
+                "value": "North West",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 355,
+                  "line": 26,
+                  "column": 38
+                },
+                "end": {
+                  "offset": 364,
+                  "line": 26,
+                  "column": 47
+                },
+                "value": "Limpopo",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 367,
+              "line": 27,
+              "column": 3
+            },
+            "end": {
+              "offset": 403,
+              "line": 27,
+              "column": 39
+            },
+            "key": "Zimbabwe",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 377,
+                  "line": 27,
+                  "column": 13
+                },
+                "end": {
+                  "offset": 385,
+                  "line": 27,
+                  "column": 21
+                },
+                "value": "Midlands",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 387,
+                  "line": 27,
+                  "column": 23
+                },
+                "end": {
+                  "offset": 403,
+                  "line": 27,
+                  "column": 39
+                },
+                "value": "Mashonaland West",
+                "quoted": false
               }
             ]
           }
