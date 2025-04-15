@@ -1,0 +1,22 @@
+NOW 
+
+check presence of any of these types:
+
+
+'oneof',
+'manyof',
+'radio',
+'select',
+'mutli-select',
+'multiselect',
+'multipleselect',
+'multiple-select',
+'multiple',
+'checkbox',
+
+
+oneof => radio or single select
+manyof => multi-select or check box 
+
+handle conditionality 
+handle dynamic select  

@@ -1,11 +1,12 @@
 'use strict';
 
-class {
+class  FormiqueParser{
 
 constructor (ast) {
 this.ast = ast;
-this.schema='';
-
+this.formSchema=[];
+this.formSettings={};
+this.formParams={};
 this.formAttributes = [
   "action",
   "method",
@@ -47,20 +48,12 @@ this.formAttributes = [
 ];
 
 this.inputAttributes = [
+  "id",
+  "class",
   "type",
   "value",
   "name",
   "placeholder",
-  "required",
-  "readonly",
-  "disabled",
-  "min",
-  "max",
-  "maxlength",
-  "pattern",
-  "step",
-  "checked",
-  "multiple",
   "autofocus",
   "size",
   "accept",
@@ -69,9 +62,330 @@ this.inputAttributes = [
 ];
 
 
+this.validationAttributes = [
+  // Basic validations
+  'required',
+  'disabled',
+  'readonly',
+  
+  // Text/pattern validations
+  'minlength',
+  'maxlength',
+  'pattern',
+  
+  // Numeric validations
+  'min',
+  'max',
+  'step',
+  
+  // Date/time validations
+  'min',
+  'max',
+  
+  // File validations
+  'accept',
+  'multiple',
+  'filesize',  // Note: Typically implemented via JavaScript
+  
+  // Special input types
+  'checked',    // For checkboxes/radios
+  'selected',   // For options
+  'placeholder', // Not validation but affects input
+  
+  // Custom data attributes (commonly used for validation)
+  'data-validate',
+  'data-required',
+  'data-min',
+  'data-max',
+  'data-minlength',
+  'data-maxlength',
+  'data-pattern',
+  'data-error',
+  'data-validate-on',
+  'data-equal-to',
+  
+  // ARIA validation attributes
+  'aria-required',
+  'aria-invalid',
+  
+  // Form-level validation
+  'novalidate',
+  'formnovalidate'
+];
 
 
-this.traverse();
+this.ignoreAttributes =[
+
+'oneof',
+'manyof',
+'radio',
+'select',
+'mutli-select',
+'multiselect',
+'multipleselect',
+'multiple-select',
+'multiple',
+'checkbox',
+
+]; 
+
+
+this.selectInputTypes =[
+
+'oneof',
+'manyof',
+'radio',
+'select',
+'mutli-select',
+'multiselect',
+'multipleselect',
+'multiple-select',
+'multiple',
+'checkbox',
+
+]; 
+
+ // Exhaustive type inference map
+    this.typeInferenceRules = {
+      // Email fields
+      email: { type: 'email', priority: 10 },
+      'e-mail': { type: 'email', priority: 9 },
+      mail: { type: 'email', priority: 8 },
+
+
+      // Name fields (all text type)
+  name: { type: 'text', subtype: 'name', priority: 10 },
+  'first-name': { type: 'text', subtype: 'given-name', priority: 10 },
+  'firstname': { type: 'text', subtype: 'given-name', priority: 9 },
+  'given-name': { type: 'text', subtype: 'given-name', priority: 10 },
+  'last-name': { type: 'text', subtype: 'family-name', priority: 10 },
+  'lastname': { type: 'text', subtype: 'family-name', priority: 9 },
+  surname: { type: 'text', subtype: 'family-name', priority: 10 },
+  'family-name': { type: 'text', subtype: 'family-name', priority: 10 },
+  'full-name': { type: 'text', subtype: 'full-name', priority: 10 },
+  'middle-name': { type: 'text', subtype: 'additional-name', priority: 9 },
+  'middle-initial': { type: 'text', subtype: 'additional-name', priority: 8 },
+  nickname: { type: 'text', subtype: 'nickname', priority: 9 },
+  username: { type: 'text', subtype: 'username', priority: 9 },
+  displayname: { type: 'text', subtype: 'display-name', priority: 8 },
+
+
+   // General text fields
+  title: { type: 'text', subtype: 'title', priority: 9 },
+  subject: { type: 'text', subtype: 'subject', priority: 8 },
+  description: { type: 'text', subtype: 'description', priority: 9 },
+  note: { type: 'text', subtype: 'note', priority: 8 },
+  bio: { type: 'text', subtype: 'bio', priority: 8 },
+  address: { type: 'text', subtype: 'address', priority: 9 },
+  city: { type: 'text', subtype: 'city', priority: 9 },
+  state: { type: 'text', subtype: 'state', priority: 9 },
+  province: { type: 'text', subtype: 'province', priority: 9 },
+  country: { type: 'text', subtype: 'country', priority: 9 },
+  zipcode: { type: 'text', subtype: 'postal-code', priority: 9 },
+  'postal-code': { type: 'text', subtype: 'postal-code', priority: 9 },
+  company: { type: 'text', subtype: 'organization', priority: 9 },
+  organization: { type: 'text', subtype: 'organization', priority: 9 },
+  job: { type: 'text', subtype: 'job-title', priority: 8 },
+  'job-title': { type: 'text', subtype: 'job-title', priority: 9 },
+  occupation: { type: 'text', subtype: 'job-title', priority: 8 },
+  message: { type: 'textarea', subtype: 'message', priority: 9 },
+  comment: { type: 'textarea', subtype: 'comment', priority: 8 },
+
+
+      
+      // Telephone fields
+      tel: { type: 'tel', priority: 10 },
+      phone: { type: 'tel', priority: 10 },
+      mobile: { type: 'tel', priority: 10 },
+      telephone: { type: 'tel', priority: 10 },
+      cell: { type: 'tel', priority: 9 },
+      'cell-phone': { type: 'tel', priority: 9 },
+      
+      // Numeric fields
+      // Numeric fields - Add these to your existing object
+  count: { type: 'number', priority: 9 },
+  price: { type: 'number', priority: 9 },
+  total: { type: 'number', priority: 8 },
+  amount: { type: 'number', priority: 9 },
+  quantity: { type: 'number', priority: 9 },
+  qty: { type: 'number', priority: 8 },
+  sum: { type: 'number', priority: 7 },
+  value: { type: 'number', priority: 7 },
+  percent: { type: 'number', priority: 8 },
+  percentage: { type: 'number', priority: 8 },
+  discount: { type: 'number', priority: 7 },
+
+  // Currency fields (also numeric but might need special handling)
+  cost: { type: 'number', priority: 9 },
+  payment: { type: 'number', priority: 8 },
+  salary: { type: 'number', priority: 8 },
+  fee: { type: 'number', priority: 8 },
+      
+      // Date fields
+      date: { type: 'date', priority: 10 },
+      dob: { type: 'date', priority: 9 },
+      'birth-date': { type: 'date', priority: 8 },
+      'start-date': { type: 'date', priority: 7 },
+      'end-date': { type: 'date', priority: 7 },
+      
+      // Password fields
+      password: { type: 'password', priority: 10 },
+      pwd: { type: 'password', priority: 8 },
+      secret: { type: 'password', priority: 6 },
+      
+      // URL fields
+      url: { type: 'url', priority: 10 },
+      website: { type: 'url', priority: 8 },
+      link: { type: 'url', priority: 7 },
+      
+      // Special cases
+      color: { type: 'color', priority: 10 },
+      search: { type: 'search', priority: 10 },
+      range: { type: 'range', priority: 10 }
+    };
+    
+    // Default fallback
+    this.defaultType = 'text';
+
+    this.traverse();
+
+
+
+    return {
+    formSchema: this.formSchema,
+    formSettings: this.formSettings,
+    formParams: this.formParams
+  };
+
+  }
+
+  
+
+
+
+
+
+// formDirective , formProperties, formProperty, formFields, 
+// optionsAttribute, fieldsAttribute 
+
+
+inferInputType(fieldName) {
+    if (!fieldName) return this.defaultType;
+    
+    const lowerName = fieldName.toLowerCase().trim();
+    const matches = [];
+    
+    // Check for exact matches first
+    if (this.typeInferenceRules[lowerName]) {
+      return this.typeInferenceRules[lowerName].type;
+    }
+    
+    // Check for partial matches (e.g., "userEmail" contains "email")
+    for (const [key, rule] of Object.entries(this.typeInferenceRules)) {
+      if (lowerName.includes(key)) {
+        matches.push({ ...rule, key });
+      }
+    }
+    
+    // If multiple matches, use the one with highest priority
+    if (matches.length > 0) {
+      matches.sort((a, b) => b.priority - a.priority);
+      return matches[0].type;
+    }
+    
+    // Check for common patterns
+    if (/.*password.*/i.test(fieldName)) return 'password';
+    if (/.*(mail|email).*/i.test(fieldName)) return 'email';
+    if (/.*(tel|phone|mobile).*/i.test(fieldName)) return 'tel';
+    if (/.*(date|dob|birth).*/i.test(fieldName)) return 'date';
+    
+    return this.defaultType;
+  }
+
+
+
+
+cleanFieldName(str) {
+  return str
+    .trim()
+    .replace(/[^\w-]/g, '');
+}
+
+
+toTitleCase(str) {
+  return str
+    .toLowerCase()
+    .split(/[\s_-]+/) // split by space, dash, or underscore
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+isRequired(str) {
+  return str.replace(/\s+/g, '').includes('*');
+}
+
+
+
+traverse() {
+  const nodeHandlers = {
+    FormDirective: this.buildDirective.bind(this),
+    FormProperties: this.buildProperties.bind(this),
+    FormProperty: this.buildProperty.bind(this),
+    FormFields: this.buildFields.bind(this),
+    FormField: this.buildField.bind(this),
+    FieldAttribute: this.buildFieldAttribute.bind(this),
+    Identifier: this.buildIdentifier.bind(this),
+    StringLiteral: this.buildStringLiteral.bind(this)
+  };
+
+  const traverseNode = (node) => {
+    if (!node || typeof node !== 'object') return;
+
+    const handler = nodeHandlers[node.type];
+
+    if (handler) {
+     // console.log('Processing:', node.type);
+      handler(node);
+    } else {
+      console.warn(`No handler for node type: ${node.type}`);
+    }
+
+    // Handle nested nodes based on AST structure
+    if (node.properties && Array.isArray(node.properties.properties)) {
+      node.properties.properties.forEach(traverseNode);
+    }
+    if (node.fields && Array.isArray(node.fields)) {
+      node.fields.forEach(traverseNode);
+    }
+    if (node.attributes && Array.isArray(node.attributes)) {
+      node.attributes.forEach(traverseNode);
+    }
+    if (node.values && Array.isArray(node.values)) {
+      node.values.forEach(traverseNode);
+    }
+    if (node.name && typeof node.name === 'object') {
+      traverseNode(node.name);
+    }
+    if (node.key && typeof node.key === 'object') {
+      traverseNode(node.key);
+    }
+    if (node.value && typeof node.value === 'object') {
+      traverseNode(node.value);
+    }
+  };
+
+  // Handle root-level nodes
+  if (this.ast && typeof this.ast === 'object') {
+    // Process directive if exists
+    if (this.ast.directive) {
+      traverseNode(this.ast.directive);
+    }
+    
+    // Process fields if exists
+    if (this.ast.fields) {
+      traverseNode(this.ast.fields);
+    }
+  }
 
 }
 
@@ -80,5 +394,620 @@ this.traverse();
 
 
 
+  // Builder methods - implement these according to your needs
+  buildDirective(node) {
+    //console.log(`Processing FormDirective: ${node.name.value}`);
+   
+   	this.formParams['id'] = node.name.value;
+    // Handle directive specific logic
+  }
+
+  buildProperties(node) {
+    console.log(`Processing FormProperties with ${node.properties.length} properties`);
+  }
+
+  buildProperty(node) {
+    //console.log(`Processing FormProperty: ${node.key.value} = ${node.value.value}`);
+    const key = node.key.value;
+    const val = node.value.value 
+
+// if this is regular form attribute then it goes to formParams
+    if (this.formAttributes.includes(key)) {
+      this.formParams[key] = val
+    } else {
+ 
+ this.formSettings[key] = val
+
+    }
+    
+
+  }
+
+  buildFields(node) {
+    //console.log(`Processing FormFields with ${node.fields} fields`);
+
+
+
+
+  }
+
+  buildField(node) {
+  //console.log(`Processing FormField: ${node.name} with ${node.attributes.length} attributes`);
+  const rawFieldName = node.name;
+  const cleanFieldName = this.cleanFieldName(rawFieldName);
+  const fieldType = this.inferInputType(cleanFieldName);
+  const fieldSchema = []; 
+  const fieldLabel = this.toTitleCase(cleanFieldName);
+
+
+ fieldSchema.push(fieldType, cleanFieldName, fieldLabel );
+ // validation 
+ let validations = {};
+ let attributes = {}; 
+
+ if (this.isRequired(rawFieldName)) {
+  validations['required'] = true;
+
+ }
+
+
+
+
+
+ //console.log("HERE",validations);
+ let inputParams;
+
+if (node.attributes.length > 0 ) {
+	inputParams = this.handleAttributes(node.attributes);
+	 //console.log("InputParams",inputParams); 	 
+}  else {
+inputParams = { validations: {}, attributes: {} }
+}
+ 
+
+ //console.log("InputParams",inputParams); 
+
+validations = inputParams.validations;
+attributes = inputParams.attributes;
+
+//console.log("VALS",validations);
+//console.log("ATTRs",attributes);
+
+   fieldSchema.push(validations)
+   fieldSchema.push(attributes)
+
+
+ this.formSchema.push(fieldSchema); 
+
+ 
+ //console.log("GET ATTRIBUTES HERE",node);
+
+  }
+
+
+handleAttributes(attributesAST) {
+  let validations = {};
+  let attributes = {};
+
+  attributesAST.forEach(attr => {
+    if (attr.type === 'FieldAttribute') {
+    const key = attr.key;
+    let value;
+     //console.log("CHECK 1",attr);
+     //console.log("CHECK 2",attr.value);
+
+    if (typeof attr.value === 'object') {
+      value = attr.value.value;
+
+    } else {
+      value = attr.value;
+    }
+
+
+    // Skip ignored keys
+    if (this.ignoreAttributes.includes(key)) return;
+
+    // Categorize key as input attribute or validation
+    if (this.inputAttributes.includes(key)) {
+      attributes[key] = value;
+    } else if (this.validationAttributes.includes(key)) {
+      validations[key] = value;
+    }
+
+
+    // console.log("attributes", attributes);
+
+
+
+} // can else if OptionAttribute here
+
+  });
+
+  return {
+    validations,
+    attributes
+  };
 }
 
+
+
+
+
+
+  buildOptionsAttribute(node) {
+    console.log(`Processing OptionsAttribute with ${node.values.length} values`);
+  }
+
+  buildFieldAttribute(node) {
+    //console.log(`Processing FieldAttribute: ${node.key} = ${node.value}`);
+  }
+
+  buildOption(node) {
+    console.log(`Processing Option: ${node.value} (quoted: ${node.quoted})`);
+  }
+
+  buildIdentifier(node) {
+   // console.log(`Processing Identifier: ${node.value}`);
+  }
+
+  buildStringLiteral(node) {
+   // console.log(`Processing StringLiteral: "${node.value}"`);
+  }
+
+
+  //class wrapper - nothing below
+
+}
+
+
+/* TESTING */
+
+
+const ast = {
+  "directive": {
+    "type": "FormDirective",
+    "start": {
+      "offset": 2,
+      "line": 3,
+      "column": 1
+    },
+    "end": {
+      "offset": 76,
+      "line": 9,
+      "column": 1
+    },
+    "name": {
+      "type": "Identifier",
+      "start": {
+        "offset": 9,
+        "line": 3,
+        "column": 8
+      },
+      "end": {
+        "offset": 26,
+        "line": 3,
+        "column": 25
+      },
+      "value": "user-registration"
+    },
+    "properties": {
+      "type": "FormProperties",
+      "start": {
+        "offset": 27,
+        "line": 4,
+        "column": 1
+      },
+      "end": {
+        "offset": 76,
+        "line": 9,
+        "column": 1
+      },
+      "properties": [
+        {
+          "type": "FormProperty",
+          "start": {
+            "offset": 27,
+            "line": 4,
+            "column": 1
+          },
+          "end": {
+            "offset": 38,
+            "line": 4,
+            "column": 12
+          },
+          "key": {
+            "type": "Identifier",
+            "start": {
+              "offset": 27,
+              "line": 4,
+              "column": 1
+            },
+            "end": {
+              "offset": 32,
+              "line": 4,
+              "column": 6
+            },
+            "value": "theme"
+          },
+          "value": {
+            "type": "StringLiteral",
+            "start": {
+              "offset": 34,
+              "line": 4,
+              "column": 8
+            },
+            "end": {
+              "offset": 38,
+              "line": 4,
+              "column": 12
+            },
+            "value": "dark"
+          }
+        },
+        {
+          "type": "FormProperty",
+          "start": {
+            "offset": 39,
+            "line": 5,
+            "column": 1
+          },
+          "end": {
+            "offset": 50,
+            "line": 5,
+            "column": 12
+          },
+          "key": {
+            "type": "Identifier",
+            "start": {
+              "offset": 39,
+              "line": 5,
+              "column": 1
+            },
+            "end": {
+              "offset": 43,
+              "line": 5,
+              "column": 5
+            },
+            "value": "mode"
+          },
+          "value": {
+            "type": "StringLiteral",
+            "start": {
+              "offset": 45,
+              "line": 5,
+              "column": 7
+            },
+            "end": {
+              "offset": 50,
+              "line": 5,
+              "column": 12
+            },
+            "value": "email"
+          }
+        },
+        {
+          "type": "FormProperty",
+          "start": {
+            "offset": 51,
+            "line": 6,
+            "column": 1
+          },
+          "end": {
+            "offset": 61,
+            "line": 6,
+            "column": 11
+          },
+          "key": {
+            "type": "Identifier",
+            "start": {
+              "offset": 51,
+              "line": 6,
+              "column": 1
+            },
+            "end": {
+              "offset": 53,
+              "line": 6,
+              "column": 3
+            },
+            "value": "id"
+          },
+          "value": {
+            "type": "StringLiteral",
+            "start": {
+              "offset": 55,
+              "line": 6,
+              "column": 5
+            },
+            "end": {
+              "offset": 61,
+              "line": 6,
+              "column": 11
+            },
+            "value": "myForm"
+          }
+        },
+        {
+          "type": "FormProperty",
+          "start": {
+            "offset": 62,
+            "line": 7,
+            "column": 1
+          },
+          "end": {
+            "offset": 74,
+            "line": 7,
+            "column": 13
+          },
+          "key": {
+            "type": "Identifier",
+            "start": {
+              "offset": 62,
+              "line": 7,
+              "column": 1
+            },
+            "end": {
+              "offset": 67,
+              "line": 7,
+              "column": 6
+            },
+            "value": "class"
+          },
+          "value": {
+            "type": "StringLiteral",
+            "start": {
+              "offset": 69,
+              "line": 7,
+              "column": 8
+            },
+            "end": {
+              "offset": 74,
+              "line": 7,
+              "column": 13
+            },
+            "value": "block"
+          }
+        }
+      ]
+    }
+  },
+  "fields": {
+    "type": "FormFields",
+    "start": {
+      "offset": 76,
+      "line": 9,
+      "column": 1
+    },
+    "end": {
+      "offset": 218,
+      "line": 21,
+      "column": 2
+    },
+    "fields": [
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 76,
+          "line": 9,
+          "column": 1
+        },
+        "end": {
+          "offset": 138,
+          "line": 13,
+          "column": 1
+        },
+        "name": "!email*",
+        "attributes": [
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 91,
+              "line": 10,
+              "column": 3
+            },
+            "end": {
+              "offset": 105,
+              "line": 10,
+              "column": 17
+            },
+            "key": "id",
+            "value": {
+              "type": "Identifier",
+              "start": {
+                "offset": 95,
+                "line": 10,
+                "column": 7
+              },
+              "end": {
+                "offset": 105,
+                "line": 10,
+                "column": 17
+              },
+              "value": "user-email"
+            }
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 108,
+              "line": 11,
+              "column": 3
+            },
+            "end": {
+              "offset": 116,
+              "line": 11,
+              "column": 11
+            },
+            "key": "required",
+            "value": true
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 119,
+              "line": 12,
+              "column": 3
+            },
+            "end": {
+              "offset": 137,
+              "line": 12,
+              "column": 21
+            },
+            "key": "class",
+            "value": {
+              "type": "Identifier",
+              "start": {
+                "offset": 126,
+                "line": 12,
+                "column": 10
+              },
+              "end": {
+                "offset": 137,
+                "line": 12,
+                "column": 21
+              },
+              "value": "input-field"
+            }
+          }
+        ]
+      },
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 138,
+          "line": 13,
+          "column": 1
+        },
+        "end": {
+          "offset": 145,
+          "line": 14,
+          "column": 1
+        },
+        "name": "name",
+        "attributes": []
+      },
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 145,
+          "line": 14,
+          "column": 1
+        },
+        "end": {
+          "offset": 159,
+          "line": 16,
+          "column": 1
+        },
+        "name": "telephone*",
+        "attributes": []
+      },
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 159,
+          "line": 16,
+          "column": 1
+        },
+        "end": {
+          "offset": 171,
+          "line": 18,
+          "column": 1
+        },
+        "name": "dob:date",
+        "attributes": []
+      },
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 171,
+          "line": 18,
+          "column": 1
+        },
+        "end": {
+          "offset": 218,
+          "line": 21,
+          "column": 2
+        },
+        "name": "location*",
+        "attributes": [
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 185,
+              "line": 19,
+              "column": 3
+            },
+            "end": {
+              "offset": 190,
+              "line": 19,
+              "column": 8
+            },
+            "key": "oneof",
+            "value": true
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 193,
+              "line": 20,
+              "column": 3
+            },
+            "end": {
+              "offset": 216,
+              "line": 20,
+              "column": 26
+            },
+            "key": "options",
+            "values": [
+              {
+                "type": "Identifier",
+                "start": {
+                  "offset": 202,
+                  "line": 20,
+                  "column": 12
+                },
+                "end": {
+                  "offset": 205,
+                  "line": 20,
+                  "column": 15
+                },
+                "value": "Zim"
+              },
+              {
+                "type": "Identifier",
+                "start": {
+                  "offset": 207,
+                  "line": 20,
+                  "column": 17
+                },
+                "end": {
+                  "offset": 210,
+                  "line": 20,
+                  "column": 20
+                },
+                "value": "RSA"
+              },
+              {
+                "type": "Identifier",
+                "start": {
+                  "offset": 212,
+                  "line": 20,
+                  "column": 22
+                },
+                "end": {
+                  "offset": 216,
+                  "line": 20,
+                  "column": 26
+                },
+                "value": "Bots"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+};
+
+
+const getSchemas = new FormiqueParser(ast); 
+console.log(JSON.stringify(getSchemas,null,2));

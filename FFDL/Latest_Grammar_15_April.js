@@ -73,20 +73,21 @@ submitMode: email
 Conditionality
 
 Single Select 
--!*country
+-!*role
   selectOne
-  options: USA, Canada, Mexico
-  default: USA
+  options: Speaker, Presenter
+  default: Speaker
   dependents: topic, mode
 
 
 - topic:text
-  dependsOn: country, USA
+  dependsOn: role, Presenter
 
 - mode
  oneof
  options: virtual,physical,hybrid
- dependsOn: country, USA
+ dependsOn: country, Presenter
+
 
 
  - country-state  
@@ -137,9 +138,14 @@ Single Select
 start = formDefinition 
 
 formDefinition
-  = formDirective formFields?
-
-formDirective "form directiive must be in this format: @form: form-name"
+  = _ directive:formDirective? _ fields:formFields _ {
+      return {
+        directive: directive,
+        fields: fields
+      }
+    }
+    
+formDirective "form directive must be in this format: @form: form-name"
   = "@form:" _ name:Identifier _ properties:formProperties {
     return createNode('FormDirective', location().start, location().end, {
       name: name,
@@ -248,8 +254,78 @@ FieldAttributes
 
 
 FieldAttribute
-= OptionsAttribute / RegularAttribute 
+  = key:AttributeKey ":" _ value:(CommaSeparatedValues / SingleValue) {
+      return value.isOptions
+        ? createNode('OptionsAttribute', location().start, location().end, {
+            key: key,
+            values: value.values
+          })
+        : createNode('FieldAttribute', location().start, location().end, {
+            key: key,
+            value: value.value
+          })
+    }
+  / flag:AttributeFlag {
+      return createNode('FieldAttribute', location().start, location().end, {
+        key: flag,
+        value: true
+      })
+    }
+    
 
+OptionsAttribute
+  = key:AttributeKey ":" _ values:CommaSeparatedValues {
+      return createNode('OptionsAttribute', location().start, location().end, {
+        key: key,
+        values: values
+      })
+    }
+
+RegularAttribute
+  = key:AttributeKey ":" _ value:SingleValue {
+      return createNode('FieldAttribute', location().start, location().end, {
+        key: key,
+        value: value
+      })
+    }
+  / flag:AttributeFlag {
+      return createNode('FieldAttribute', location().start, location().end, {
+        key: flag,
+        value: true
+      })
+    }
+
+CommaSeparatedValues
+  = head:QuotedOption tail:(_ "," _ QuotedOption)* {
+      const values = [head];
+      for (const item of tail) {
+        values.push(item[3]);
+      }
+      return {
+        isOptions: true,
+        values: values
+      };
+    }
+  / head:UnquotedOption tail:(_ "," _ UnquotedOption)* {
+      const values = [head];
+      for (const item of tail) {
+        values.push(item[3]);
+      }
+      return {
+        isOptions: true,
+        values: values
+      };
+    }
+
+SingleValue
+  = value:AttributeValue {
+      return {
+        isOptions: false,
+        value: value
+      };
+    }
+
+/*
 RegularAttribute
   = key:AttributeKey ":" _ value:AttributeValue {
     return createNode('FieldAttribute', location().start, location().end, {
@@ -263,23 +339,36 @@ RegularAttribute
       value: true
     })
   }
+*/
+
 
 AttributeKey
   = [a-zA-Z][a-zA-Z0-9_-]* { return text() }
 
 AttributeValue
-  = StringLiteral / BooleanLiteral / NumberLiteral / Identifier / UnquotedString
-
+  = QuotedOption / UnquotedOption / StringLiteral / BooleanLiteral / NumberLiteral / Identifier / UnquotedString
+  
 AttributeFlag
   = [a-zA-Z][a-zA-Z0-9_-]* { return text() }
   
+  /*
+ RegularAttribute
+  = key:Identifier ":" _ value:Identifier {
+      return createNode('Attribute', location().start, location().end, {
+        value: value
+      })
+    }
+  */
+  
+  
+  /*
 OptionsAttribute
   = key:Identifier ":" _ values:OptionList {
       return createNode('OptionsAttribute', location().start, location().end, {
         values: values
       })
     }
-
+*/
 
 OptionList
   = head:Option tail:(_ "," _ Option)* {
