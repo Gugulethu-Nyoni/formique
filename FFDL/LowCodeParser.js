@@ -479,19 +479,26 @@ extractDependentValues(attributes) {
 
 inputTypeResolver(fieldName, attributeKeys) {
 
-// first option - explicit field name directive 
+// first option - handle dynamicSingleSelect
+if (fieldName.includes('-')) {
+    return "dynamicSingleSelect"; // 
+  }
+
+
+
+// second option - explicit field name directive 
   if (fieldName.includes(':')) {
     const chunks = fieldName.split(':');
     return chunks[1]; // e.g., 'date' from 'dob:date'
   }
 
-// Second option - low code type definition  
+// Third option - low code type definition  
 const matchedKey = attributeKeys.find(key => key in this.inputTypeMaps);
 if (matchedKey) {
   return this.inputTypeMaps[matchedKey];
 }
 
-// option 3: inference with text fall back 
+// Fourth 3: inference with text fall back 
   return this.inferInputType(fieldName);
 
   
