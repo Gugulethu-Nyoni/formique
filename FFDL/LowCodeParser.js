@@ -506,6 +506,71 @@ if (matchedKey) {
 
 
 
+
+buildDynamicSingleSelect(node, fieldName) {
+let fieldSchema = []; 
+fieldSchema.push('dynamicSingleSelect',fieldName, this.toTitleCase(fieldName)); 
+
+
+
+//console.log("HERE",validations);
+ let inputParams;
+
+if (node.attributes.length > 0 ) {
+  inputParams = this.handleAttributes(node.attributes);
+   //console.log("InputParams",inputParams);   
+}  else {
+inputParams = { validations: {}, attributes: {} }
+}
+ 
+
+ //console.log("InputParams",inputParams); 
+
+validations = inputParams.validations;
+attributes = inputParams.attributes;
+
+if (this.isRequired(rawFieldName)) {
+  validations['required'] = true;
+
+ }
+
+
+//console.log("VALS",validations);
+//console.log("ATTRs",attributes);
+
+   fieldSchema.push(validations)
+   fieldSchema.push(attributes)
+
+/// NOW BUILD SCENARIO (SELECT STATE) BLOCKS
+
+let scenarioBlock = [];
+let schema = {}; 
+
+/// E.G. Countries for which we want display states reactively 
+const optionValues = this.extractOptionValues(node.attributes);
+let options = []; 
+
+if (optionValues.length > 0 ) {
+
+  optionValues.forEach(option => {
+
+    schema['id']= option.toLowerCase(); 
+    schema['label']= option; 
+
+
+
+  options.push({value: option, label: this.toTitleCase(option)})
+  })
+
+ fieldSchema.push(options) 
+}
+
+
+
+}
+
+
+
   // Builder methods - implement these according to your needs
   buildDirective(node) {
     //console.log(`Processing FormDirective: ${node.name.value}`);
@@ -558,6 +623,11 @@ if (matchedKey) {
 }  else {
 fieldType = this.inferInputType(cleanFieldName);
 
+}
+
+
+if (fieldType === 'dynamicSingleSelect') {
+this.buildDynamicSingleSelect(node, cleanFieldName);
 }
 
 
