@@ -162,6 +162,13 @@ this.inputTypeMaps = {
   multipleselect: 'select-multiple',
   'multiple-select': 'select-multiple',
   multiple: 'select-multiple',
+  selectMany: 'select-multiple',
+  selectOne:'select',
+  manyselect: 'select-multiple',
+  oneselect:'select',
+  selectmany: 'select-multiple',
+  selectone:'select',
+
 };
 
 
@@ -452,6 +459,24 @@ extractOptionValues(attributes) {
 }
 
 
+
+extractDependentValues(attributes) {
+  if (!Array.isArray(attributes)) {
+    throw new Error('Input must be an array of attributes');
+  }
+
+  return attributes
+    // Find the OptionsAttribute node
+    .filter(attr => attr?.type === 'OptionsAttribute' && attr?.key === 'dependents')
+    // Get the values array
+    .flatMap(attr => attr.values || [])
+    // Extract each option's value
+    .map(option => option?.value)
+    // Remove any undefined/null values
+    .filter(Boolean);
+}
+
+
 inputTypeResolver(fieldName, attributeKeys) {
 
 // first option - explicit field name directive 
@@ -538,11 +563,7 @@ fieldType = this.inferInputType(cleanFieldName);
  let validations = {};
  let attributes = {}; 
 
- if (this.isRequired(rawFieldName)) {
-  validations['required'] = true;
-
- }
-
+ 
 
 
 
@@ -563,6 +584,12 @@ inputParams = { validations: {}, attributes: {} }
 validations = inputParams.validations;
 attributes = inputParams.attributes;
 
+if (this.isRequired(rawFieldName)) {
+  validations['required'] = true;
+
+ }
+
+
 //console.log("VALS",validations);
 //console.log("ATTRs",attributes);
 
@@ -575,8 +602,19 @@ attributes = inputParams.attributes;
   if (node.attributes.length > 0) {
 
 const optionValues = this.extractOptionValues(node.attributes);
-console.log(optionValues);
+let options = []; 
 
+if (optionValues.length > 0 ) {
+
+  optionValues.forEach(option => {
+  options.push({value: option, label: this.toTitleCase(option)})
+  })
+
+ fieldSchema.push(options) 
+}
+//console.log(optionValues);
+
+//console.log(options);
 
   }
 
