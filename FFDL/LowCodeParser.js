@@ -577,7 +577,7 @@ if (optionValues.length > 0 ) {
 
   optionValues.forEach(option => {
 
-let scenarioBlock = [];
+//let scenarioBlock;
 let schema = {}; 
 
     schema['id']= option.toLowerCase(); 
@@ -599,8 +599,8 @@ schema['options']= options;
 
 
 // now get option options 
-  scenarioBlock.push(schema); 
- fieldSchema.push(scenarioBlock) 
+  //scenarioBlock.push(schema); 
+ fieldSchema.push(schema); 
 
 
 
@@ -734,13 +734,47 @@ if (this.isRequired(rawFieldName)) {
 
   if (node.attributes.length > 0) {
 
+
+/// in case of options (selects scenarios) - get the default (selected) value if exists
+
+
+const getDefaultValue = (attributes) => {
+  if (!Array.isArray(attributes)) return null;
+  
+  // Find the default attribute (could be FieldAttribute or OptionsAttribute)
+  const defaultAttr = attributes.find(attr => 
+    attr?.key === "default" && 
+    (attr.type === "FieldAttribute" || attr.type === "OptionsAttribute")
+  );
+
+  // Handle different attribute types
+  if (defaultAttr?.type === "FieldAttribute") {
+    return defaultAttr.value ?? null;
+  }
+  if (defaultAttr?.type === "OptionsAttribute") {
+    // Return first value if exists (though default should typically be single value)
+    return defaultAttr.values?.[0]?.value ?? null;
+  }
+
+  return null;
+};
+
+const defaultValue = getDefaultValue(node.attributes);
+
+
+
+
 const optionValues = this.extractOptionValues(node.attributes);
 let options = []; 
 
 if (optionValues.length > 0 ) {
+  optionValues.forEach(option => { 
+    if (option === defaultValue) {
+    options.push({value: option.toLowerCase(), label: this.toTitleCase(option), selected: true})
+} else {
+  options.push({value: option.toLowerCase(), label: this.toTitleCase(option)})
+}
 
-  optionValues.forEach(option => {
-  options.push({value: option, label: this.toTitleCase(option)})
   })
 
  fieldSchema.push(options) 
@@ -761,6 +795,8 @@ if (optionValues.length > 0 ) {
 
 
 handleAttributes(attributesAST) {
+
+
   let validations = {};
   let attributes = {};
 
@@ -790,6 +826,9 @@ handleAttributes(attributesAST) {
     }
 
 
+    // HANDLE Conditionality Attributes 
+
+   
     // console.log("attributes", attributes);
 
 
@@ -797,6 +836,70 @@ handleAttributes(attributesAST) {
 } // can else if OptionAttribute here
 
   });
+
+
+let dependents = [];
+
+const getDependents = (attributesAST) => {
+  // Find the OptionsAttribute with key "dependents"
+  const dependentsAttr = attributesAST.find(
+    attr => attr.type === "OptionsAttribute" && attr.key === "dependents"
+  );
+  
+  // If found, map the values to just the option strings
+  return dependentsAttr 
+    ? dependentsAttr.values.map(option => option.value) 
+    : [];
+
+
+ }
+
+// Usage example:
+dependents = getDependents(attributesAST);
+if(dependents.length > 0) {
+  attributes['dependents'] = dependents; 
+}
+//console.log("WHY?",dependents);
+
+// NOW LET'S HANDLE child dependencies
+
+
+const getDependsOn = (attributesAST) => {
+  if (!Array.isArray(attributesAST)) return null;
+
+  const dependsOnAttr = attributesAST.find(
+    attr => attr?.type === "OptionsAttribute" && attr?.key === "dependsOn"
+  );
+
+  // Must have at least 2 values (field and condition)
+  if (!dependsOnAttr?.values || dependsOnAttr.values.length < 2) {
+    return null;
+  }
+
+  return {
+    dependsOnValue: dependsOnAttr.values[0]?.value || '',
+    dependsOnCondition: dependsOnAttr.values[1]?.value || ''
+  };
+
+
+  
+};
+
+const dependency = getDependsOn(attributesAST);
+/// 
+if (dependency) {
+
+attributes['dependsOn']= dependency.dependsOnValue;
+attributes['condition'] = `(value) => value === '${dependency.dependsOnCondition}'`;
+
+}
+/*
+const dependencyObject =  {
+    dependsOn: `${dependency.dependsOnValue}`,
+    condition: (value) => value === `${dependency.dependsOnCondition}`
+  };
+console.log(dependency);
+*/
 
   return {
     validations,
@@ -1053,8 +1156,8 @@ const ast = {
       "column": 1
     },
     "end": {
-      "offset": 432,
-      "line": 30,
+      "offset": 653,
+      "line": 45,
       "column": 1
     },
     "fields": [
@@ -1279,8 +1382,8 @@ const ast = {
           "column": 1
         },
         "end": {
-          "offset": 432,
-          "line": 30,
+          "offset": 433,
+          "line": 31,
           "column": 1
         },
         "name": "country-state*",
@@ -1293,8 +1396,8 @@ const ast = {
               "column": 3
             },
             "end": {
-              "offset": 432,
-              "line": 30,
+              "offset": 433,
+              "line": 31,
               "column": 1
             },
             "key": "id",
@@ -1308,8 +1411,8 @@ const ast = {
               "column": 3
             },
             "end": {
-              "offset": 432,
-              "line": 30,
+              "offset": 433,
+              "line": 31,
               "column": 1
             },
             "key": "class",
@@ -1323,8 +1426,8 @@ const ast = {
               "column": 3
             },
             "end": {
-              "offset": 432,
-              "line": 30,
+              "offset": 433,
+              "line": 31,
               "column": 1
             },
             "key": "options",
@@ -1337,8 +1440,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "Zambia",
@@ -1352,8 +1455,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "South Africa",
@@ -1367,8 +1470,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "Zimbabwe",
@@ -1384,8 +1487,8 @@ const ast = {
               "column": 3
             },
             "end": {
-              "offset": 432,
-              "line": 30,
+              "offset": 433,
+              "line": 31,
               "column": 1
             },
             "key": "Zambia",
@@ -1398,8 +1501,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "Lusaka",
@@ -1413,8 +1516,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "Copperbelt",
@@ -1430,8 +1533,8 @@ const ast = {
               "column": 3
             },
             "end": {
-              "offset": 432,
-              "line": 30,
+              "offset": 433,
+              "line": 31,
               "column": 1
             },
             "key": "South Africa",
@@ -1444,8 +1547,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "Gauteng",
@@ -1459,8 +1562,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "North West",
@@ -1474,8 +1577,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "Limpopo",
@@ -1491,8 +1594,8 @@ const ast = {
               "column": 3
             },
             "end": {
-              "offset": 432,
-              "line": 30,
+              "offset": 433,
+              "line": 31,
               "column": 1
             },
             "key": "Zimbabwe",
@@ -1505,8 +1608,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "Midlands",
@@ -1520,8 +1623,8 @@ const ast = {
                   "column": 3
                 },
                 "end": {
-                  "offset": 432,
-                  "line": 30,
+                  "offset": 433,
+                  "line": 31,
                   "column": 1
                 },
                 "value": "Mashonaland West",
@@ -1537,12 +1640,410 @@ const ast = {
               "column": 3
             },
             "end": {
-              "offset": 432,
-              "line": 30,
+              "offset": 433,
+              "line": 31,
               "column": 1
             },
             "key": "",
             "value": true
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 243,
+              "line": 23,
+              "column": 3
+            },
+            "end": {
+              "offset": 433,
+              "line": 31,
+              "column": 1
+            },
+            "key": "",
+            "value": true
+          }
+        ]
+      },
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 433,
+          "line": 31,
+          "column": 1
+        },
+        "end": {
+          "offset": 532,
+          "line": 38,
+          "column": 1
+        },
+        "name": "!*role",
+        "attributes": [
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 443,
+              "line": 32,
+              "column": 3
+            },
+            "end": {
+              "offset": 532,
+              "line": 38,
+              "column": 1
+            },
+            "key": "selectOne",
+            "value": true
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 443,
+              "line": 32,
+              "column": 3
+            },
+            "end": {
+              "offset": 532,
+              "line": 38,
+              "column": 1
+            },
+            "key": "options",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 443,
+                  "line": 32,
+                  "column": 3
+                },
+                "end": {
+                  "offset": 532,
+                  "line": 38,
+                  "column": 1
+                },
+                "value": "Attendee",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 443,
+                  "line": 32,
+                  "column": 3
+                },
+                "end": {
+                  "offset": 532,
+                  "line": 38,
+                  "column": 1
+                },
+                "value": "Presenter",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 443,
+              "line": 32,
+              "column": 3
+            },
+            "end": {
+              "offset": 532,
+              "line": 38,
+              "column": 1
+            },
+            "key": "default",
+            "value": "Attendee"
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 443,
+              "line": 32,
+              "column": 3
+            },
+            "end": {
+              "offset": 532,
+              "line": 38,
+              "column": 1
+            },
+            "key": "dependents",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 443,
+                  "line": 32,
+                  "column": 3
+                },
+                "end": {
+                  "offset": 532,
+                  "line": 38,
+                  "column": 1
+                },
+                "value": "topic",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 443,
+                  "line": 32,
+                  "column": 3
+                },
+                "end": {
+                  "offset": 532,
+                  "line": 38,
+                  "column": 1
+                },
+                "value": "mode",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 443,
+              "line": 32,
+              "column": 3
+            },
+            "end": {
+              "offset": 532,
+              "line": 38,
+              "column": 1
+            },
+            "key": "",
+            "value": true
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 443,
+              "line": 32,
+              "column": 3
+            },
+            "end": {
+              "offset": 532,
+              "line": 38,
+              "column": 1
+            },
+            "key": "",
+            "value": true
+          }
+        ]
+      },
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 532,
+          "line": 38,
+          "column": 1
+        },
+        "end": {
+          "offset": 576,
+          "line": 41,
+          "column": 1
+        },
+        "name": "topic:text",
+        "attributes": [
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 548,
+              "line": 39,
+              "column": 3
+            },
+            "end": {
+              "offset": 576,
+              "line": 41,
+              "column": 1
+            },
+            "key": "dependsOn",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 548,
+                  "line": 39,
+                  "column": 3
+                },
+                "end": {
+                  "offset": 576,
+                  "line": 41,
+                  "column": 1
+                },
+                "value": "role",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 548,
+                  "line": 39,
+                  "column": 3
+                },
+                "end": {
+                  "offset": 576,
+                  "line": 41,
+                  "column": 1
+                },
+                "value": "Presenter",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 548,
+              "line": 39,
+              "column": 3
+            },
+            "end": {
+              "offset": 576,
+              "line": 41,
+              "column": 1
+            },
+            "key": "",
+            "value": true
+          }
+        ]
+      },
+      {
+        "type": "FormField",
+        "start": {
+          "offset": 576,
+          "line": 41,
+          "column": 1
+        },
+        "end": {
+          "offset": 653,
+          "line": 45,
+          "column": 1
+        },
+        "name": "mode*",
+        "attributes": [
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 585,
+              "line": 42,
+              "column": 2
+            },
+            "end": {
+              "offset": 653,
+              "line": 45,
+              "column": 1
+            },
+            "key": "oneof",
+            "value": true
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 585,
+              "line": 42,
+              "column": 2
+            },
+            "end": {
+              "offset": 653,
+              "line": 45,
+              "column": 1
+            },
+            "key": "options",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 585,
+                  "line": 42,
+                  "column": 2
+                },
+                "end": {
+                  "offset": 653,
+                  "line": 45,
+                  "column": 1
+                },
+                "value": "virtual",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 585,
+                  "line": 42,
+                  "column": 2
+                },
+                "end": {
+                  "offset": 653,
+                  "line": 45,
+                  "column": 1
+                },
+                "value": "physical",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 585,
+                  "line": 42,
+                  "column": 2
+                },
+                "end": {
+                  "offset": 653,
+                  "line": 45,
+                  "column": 1
+                },
+                "value": "hybrid",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 585,
+              "line": 42,
+              "column": 2
+            },
+            "end": {
+              "offset": 653,
+              "line": 45,
+              "column": 1
+            },
+            "key": "dependsOn",
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 585,
+                  "line": 42,
+                  "column": 2
+                },
+                "end": {
+                  "offset": 653,
+                  "line": 45,
+                  "column": 1
+                },
+                "value": "role",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 585,
+                  "line": 42,
+                  "column": 2
+                },
+                "end": {
+                  "offset": 653,
+                  "line": 45,
+                  "column": 1
+                },
+                "value": "Presenter",
+                "quoted": false
+              }
+            ]
           }
         ]
       }

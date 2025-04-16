@@ -53,6 +53,21 @@ class: block
   South Africa: Gauteng, North West, Limpopo  
   Zimbabwe: Midlands, Mashonaland West
 
+
+-!*role
+  selectOne
+  options: Attendee, Presenter
+  default: Attendee
+  dependents: topic, mode
+
+
+- topic*:text
+  dependsOn: role, Presenter
+
+- mode*
+ oneof
+ options: virtual,physical,hybrid
+ dependsOn: role, Presenter
 	`; 
 
 
