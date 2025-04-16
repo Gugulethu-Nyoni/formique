@@ -601,7 +601,6 @@ schema['options']= options;
 // now get option options 
   scenarioBlock.push(schema); 
  fieldSchema.push(scenarioBlock) 
- this.formSchema.push(fieldSchema);
 
 
 
@@ -609,6 +608,7 @@ schema['options']= options;
  // options.push({value: option, label: this.toTitleCase(option)})
   });
 
+ this.formSchema.push(fieldSchema);
 
    //console.log("THERE",JSON.stringify(fieldSchema,null,2));
 
@@ -617,6 +617,8 @@ schema['options']= options;
 
 
 }
+
+
 
 
 
@@ -674,10 +676,14 @@ fieldType = this.inferInputType(cleanFieldName);
 
 }
 
+console.log("fieldType", fieldType);
+
+
 
 if (fieldType === 'dynamicSingleSelect') {
   //console.log("HERE",fieldType);
 this.buildDynamicSingleSelect(node, rawFieldName);
+return; 
 }
 
 
