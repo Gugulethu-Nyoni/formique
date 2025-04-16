@@ -1,7 +1,6 @@
 import parser from './latestParser.mjs';
 
-
-const lowCode = `
+/*
 
 @form: user-registration
 theme: dark
@@ -23,7 +22,32 @@ class: block
   options: Vegan, Pescitarian, Meat
 
 
-- country-state  
+*/
+
+const lowCode =`
+
+@form: user-registration
+theme: dark
+mode: email
+id: myForm
+class: block
+
+- ! email * 
+  id: user-email
+  required
+  class: input-field
+- name
+- telephone*
+
+- dob:date
+
+- Diet*
+  oneof
+  options: Vegan, Pescitarian, Meat
+
+- country-state*
+  id: dsel
+  class: active  
   options: Zambia, South Africa, Zimbabwe  
   Zambia: Lusaka, Copperbelt  
   South Africa: Gauteng, North West, Limpopo  

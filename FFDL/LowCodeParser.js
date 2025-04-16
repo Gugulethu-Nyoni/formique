@@ -366,16 +366,18 @@ traverse() {
     StringLiteral: this.buildStringLiteral.bind(this)
   };
 
+      const skipNodeTypes= ['buildProperties','StringLiteral','Identifier','FieldAttribute','buildFields']
+
   const traverseNode = (node) => {
     if (!node || typeof node !== 'object') return;
 
     const handler = nodeHandlers[node.type];
 
-    if (handler) {
+    if (handler && !skipNodeTypes.includes(node.type) ) {
      // console.log('Processing:', node.type);
       handler(node);
     } else {
-      console.warn(`No handler for node type: ${node.type}`);
+      //console.warn(`No handler for node type: ${node.type}`);
     }
 
     // Handle nested nodes based on AST structure
@@ -480,6 +482,7 @@ extractDependentValues(attributes) {
 inputTypeResolver(fieldName, attributeKeys) {
 
 // first option - handle dynamicSingleSelect
+  //console.log("CHK",fieldName); 
 if (fieldName.includes('-')) {
     return "dynamicSingleSelect"; // 
   }
@@ -505,12 +508,34 @@ if (matchedKey) {
 }
 
 
+getOptionValuesByKey(attributes, targetKey) {
+  if (!Array.isArray(attributes)) throw new Error('Input must be an array of attributes');
+  if (!targetKey) throw new Error('Target key is required');
+
+  const optionsAttribute = attributes.find(
+    attr => attr?.type === 'OptionsAttribute' && attr?.key === targetKey
+  );
+
+  return optionsAttribute?.values
+    ? optionsAttribute.values
+        .map(option => option?.value)
+        .filter(Boolean)
+        .map(value => value.toLowerCase()) // Normalize to lowercase
+    : [];
+}
 
 
-buildDynamicSingleSelect(node, fieldName) {
+
+buildDynamicSingleSelect(node, rawFieldName) {
+
+const fieldName = this.cleanFieldName(rawFieldName);
+
+
 let fieldSchema = []; 
 fieldSchema.push('dynamicSingleSelect',fieldName, this.toTitleCase(fieldName)); 
 
+let validations; 
+let attributes; 
 
 
 //console.log("HERE",validations);
@@ -543,26 +568,50 @@ if (this.isRequired(rawFieldName)) {
 
 /// NOW BUILD SCENARIO (SELECT STATE) BLOCKS
 
-let scenarioBlock = [];
-let schema = {}; 
 
 /// E.G. Countries for which we want display states reactively 
 const optionValues = this.extractOptionValues(node.attributes);
-let options = []; 
+//console.log("optionValues",optionValues);
 
 if (optionValues.length > 0 ) {
 
   optionValues.forEach(option => {
 
+let scenarioBlock = [];
+let schema = {}; 
+
     schema['id']= option.toLowerCase(); 
     schema['label']= option; 
 
+    /// add options now
+const keyOptions = this.getOptionValuesByKey(node.attributes, option);
+//console.log(keyOptions);
+let options = []; 
 
-
-  options.push({value: option, label: this.toTitleCase(option)})
+if (keyOptions.length > 0) {
+  keyOptions.forEach(subOption => {
+  options.push({value: subOption.toLowerCase(), label: this.toTitleCase(subOption)})
   })
+schema['options']= options; 
 
- fieldSchema.push(options) 
+}
+
+
+
+// now get option options 
+  scenarioBlock.push(schema); 
+ fieldSchema.push(scenarioBlock) 
+ this.formSchema.push(fieldSchema);
+
+
+
+
+ // options.push({value: option, label: this.toTitleCase(option)})
+  });
+
+
+   //console.log("THERE",JSON.stringify(fieldSchema,null,2));
+
 }
 
 
@@ -580,7 +629,7 @@ if (optionValues.length > 0 ) {
   }
 
   buildProperties(node) {
-    console.log(`Processing FormProperties with ${node.properties.length} properties`);
+   // console.log(`Processing FormProperties with ${node.properties.length} properties`);
   }
 
   buildProperty(node) {
@@ -627,7 +676,8 @@ fieldType = this.inferInputType(cleanFieldName);
 
 
 if (fieldType === 'dynamicSingleSelect') {
-this.buildDynamicSingleSelect(node, cleanFieldName);
+  //console.log("HERE",fieldType);
+this.buildDynamicSingleSelect(node, rawFieldName);
 }
 
 
@@ -754,7 +804,7 @@ handleAttributes(attributesAST) {
 
 
   buildOptionsAttribute(node) {
-    console.log(`Processing OptionsAttribute with ${node.values.length} values`);
+    //console.log(`Processing OptionsAttribute with ${node.values.length} values`);
   }
 
   buildFieldAttribute(node) {
@@ -762,7 +812,7 @@ handleAttributes(attributesAST) {
   }
 
   buildOption(node) {
-    console.log(`Processing Option: ${node.value} (quoted: ${node.quoted})`);
+    //console.log(`Processing Option: ${node.value} (quoted: ${node.quoted})`);
   }
 
   buildIdentifier(node) {
@@ -997,9 +1047,9 @@ const ast = {
       "column": 1
     },
     "end": {
-      "offset": 406,
-      "line": 29,
-      "column": 2
+      "offset": 432,
+      "line": 30,
+      "column": 1
     },
     "fields": [
       {
@@ -1017,81 +1067,49 @@ const ast = {
         "name": "!email*",
         "attributes": [
           {
-            "type": "OptionsAttribute",
+            "type": "FieldAttribute",
             "start": {
               "offset": 91,
               "line": 10,
               "column": 3
             },
             "end": {
-              "offset": 105,
-              "line": 10,
-              "column": 17
+              "offset": 138,
+              "line": 13,
+              "column": 1
             },
             "key": "id",
-            "values": [
-              {
-                "type": "Option",
-                "start": {
-                  "offset": 95,
-                  "line": 10,
-                  "column": 7
-                },
-                "end": {
-                  "offset": 105,
-                  "line": 10,
-                  "column": 17
-                },
-                "value": "user-email",
-                "quoted": false
-              }
-            ]
+            "value": "user-email"
           },
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 108,
-              "line": 11,
+              "offset": 91,
+              "line": 10,
               "column": 3
             },
             "end": {
-              "offset": 116,
-              "line": 11,
-              "column": 11
+              "offset": 138,
+              "line": 13,
+              "column": 1
             },
             "key": "required",
             "value": true
           },
           {
-            "type": "OptionsAttribute",
+            "type": "FieldAttribute",
             "start": {
-              "offset": 119,
-              "line": 12,
+              "offset": 91,
+              "line": 10,
               "column": 3
             },
             "end": {
-              "offset": 137,
-              "line": 12,
-              "column": 21
+              "offset": 138,
+              "line": 13,
+              "column": 1
             },
             "key": "class",
-            "values": [
-              {
-                "type": "Option",
-                "start": {
-                  "offset": 126,
-                  "line": 12,
-                  "column": 10
-                },
-                "end": {
-                  "offset": 137,
-                  "line": 12,
-                  "column": 21
-                },
-                "value": "input-field",
-                "quoted": false
-              }
-            ]
+            "value": "input-field"
           }
         ]
       },
@@ -1148,8 +1166,8 @@ const ast = {
           "column": 1
         },
         "end": {
-          "offset": 225,
-          "line": 23,
+          "offset": 224,
+          "line": 22,
           "column": 1
         },
         "name": "Diet*",
@@ -1162,9 +1180,9 @@ const ast = {
               "column": 3
             },
             "end": {
-              "offset": 186,
-              "line": 19,
-              "column": 8
+              "offset": 224,
+              "line": 22,
+              "column": 1
             },
             "key": "oneof",
             "value": true
@@ -1172,28 +1190,28 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 189,
-              "line": 20,
+              "offset": 181,
+              "line": 19,
               "column": 3
             },
             "end": {
-              "offset": 222,
-              "line": 20,
-              "column": 36
+              "offset": 224,
+              "line": 22,
+              "column": 1
             },
             "key": "options",
             "values": [
               {
                 "type": "Option",
                 "start": {
-                  "offset": 198,
-                  "line": 20,
-                  "column": 12
+                  "offset": 181,
+                  "line": 19,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 203,
-                  "line": 20,
-                  "column": 17
+                  "offset": 224,
+                  "line": 22,
+                  "column": 1
                 },
                 "value": "Vegan",
                 "quoted": false
@@ -1201,14 +1219,14 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 205,
-                  "line": 20,
-                  "column": 19
+                  "offset": 181,
+                  "line": 19,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 216,
-                  "line": 20,
-                  "column": 30
+                  "offset": 224,
+                  "line": 22,
+                  "column": 1
                 },
                 "value": "Pescitarian",
                 "quoted": false
@@ -1216,61 +1234,106 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 218,
-                  "line": 20,
-                  "column": 32
+                  "offset": 181,
+                  "line": 19,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 222,
-                  "line": 20,
-                  "column": 36
+                  "offset": 224,
+                  "line": 22,
+                  "column": 1
                 },
                 "value": "Meat",
                 "quoted": false
               }
             ]
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 181,
+              "line": 19,
+              "column": 3
+            },
+            "end": {
+              "offset": 224,
+              "line": 22,
+              "column": 1
+            },
+            "key": "",
+            "value": true
           }
         ]
       },
       {
         "type": "FormField",
         "start": {
-          "offset": 225,
-          "line": 23,
+          "offset": 224,
+          "line": 22,
           "column": 1
         },
         "end": {
-          "offset": 406,
-          "line": 29,
-          "column": 2
+          "offset": 432,
+          "line": 30,
+          "column": 1
         },
-        "name": "country-state",
+        "name": "country-state*",
         "attributes": [
           {
-            "type": "OptionsAttribute",
+            "type": "FieldAttribute",
             "start": {
-              "offset": 245,
-              "line": 24,
+              "offset": 243,
+              "line": 23,
               "column": 3
             },
             "end": {
-              "offset": 286,
-              "line": 24,
-              "column": 44
+              "offset": 432,
+              "line": 30,
+              "column": 1
+            },
+            "key": "id",
+            "value": "dsel"
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 243,
+              "line": 23,
+              "column": 3
+            },
+            "end": {
+              "offset": 432,
+              "line": 30,
+              "column": 1
+            },
+            "key": "class",
+            "value": "active"
+          },
+          {
+            "type": "OptionsAttribute",
+            "start": {
+              "offset": 243,
+              "line": 23,
+              "column": 3
+            },
+            "end": {
+              "offset": 432,
+              "line": 30,
+              "column": 1
             },
             "key": "options",
             "values": [
               {
                 "type": "Option",
                 "start": {
-                  "offset": 254,
-                  "line": 24,
-                  "column": 12
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 260,
-                  "line": 24,
-                  "column": 18
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "Zambia",
                 "quoted": false
@@ -1278,14 +1341,14 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 262,
-                  "line": 24,
-                  "column": 20
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 274,
-                  "line": 24,
-                  "column": 32
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "South Africa",
                 "quoted": false
@@ -1293,14 +1356,14 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 276,
-                  "line": 24,
-                  "column": 34
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 286,
-                  "line": 24,
-                  "column": 44
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "Zimbabwe",
                 "quoted": false
@@ -1310,28 +1373,28 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 289,
-              "line": 25,
+              "offset": 243,
+              "line": 23,
               "column": 3
             },
             "end": {
-              "offset": 317,
-              "line": 25,
-              "column": 31
+              "offset": 432,
+              "line": 30,
+              "column": 1
             },
             "key": "Zambia",
             "values": [
               {
                 "type": "Option",
                 "start": {
-                  "offset": 297,
-                  "line": 25,
-                  "column": 11
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 303,
-                  "line": 25,
-                  "column": 17
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "Lusaka",
                 "quoted": false
@@ -1339,14 +1402,14 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 305,
-                  "line": 25,
-                  "column": 19
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 317,
-                  "line": 25,
-                  "column": 31
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "Copperbelt",
                 "quoted": false
@@ -1354,45 +1417,30 @@ const ast = {
             ]
           },
           {
-            "type": "FieldAttribute",
+            "type": "OptionsAttribute",
             "start": {
-              "offset": 320,
-              "line": 26,
+              "offset": 243,
+              "line": 23,
               "column": 3
             },
             "end": {
-              "offset": 325,
-              "line": 26,
-              "column": 8
+              "offset": 432,
+              "line": 30,
+              "column": 1
             },
-            "key": "South",
-            "value": true
-          },
-          {
-            "type": "OptionsAttribute",
-            "start": {
-              "offset": 326,
-              "line": 26,
-              "column": 9
-            },
-            "end": {
-              "offset": 364,
-              "line": 26,
-              "column": 47
-            },
-            "key": "Africa",
+            "key": "South Africa",
             "values": [
               {
                 "type": "Option",
                 "start": {
-                  "offset": 334,
-                  "line": 26,
-                  "column": 17
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 341,
-                  "line": 26,
-                  "column": 24
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "Gauteng",
                 "quoted": false
@@ -1400,14 +1448,14 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 343,
-                  "line": 26,
-                  "column": 26
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 353,
-                  "line": 26,
-                  "column": 36
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "North West",
                 "quoted": false
@@ -1415,14 +1463,14 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 355,
-                  "line": 26,
-                  "column": 38
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 364,
-                  "line": 26,
-                  "column": 47
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "Limpopo",
                 "quoted": false
@@ -1432,28 +1480,28 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 367,
-              "line": 27,
+              "offset": 243,
+              "line": 23,
               "column": 3
             },
             "end": {
-              "offset": 403,
-              "line": 27,
-              "column": 39
+              "offset": 432,
+              "line": 30,
+              "column": 1
             },
             "key": "Zimbabwe",
             "values": [
               {
                 "type": "Option",
                 "start": {
-                  "offset": 377,
-                  "line": 27,
-                  "column": 13
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 385,
-                  "line": 27,
-                  "column": 21
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "Midlands",
                 "quoted": false
@@ -1461,25 +1509,43 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 387,
-                  "line": 27,
-                  "column": 23
+                  "offset": 243,
+                  "line": 23,
+                  "column": 3
                 },
                 "end": {
-                  "offset": 403,
-                  "line": 27,
-                  "column": 39
+                  "offset": 432,
+                  "line": 30,
+                  "column": 1
                 },
                 "value": "Mashonaland West",
                 "quoted": false
               }
             ]
+          },
+          {
+            "type": "FieldAttribute",
+            "start": {
+              "offset": 243,
+              "line": 23,
+              "column": 3
+            },
+            "end": {
+              "offset": 432,
+              "line": 30,
+              "column": 1
+            },
+            "key": "",
+            "value": true
           }
         ]
       }
     ]
   }
 };
+
+
+
 
 
 const getSchemas = new FormiqueParser(ast); 
