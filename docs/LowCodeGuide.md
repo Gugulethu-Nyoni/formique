@@ -100,7 +100,6 @@ id: app-form
 theme: corporate-blue
 method: post
 action: /careers/submit
-submitMode: ajax
 successMessage: "Application received!"
 requiredFieldIndicator: true
 enctype: multipart/form-data
@@ -137,7 +136,7 @@ FFDL will infer that this will be text field type with "name" as id and name att
 ```ffdl
 - email  
   required  
-  placeholder: "Enter your email"  
+  placeholder: Enter your email
 ```  
 
 ---
@@ -181,7 +180,7 @@ If no type is specified, Formique defaults to `text`.
 
 #### **Example**  
 ```ffdl
-- username   # Treated as text input  
+- username   # Treated as text input  (Formique LowCode use type inference)
 ```  
 
 ### **5.2 Explicit Type Declaration**  
@@ -190,6 +189,11 @@ Add `:type` after the field name.
 #### **Syntax**  
 ```ffdl
 - field_name:type  
+```  
+
+#### **Example**  
+```ffdl
+- dob:date  
 ```  
 
 #### **Supported Types**  
