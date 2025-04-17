@@ -1,7 +1,6 @@
 'use strict';
 
 class  FormiqueParser{
-
 constructor (ast) {
 this.ast = ast;
 this.formSchema=[];
@@ -643,8 +642,18 @@ schema['options']= options;
     if (this.formAttributes.includes(key)) {
       this.formParams[key] = val
     } else {
- 
+
+if (key === 'sendTo') {
+//let sendToEmails= [];
+const sendToEmails = (sendToProperty) => sendToProperty.value.values.map(opt => opt.value);
+this.formSettings[key] = sendToEmails
+
+}  else {
+
  this.formSettings[key] = val
+
+}
+ 
 
     }
     
