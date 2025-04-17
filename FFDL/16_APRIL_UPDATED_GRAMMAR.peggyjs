@@ -135,10 +135,10 @@ Single Select
 }
 
 // Main form structure 
-start = formDefinition 
+start = formDefinition
 
 formDefinition
-  = _ directive:formDirective? _ fields:formFields _ {
+  = _ directive:formDirective? _ fields:formFields? _ {
       return {
         directive: directive,
         fields: fields
@@ -172,8 +172,13 @@ formProperty
     })
   }
 
+/*
 PropertyValue
   = UnquotedString / StringLiteral / BooleanLiteral / NumberLiteral / Identifier
+*/
+
+PropertyValue
+  = CommaSeparatedValues / UnquotedString / StringLiteral / BooleanLiteral / NumberLiteral / Identifier
 
 UnquotedString
   = [^\s:\r\n]+ {  // Now allows @ symbols
