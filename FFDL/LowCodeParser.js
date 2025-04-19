@@ -1,6 +1,6 @@
 'use strict';
 
-class  FormiqueParser{
+export default class  FormiqueParser{
 constructor (ast) {
 this.ast = ast;
 this.formSchema=[];
@@ -170,7 +170,30 @@ this.inputTypeMaps = {
 
 };
 
-
+this.regularInputTypes = [
+  'text',
+  'password',
+  'email',
+  'number',
+  'range',
+  'date',
+  'datetime-local',
+  'time',
+  'month',
+  'week',
+  'search',
+  'tel',
+  'url',
+  'color',
+  'checkbox',
+  'radio',
+  'file',
+  'hidden',
+  'submit',
+  'reset',
+  'button',
+  'image'
+];
 
  // Exhaustive type inference map
     this.typeInferenceRules = {
@@ -331,13 +354,20 @@ inferInputType(fieldName) {
 
 
 
-
+/*
 cleanFieldName(str) {
   return str
     .trim()
     .replace(/[^\w-]/g, '');
 }
+*/
 
+cleanFieldName(str) {
+const anyFirstChunk = str.split(':')[0]; 
+  return anyFirstChunk
+    .trim()
+    .replace(/[^\w-]/g, '');
+}
 
 toTitleCase(str) {
   return str
@@ -491,6 +521,7 @@ if (fieldName.includes('-')) {
 // second option - explicit field name directive 
   if (fieldName.includes(':')) {
     const chunks = fieldName.split(':');
+    console.log("LAPHA",chunks[1]);
     return chunks[1]; // e.g., 'date' from 'dob:date'
   }
 
@@ -572,11 +603,13 @@ if (this.isRequired(rawFieldName)) {
 const optionValues = this.extractOptionValues(node.attributes);
 //console.log("optionValues",optionValues);
 
+let scenarioBlocks =[];
+
+
 if (optionValues.length > 0 ) {
 
   optionValues.forEach(option => {
 
-//let scenarioBlock;
 let schema = {}; 
 
     schema['id']= option.toLowerCase(); 
@@ -592,6 +625,7 @@ if (keyOptions.length > 0) {
   options.push({value: subOption.toLowerCase(), label: this.toTitleCase(subOption)})
   })
 schema['options']= options; 
+scenarioBlocks.push(schema);
 
 }
 
@@ -599,7 +633,7 @@ schema['options']= options;
 
 // now get option options 
   //scenarioBlock.push(schema); 
- fieldSchema.push(schema); 
+ fieldSchema.push(scenarioBlocks); 
 
 
 
@@ -636,7 +670,9 @@ schema['options']= options;
   buildProperty(node) {
     //console.log(`Processing FormProperty: ${node.key.value} = ${node.value.value}`);
     const key = node.key.value;
-    const val = node.value.value 
+    const val = node.value.values[0].value; 
+
+    //console.log(node);
 
 // if this is regular form attribute then it goes to formParams
     if (this.formAttributes.includes(key)) {
@@ -644,19 +680,19 @@ schema['options']= options;
     } else {
 
 if (key === 'sendTo') {
-//let sendToEmails= [];
-const sendToEmails = (sendToProperty) => sendToProperty.value.values.map(opt => opt.value);
+const sendToEmails = node.value.values.map(option => option.value);
 this.formSettings[key] = sendToEmails
-
-}  else {
-
+}  else 
+ {
  this.formSettings[key] = val
+}
 
 }
- 
-
-    }
     
+
+//console.log(this.formSettings);
+//console.log(this.formParams);
+
 
   }
 
@@ -685,7 +721,7 @@ fieldType = this.inferInputType(cleanFieldName);
 
 }
 
-console.log("fieldType", fieldType);
+//console.log("fieldType", fieldType);
 
 
 
@@ -896,10 +932,13 @@ const getDependsOn = (attributesAST) => {
 
 const dependency = getDependsOn(attributesAST);
 /// 
+
 if (dependency) {
+const dependsOnCondition= dependency.dependsOnCondition.toLowerCase(); 
 
 attributes['dependsOn']= dependency.dependsOnValue;
-attributes['condition'] = `(value) => value === '${dependency.dependsOnCondition}'`;
+attributes['condition'] = `${dependsOnCondition}`;
+//attributes['condition'] = `(value) => value === ${dependency.dependsOnCondition}`;
 
 }
 /*
@@ -950,7 +989,7 @@ console.log(dependency);
 /* TESTING */
 
 
-const ast = {
+const testAst = {
   "directive": {
     "type": "FormDirective",
     "start": {
@@ -959,8 +998,8 @@ const ast = {
       "column": 1
     },
     "end": {
-      "offset": 76,
-      "line": 9,
+      "offset": 120,
+      "line": 10,
       "column": 1
     },
     "name": {
@@ -985,8 +1024,8 @@ const ast = {
         "column": 1
       },
       "end": {
-        "offset": 76,
-        "line": 9,
+        "offset": 120,
+        "line": 10,
         "column": 1
       },
       "properties": [
@@ -1017,18 +1056,24 @@ const ast = {
             "value": "theme"
           },
           "value": {
-            "type": "StringLiteral",
-            "start": {
-              "offset": 34,
-              "line": 4,
-              "column": 8
-            },
-            "end": {
-              "offset": 38,
-              "line": 4,
-              "column": 12
-            },
-            "value": "dark"
+            "isOptions": true,
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 34,
+                  "line": 4,
+                  "column": 8
+                },
+                "end": {
+                  "offset": 38,
+                  "line": 4,
+                  "column": 12
+                },
+                "value": "dark",
+                "quoted": false
+              }
+            ]
           }
         },
         {
@@ -1058,18 +1103,24 @@ const ast = {
             "value": "mode"
           },
           "value": {
-            "type": "StringLiteral",
-            "start": {
-              "offset": 45,
-              "line": 5,
-              "column": 7
-            },
-            "end": {
-              "offset": 50,
-              "line": 5,
-              "column": 12
-            },
-            "value": "email"
+            "isOptions": true,
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 45,
+                  "line": 5,
+                  "column": 7
+                },
+                "end": {
+                  "offset": 50,
+                  "line": 5,
+                  "column": 12
+                },
+                "value": "email",
+                "quoted": false
+              }
+            ]
           }
         },
         {
@@ -1080,9 +1131,9 @@ const ast = {
             "column": 1
           },
           "end": {
-            "offset": 61,
+            "offset": 94,
             "line": 6,
-            "column": 11
+            "column": 44
           },
           "key": {
             "type": "Identifier",
@@ -1092,66 +1143,140 @@ const ast = {
               "column": 1
             },
             "end": {
-              "offset": 53,
+              "offset": 57,
               "line": 6,
-              "column": 3
+              "column": 7
             },
-            "value": "id"
+            "value": "sendTo"
           },
           "value": {
-            "type": "StringLiteral",
-            "start": {
-              "offset": 55,
-              "line": 6,
-              "column": 5
-            },
-            "end": {
-              "offset": 61,
-              "line": 6,
-              "column": 11
-            },
-            "value": "myForm"
+            "isOptions": true,
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 59,
+                  "line": 6,
+                  "column": 9
+                },
+                "end": {
+                  "offset": 75,
+                  "line": 6,
+                  "column": 25
+                },
+                "value": "info@example.com",
+                "quoted": false
+              },
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 77,
+                  "line": 6,
+                  "column": 27
+                },
+                "end": {
+                  "offset": 94,
+                  "line": 6,
+                  "column": 44
+                },
+                "value": "admin@example.com",
+                "quoted": false
+              }
+            ]
           }
         },
         {
           "type": "FormProperty",
           "start": {
-            "offset": 62,
+            "offset": 95,
             "line": 7,
             "column": 1
           },
           "end": {
-            "offset": 74,
+            "offset": 105,
             "line": 7,
+            "column": 11
+          },
+          "key": {
+            "type": "Identifier",
+            "start": {
+              "offset": 95,
+              "line": 7,
+              "column": 1
+            },
+            "end": {
+              "offset": 97,
+              "line": 7,
+              "column": 3
+            },
+            "value": "id"
+          },
+          "value": {
+            "isOptions": true,
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 99,
+                  "line": 7,
+                  "column": 5
+                },
+                "end": {
+                  "offset": 105,
+                  "line": 7,
+                  "column": 11
+                },
+                "value": "myForm",
+                "quoted": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "FormProperty",
+          "start": {
+            "offset": 106,
+            "line": 8,
+            "column": 1
+          },
+          "end": {
+            "offset": 118,
+            "line": 8,
             "column": 13
           },
           "key": {
             "type": "Identifier",
             "start": {
-              "offset": 62,
-              "line": 7,
+              "offset": 106,
+              "line": 8,
               "column": 1
             },
             "end": {
-              "offset": 67,
-              "line": 7,
+              "offset": 111,
+              "line": 8,
               "column": 6
             },
             "value": "class"
           },
           "value": {
-            "type": "StringLiteral",
-            "start": {
-              "offset": 69,
-              "line": 7,
-              "column": 8
-            },
-            "end": {
-              "offset": 74,
-              "line": 7,
-              "column": 13
-            },
-            "value": "block"
+            "isOptions": true,
+            "values": [
+              {
+                "type": "Option",
+                "start": {
+                  "offset": 113,
+                  "line": 8,
+                  "column": 8
+                },
+                "end": {
+                  "offset": 118,
+                  "line": 8,
+                  "column": 13
+                },
+                "value": "block",
+                "quoted": false
+              }
+            ]
           }
         }
       ]
@@ -1160,26 +1285,26 @@ const ast = {
   "fields": {
     "type": "FormFields",
     "start": {
-      "offset": 76,
-      "line": 9,
+      "offset": 120,
+      "line": 10,
       "column": 1
     },
     "end": {
-      "offset": 653,
-      "line": 45,
+      "offset": 697,
+      "line": 46,
       "column": 1
     },
     "fields": [
       {
         "type": "FormField",
         "start": {
-          "offset": 76,
-          "line": 9,
+          "offset": 120,
+          "line": 10,
           "column": 1
         },
         "end": {
-          "offset": 138,
-          "line": 13,
+          "offset": 182,
+          "line": 14,
           "column": 1
         },
         "name": "!email*",
@@ -1187,13 +1312,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 91,
-              "line": 10,
+              "offset": 135,
+              "line": 11,
               "column": 3
             },
             "end": {
-              "offset": 138,
-              "line": 13,
+              "offset": 182,
+              "line": 14,
               "column": 1
             },
             "key": "id",
@@ -1202,13 +1327,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 91,
-              "line": 10,
+              "offset": 135,
+              "line": 11,
               "column": 3
             },
             "end": {
-              "offset": 138,
-              "line": 13,
+              "offset": 182,
+              "line": 14,
               "column": 1
             },
             "key": "required",
@@ -1217,13 +1342,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 91,
-              "line": 10,
+              "offset": 135,
+              "line": 11,
               "column": 3
             },
             "end": {
-              "offset": 138,
-              "line": 13,
+              "offset": 182,
+              "line": 14,
               "column": 1
             },
             "key": "class",
@@ -1234,13 +1359,13 @@ const ast = {
       {
         "type": "FormField",
         "start": {
-          "offset": 138,
-          "line": 13,
+          "offset": 182,
+          "line": 14,
           "column": 1
         },
         "end": {
-          "offset": 145,
-          "line": 14,
+          "offset": 189,
+          "line": 15,
           "column": 1
         },
         "name": "name",
@@ -1249,13 +1374,13 @@ const ast = {
       {
         "type": "FormField",
         "start": {
-          "offset": 145,
-          "line": 14,
+          "offset": 189,
+          "line": 15,
           "column": 1
         },
         "end": {
-          "offset": 159,
-          "line": 16,
+          "offset": 203,
+          "line": 17,
           "column": 1
         },
         "name": "telephone*",
@@ -1264,13 +1389,13 @@ const ast = {
       {
         "type": "FormField",
         "start": {
-          "offset": 159,
-          "line": 16,
+          "offset": 203,
+          "line": 17,
           "column": 1
         },
         "end": {
-          "offset": 171,
-          "line": 18,
+          "offset": 215,
+          "line": 19,
           "column": 1
         },
         "name": "dob:date",
@@ -1279,13 +1404,13 @@ const ast = {
       {
         "type": "FormField",
         "start": {
-          "offset": 171,
-          "line": 18,
+          "offset": 215,
+          "line": 19,
           "column": 1
         },
         "end": {
-          "offset": 224,
-          "line": 22,
+          "offset": 268,
+          "line": 23,
           "column": 1
         },
         "name": "Diet*",
@@ -1293,13 +1418,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 181,
-              "line": 19,
+              "offset": 225,
+              "line": 20,
               "column": 3
             },
             "end": {
-              "offset": 224,
-              "line": 22,
+              "offset": 268,
+              "line": 23,
               "column": 1
             },
             "key": "oneof",
@@ -1308,13 +1433,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 181,
-              "line": 19,
+              "offset": 225,
+              "line": 20,
               "column": 3
             },
             "end": {
-              "offset": 224,
-              "line": 22,
+              "offset": 268,
+              "line": 23,
               "column": 1
             },
             "key": "options",
@@ -1322,13 +1447,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 181,
-                  "line": 19,
+                  "offset": 225,
+                  "line": 20,
                   "column": 3
                 },
                 "end": {
-                  "offset": 224,
-                  "line": 22,
+                  "offset": 268,
+                  "line": 23,
                   "column": 1
                 },
                 "value": "Vegan",
@@ -1337,13 +1462,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 181,
-                  "line": 19,
+                  "offset": 225,
+                  "line": 20,
                   "column": 3
                 },
                 "end": {
-                  "offset": 224,
-                  "line": 22,
+                  "offset": 268,
+                  "line": 23,
                   "column": 1
                 },
                 "value": "Pescitarian",
@@ -1352,13 +1477,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 181,
-                  "line": 19,
+                  "offset": 225,
+                  "line": 20,
                   "column": 3
                 },
                 "end": {
-                  "offset": 224,
-                  "line": 22,
+                  "offset": 268,
+                  "line": 23,
                   "column": 1
                 },
                 "value": "Meat",
@@ -1369,13 +1494,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 181,
-              "line": 19,
+              "offset": 225,
+              "line": 20,
               "column": 3
             },
             "end": {
-              "offset": 224,
-              "line": 22,
+              "offset": 268,
+              "line": 23,
               "column": 1
             },
             "key": "",
@@ -1386,13 +1511,13 @@ const ast = {
       {
         "type": "FormField",
         "start": {
-          "offset": 224,
-          "line": 22,
+          "offset": 268,
+          "line": 23,
           "column": 1
         },
         "end": {
-          "offset": 433,
-          "line": 31,
+          "offset": 477,
+          "line": 32,
           "column": 1
         },
         "name": "country-state*",
@@ -1400,13 +1525,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 243,
-              "line": 23,
+              "offset": 287,
+              "line": 24,
               "column": 3
             },
             "end": {
-              "offset": 433,
-              "line": 31,
+              "offset": 477,
+              "line": 32,
               "column": 1
             },
             "key": "id",
@@ -1415,13 +1540,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 243,
-              "line": 23,
+              "offset": 287,
+              "line": 24,
               "column": 3
             },
             "end": {
-              "offset": 433,
-              "line": 31,
+              "offset": 477,
+              "line": 32,
               "column": 1
             },
             "key": "class",
@@ -1430,13 +1555,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 243,
-              "line": 23,
+              "offset": 287,
+              "line": 24,
               "column": 3
             },
             "end": {
-              "offset": 433,
-              "line": 31,
+              "offset": 477,
+              "line": 32,
               "column": 1
             },
             "key": "options",
@@ -1444,13 +1569,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "Zambia",
@@ -1459,13 +1584,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "South Africa",
@@ -1474,13 +1599,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "Zimbabwe",
@@ -1491,13 +1616,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 243,
-              "line": 23,
+              "offset": 287,
+              "line": 24,
               "column": 3
             },
             "end": {
-              "offset": 433,
-              "line": 31,
+              "offset": 477,
+              "line": 32,
               "column": 1
             },
             "key": "Zambia",
@@ -1505,13 +1630,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "Lusaka",
@@ -1520,13 +1645,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "Copperbelt",
@@ -1537,13 +1662,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 243,
-              "line": 23,
+              "offset": 287,
+              "line": 24,
               "column": 3
             },
             "end": {
-              "offset": 433,
-              "line": 31,
+              "offset": 477,
+              "line": 32,
               "column": 1
             },
             "key": "South Africa",
@@ -1551,13 +1676,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "Gauteng",
@@ -1566,13 +1691,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "North West",
@@ -1581,13 +1706,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "Limpopo",
@@ -1598,13 +1723,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 243,
-              "line": 23,
+              "offset": 287,
+              "line": 24,
               "column": 3
             },
             "end": {
-              "offset": 433,
-              "line": 31,
+              "offset": 477,
+              "line": 32,
               "column": 1
             },
             "key": "Zimbabwe",
@@ -1612,13 +1737,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "Midlands",
@@ -1627,13 +1752,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 243,
-                  "line": 23,
+                  "offset": 287,
+                  "line": 24,
                   "column": 3
                 },
                 "end": {
-                  "offset": 433,
-                  "line": 31,
+                  "offset": 477,
+                  "line": 32,
                   "column": 1
                 },
                 "value": "Mashonaland West",
@@ -1644,13 +1769,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 243,
-              "line": 23,
+              "offset": 287,
+              "line": 24,
               "column": 3
             },
             "end": {
-              "offset": 433,
-              "line": 31,
+              "offset": 477,
+              "line": 32,
               "column": 1
             },
             "key": "",
@@ -1659,13 +1784,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 243,
-              "line": 23,
+              "offset": 287,
+              "line": 24,
               "column": 3
             },
             "end": {
-              "offset": 433,
-              "line": 31,
+              "offset": 477,
+              "line": 32,
               "column": 1
             },
             "key": "",
@@ -1676,13 +1801,13 @@ const ast = {
       {
         "type": "FormField",
         "start": {
-          "offset": 433,
-          "line": 31,
+          "offset": 477,
+          "line": 32,
           "column": 1
         },
         "end": {
-          "offset": 532,
-          "line": 38,
+          "offset": 576,
+          "line": 39,
           "column": 1
         },
         "name": "!*role",
@@ -1690,13 +1815,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 443,
-              "line": 32,
+              "offset": 487,
+              "line": 33,
               "column": 3
             },
             "end": {
-              "offset": 532,
-              "line": 38,
+              "offset": 576,
+              "line": 39,
               "column": 1
             },
             "key": "selectOne",
@@ -1705,13 +1830,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 443,
-              "line": 32,
+              "offset": 487,
+              "line": 33,
               "column": 3
             },
             "end": {
-              "offset": 532,
-              "line": 38,
+              "offset": 576,
+              "line": 39,
               "column": 1
             },
             "key": "options",
@@ -1719,13 +1844,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 443,
-                  "line": 32,
+                  "offset": 487,
+                  "line": 33,
                   "column": 3
                 },
                 "end": {
-                  "offset": 532,
-                  "line": 38,
+                  "offset": 576,
+                  "line": 39,
                   "column": 1
                 },
                 "value": "Attendee",
@@ -1734,13 +1859,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 443,
-                  "line": 32,
+                  "offset": 487,
+                  "line": 33,
                   "column": 3
                 },
                 "end": {
-                  "offset": 532,
-                  "line": 38,
+                  "offset": 576,
+                  "line": 39,
                   "column": 1
                 },
                 "value": "Presenter",
@@ -1751,13 +1876,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 443,
-              "line": 32,
+              "offset": 487,
+              "line": 33,
               "column": 3
             },
             "end": {
-              "offset": 532,
-              "line": 38,
+              "offset": 576,
+              "line": 39,
               "column": 1
             },
             "key": "default",
@@ -1766,13 +1891,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 443,
-              "line": 32,
+              "offset": 487,
+              "line": 33,
               "column": 3
             },
             "end": {
-              "offset": 532,
-              "line": 38,
+              "offset": 576,
+              "line": 39,
               "column": 1
             },
             "key": "dependents",
@@ -1780,13 +1905,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 443,
-                  "line": 32,
+                  "offset": 487,
+                  "line": 33,
                   "column": 3
                 },
                 "end": {
-                  "offset": 532,
-                  "line": 38,
+                  "offset": 576,
+                  "line": 39,
                   "column": 1
                 },
                 "value": "topic",
@@ -1795,13 +1920,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 443,
-                  "line": 32,
+                  "offset": 487,
+                  "line": 33,
                   "column": 3
                 },
                 "end": {
-                  "offset": 532,
-                  "line": 38,
+                  "offset": 576,
+                  "line": 39,
                   "column": 1
                 },
                 "value": "mode",
@@ -1812,13 +1937,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 443,
-              "line": 32,
+              "offset": 487,
+              "line": 33,
               "column": 3
             },
             "end": {
-              "offset": 532,
-              "line": 38,
+              "offset": 576,
+              "line": 39,
               "column": 1
             },
             "key": "",
@@ -1827,13 +1952,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 443,
-              "line": 32,
+              "offset": 487,
+              "line": 33,
               "column": 3
             },
             "end": {
-              "offset": 532,
-              "line": 38,
+              "offset": 576,
+              "line": 39,
               "column": 1
             },
             "key": "",
@@ -1844,13 +1969,13 @@ const ast = {
       {
         "type": "FormField",
         "start": {
-          "offset": 532,
-          "line": 38,
+          "offset": 576,
+          "line": 39,
           "column": 1
         },
         "end": {
-          "offset": 576,
-          "line": 41,
+          "offset": 620,
+          "line": 42,
           "column": 1
         },
         "name": "topic:text",
@@ -1858,13 +1983,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 548,
-              "line": 39,
+              "offset": 592,
+              "line": 40,
               "column": 3
             },
             "end": {
-              "offset": 576,
-              "line": 41,
+              "offset": 620,
+              "line": 42,
               "column": 1
             },
             "key": "dependsOn",
@@ -1872,13 +1997,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 548,
-                  "line": 39,
+                  "offset": 592,
+                  "line": 40,
                   "column": 3
                 },
                 "end": {
-                  "offset": 576,
-                  "line": 41,
+                  "offset": 620,
+                  "line": 42,
                   "column": 1
                 },
                 "value": "role",
@@ -1887,13 +2012,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 548,
-                  "line": 39,
+                  "offset": 592,
+                  "line": 40,
                   "column": 3
                 },
                 "end": {
-                  "offset": 576,
-                  "line": 41,
+                  "offset": 620,
+                  "line": 42,
                   "column": 1
                 },
                 "value": "Presenter",
@@ -1904,13 +2029,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 548,
-              "line": 39,
+              "offset": 592,
+              "line": 40,
               "column": 3
             },
             "end": {
-              "offset": 576,
-              "line": 41,
+              "offset": 620,
+              "line": 42,
               "column": 1
             },
             "key": "",
@@ -1921,13 +2046,13 @@ const ast = {
       {
         "type": "FormField",
         "start": {
-          "offset": 576,
-          "line": 41,
+          "offset": 620,
+          "line": 42,
           "column": 1
         },
         "end": {
-          "offset": 653,
-          "line": 45,
+          "offset": 697,
+          "line": 46,
           "column": 1
         },
         "name": "mode*",
@@ -1935,13 +2060,13 @@ const ast = {
           {
             "type": "FieldAttribute",
             "start": {
-              "offset": 585,
-              "line": 42,
+              "offset": 629,
+              "line": 43,
               "column": 2
             },
             "end": {
-              "offset": 653,
-              "line": 45,
+              "offset": 697,
+              "line": 46,
               "column": 1
             },
             "key": "oneof",
@@ -1950,13 +2075,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 585,
-              "line": 42,
+              "offset": 629,
+              "line": 43,
               "column": 2
             },
             "end": {
-              "offset": 653,
-              "line": 45,
+              "offset": 697,
+              "line": 46,
               "column": 1
             },
             "key": "options",
@@ -1964,13 +2089,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 585,
-                  "line": 42,
+                  "offset": 629,
+                  "line": 43,
                   "column": 2
                 },
                 "end": {
-                  "offset": 653,
-                  "line": 45,
+                  "offset": 697,
+                  "line": 46,
                   "column": 1
                 },
                 "value": "virtual",
@@ -1979,13 +2104,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 585,
-                  "line": 42,
+                  "offset": 629,
+                  "line": 43,
                   "column": 2
                 },
                 "end": {
-                  "offset": 653,
-                  "line": 45,
+                  "offset": 697,
+                  "line": 46,
                   "column": 1
                 },
                 "value": "physical",
@@ -1994,13 +2119,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 585,
-                  "line": 42,
+                  "offset": 629,
+                  "line": 43,
                   "column": 2
                 },
                 "end": {
-                  "offset": 653,
-                  "line": 45,
+                  "offset": 697,
+                  "line": 46,
                   "column": 1
                 },
                 "value": "hybrid",
@@ -2011,13 +2136,13 @@ const ast = {
           {
             "type": "OptionsAttribute",
             "start": {
-              "offset": 585,
-              "line": 42,
+              "offset": 629,
+              "line": 43,
               "column": 2
             },
             "end": {
-              "offset": 653,
-              "line": 45,
+              "offset": 697,
+              "line": 46,
               "column": 1
             },
             "key": "dependsOn",
@@ -2025,13 +2150,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 585,
-                  "line": 42,
+                  "offset": 629,
+                  "line": 43,
                   "column": 2
                 },
                 "end": {
-                  "offset": 653,
-                  "line": 45,
+                  "offset": 697,
+                  "line": 46,
                   "column": 1
                 },
                 "value": "role",
@@ -2040,13 +2165,13 @@ const ast = {
               {
                 "type": "Option",
                 "start": {
-                  "offset": 585,
-                  "line": 42,
+                  "offset": 629,
+                  "line": 43,
                   "column": 2
                 },
                 "end": {
-                  "offset": 653,
-                  "line": 45,
+                  "offset": 697,
+                  "line": 46,
                   "column": 1
                 },
                 "value": "Presenter",
@@ -2063,6 +2188,5 @@ const ast = {
 
 
 
-
-const getSchemas = new FormiqueParser(ast); 
-console.log(JSON.stringify(getSchemas,null,2));
+//const getSchemas = new FormiqueParser(ast); 
+//console.log(JSON.stringify(getSchemas,null,2));

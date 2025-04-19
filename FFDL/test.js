@@ -29,6 +29,7 @@ const lowCode =`
 @form: user-registration
 theme: dark
 mode: email
+sendTo: info@example.com, admin@example.com
 id: myForm
 class: block
 
@@ -72,4 +73,9 @@ class: block
 
 
 const ast = parser.parse(lowCode); 
-console.log(JSON.stringify(ast,null,2));
+const formSchema = ast.formSchema;
+const formSettings= ast.formSettings;
+const formParams = ast.formParams;
+
+
+//console.log(JSON.stringify(ast,null,2));

@@ -1,0 +1,24 @@
+
+
+
+(attributes.binding)
+(attributes && Object.keys(attributes).length > 0 && attributes.binding)
+
+
+(attributes && attributes.binding.startsWith('::') && name)
+(attributes && Object.keys(attributes).length > 0 && attributes.binding.startsWith('::') && name)
+
+
+
+(attributes.binding.startsWith('::') && name)
+(attributes && Object.keys(attributes).length > 0 && attributes.binding.startsWith('::') && name)
+
+
+
+(attributes.binding && !name)
+(attributes && Object.keys(attributes).length > 0 &&  attributes.binding && name)
+
+
+
+
+attributes && Object.keys(attributes).length > 0

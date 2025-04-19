@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title> Formique Low Code </title>
+</head>
+
+      <link rel="stylesheet" href="./formique-css.css" />
+
+
+<script type="module">
+
+import Formique from './formique.js'
+import parser from './latestParser.mjs';
+import FormiqueLowCodeParser from './LowCodeParser.js'; 	
+
+
+const lowCode =`
+
+@form: user-registration
+theme: light
+mode: email
+method: post
+sendTo: info@example.com, admin@example.com
+id: myForm
+class: block
+
+- rating:range
+min: 0
+max: 10
+
+- name*
+- surname*
+
+- ! email * 
+  id: user-email
+  required
+- telephone*
+
+- dob*:date
+
+- Diet*
+  manyof
+  options: Vegan, Pescitarian, Meat
+
+- country-state*
+  id: dsel
+  class: active  
+  options: Zambia, South Africa, Zimbabwe  
+  Zambia: Lusaka, Copperbelt  
+  South Africa: Gauteng, North West, Limpopo  
+  Zimbabwe: Midlands, Mashonaland West
+
+
+-!*role
+  selectOne
+  options: Attendee, Presenter
+  default: Attendee
+  dependents: topic, mode
+
+
+- topic*:text
+  dependsOn: role, Presenter
+
+- mode*
+ oneof
+ options: virtual,physical,hybrid
+ dependsOn: role, Presenter
+	`; 
+
+
+const lowCodeToAst = parser.parse(lowCode);
+//console.log(lowCodeToAst);
+const formObjects = new FormiqueLowCodeParser(lowCodeToAst);
+
+//
+const formSchema = formObjects.formSchema;
+
+
+  const formSchemaR = [[
+  'dynamicSingleSelect',       // Input type (required)
+  'languages',                 // Field name (required)
+  'Programming Scope-Programming Languages', // Labels for both primary drop down and secondary (dynamic) drop down seperated by a hyphen - e.g. Country-States
+  { required: true },          // Validation rules (optional) but the curly braces {} must always be included  
+  {},                          // Field attributes (optional) but the curly braces {} must always be included  
+  
+  // Dropdown Options
+  [
+    {
+      id: 'frontend',           // Option group ID (required)
+      label: 'Front End',       // Option group label (required)
+      options: [                // List of options (required)
+        { value: 'javascript', label: 'JavaScript' },
+        { value: 'html', label: 'HTML' },
+        { value: 'css', label: 'CSS' },
+        { value: 'typescript', label: 'TypeScript' },
+        { value: 'semantq', label: 'Semantq' },
+        { value: 'svelte', label: 'Svelte' },
+        { value: 'vue', label: 'Vue' },
+        { value: 'react', label: 'React' },
+        { value: 'angular', label: 'Angular' },
+      ]
+    },
+    {
+      id: 'backend',            // Option group ID (required)
+      label: 'Back End',        // Option group label (required)
+      options: [                // List of options (required)
+        { value: 'nodejs', label: 'Node.js' },
+        { value: 'python', label: 'Python' },
+        { value: 'java', label: 'Java' },
+        { value: 'php', label: 'PHP' },
+        { value: 'ruby', label: 'Ruby' },
+        { value: 'csharp', label: 'C#' },
+        { value: 'golang', label: 'Go' }
+      ]
+    }
+  ]
+]];
+
+
+const formSettings= formObjects.formSettings;
+const formParams = formObjects.formParams;
+
+console.log(JSON.stringify(formSchema,null,2));
+
+
+const form = new Formique(formSchema, formSettings, formParams);
+
+</script>
+
+
+<body>
+
+	<h1> Testing </h1>
+<div id="formique"></div>
+</body>
+</html>

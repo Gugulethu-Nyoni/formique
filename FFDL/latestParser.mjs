@@ -614,14 +614,12 @@ function peg$parse(input, options) {
     }
     s3 = peg$parse_();
     s4 = peg$parseformFields();
-    if (s4 !== peg$FAILED) {
-      s5 = peg$parse_();
-      peg$savedPos = s0;
-      s0 = peg$f0(s2, s4);
-    } else {
-      peg$currPos = s0;
-      s0 = peg$FAILED;
+    if (s4 === peg$FAILED) {
+      s4 = null;
     }
+    s5 = peg$parse_();
+    peg$savedPos = s0;
+    s0 = peg$f0(s2, s4);
 
     return s0;
   }
@@ -736,15 +734,18 @@ function peg$parse(input, options) {
   function peg$parsePropertyValue() {
     var s0;
 
-    s0 = peg$parseUnquotedString();
+    s0 = peg$parseCommaSeparatedValues();
     if (s0 === peg$FAILED) {
-      s0 = peg$parseStringLiteral();
+      s0 = peg$parseUnquotedString();
       if (s0 === peg$FAILED) {
-        s0 = peg$parseBooleanLiteral();
+        s0 = peg$parseStringLiteral();
         if (s0 === peg$FAILED) {
-          s0 = peg$parseNumberLiteral();
+          s0 = peg$parseBooleanLiteral();
           if (s0 === peg$FAILED) {
-            s0 = peg$parseIdentifier();
+            s0 = peg$parseNumberLiteral();
+            if (s0 === peg$FAILED) {
+              s0 = peg$parseIdentifier();
+            }
           }
         }
       }
@@ -2065,11 +2066,12 @@ export {
   peg$SyntaxError as SyntaxError,
   peg$parse as parse
 };
-*/
 
+*/
 
 export default {
   StartRules: ["start"],
   SyntaxError: peg$SyntaxError,
   parse: peg$parse
 };
+
