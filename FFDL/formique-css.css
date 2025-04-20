@@ -197,6 +197,10 @@
   box-shadow: 0 0 5px rgba(33, 87, 128, 0.5);
 }
 
+#rating-value {
+  color: var(--label-color);
+}
+
 textarea.form-input {
   resize: vertical;
   min-height: 120px;
