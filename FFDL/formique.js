@@ -68,7 +68,7 @@ class Formique extends FormBuilder {
     this.submitButtonClass = 'form-submit-btn';
     this.formContainerId = formSettings?.formContainerId || 'formique';
     this.formId = this.formParams?.id || this.generateFormId();
-    console.log(this.formId);
+    //console.log(this.formId);
     this.formAction = formParams?.action || 'https://httpbin.org/post';
     this.method = 'POST';    
     this.formMarkUp = '';

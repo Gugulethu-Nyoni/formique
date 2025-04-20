@@ -116,7 +116,9 @@ this.validationAttributes = [
 this.ignoreAttributes =[
 
 'oneof',
+'one',
 'manyof',
+'many',
 'radio',
 'select',
 'mutli-select',
@@ -151,10 +153,12 @@ this.selectInputTypes =[
 
 this.inputTypeMaps = {
   oneof: 'radio',
+  one: 'radio',
   radio: 'radio',
   select: 'select',
   singleSelect: 'select', // optional addition
   manyof: 'checkbox',
+  many: 'checkbox',
   checkbox: 'checkbox',
   'multi-select': 'select-multiple',
   multiselect: 'select-multiple',
@@ -298,6 +302,7 @@ this.regularInputTypes = [
     this.defaultType = 'text';
 
     this.traverse();
+    this.addSubmit();
 
 
 
@@ -926,6 +931,7 @@ handleAttributes(attributesAST) {
   });
 
 
+/*
 let dependents = [];
 
 const getDependents = (attributesAST) => {
@@ -947,7 +953,50 @@ dependents = getDependents(attributesAST);
 if(dependents.length > 0) {
   attributes['dependents'] = dependents; 
 }
-//console.log("WHY?",dependents);
+console.log("Deps",dependents);
+
+*/
+
+  /**
+ * Extracts dependents from field attributes AST
+ * @param {Array} attributesAST - The attributes array from a FormField node
+ * @returns {Array} - Array of dependent field names (empty array if none found)
+ */
+const getDependents = (attributesAST = []) => {
+  // 1. Find any attribute with key "dependents" (regardless of type)
+  const dependentsAttr = attributesAST.find(attr => attr.key === "dependents");
+  if (!dependentsAttr) return [];
+  
+  // 2. Handle OptionsAttribute case (multiple values in values array)
+  if (dependentsAttr.type === "OptionsAttribute" && dependentsAttr.values) {
+    return dependentsAttr.values
+      .map(option => option.value)
+      .filter(Boolean); // Remove any empty values
+  }
+  
+  // 3. Handle FieldAttribute case (direct value)
+  if (dependentsAttr.value !== undefined) {
+    // Handle both string and array values
+    if (Array.isArray(dependentsAttr.value)) {
+      return dependentsAttr.value.filter(Boolean);
+    }
+    // Split comma-separated strings if needed
+    const values = typeof dependentsAttr.value === 'string' 
+      ? dependentsAttr.value.split(',').map(v => v.trim())
+      : [dependentsAttr.value];
+    return values.filter(Boolean);
+  }
+  
+  // 4. Fallback for any other structure
+  return [];
+};
+
+// Usage remains the same:
+let dependents = getDependents(attributesAST);
+if (dependents.length > 0) {
+  attributes['dependents'] = dependents;
+}
+//console.log("Deps", dependents);
 
 // NOW LET'S HANDLE child dependencies
 
@@ -1023,6 +1072,13 @@ console.log(dependency);
    // console.log(`Processing StringLiteral: "${node.value}"`);
   }
 
+
+addSubmit () {
+
+this.formSchema.push(['submit','submit','Submit']); 
+
+
+}
 
   //class wrapper - nothing below
 

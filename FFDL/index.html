@@ -18,58 +18,21 @@ import FormiqueLowCodeParser from './LowCodeParser.js';
 
 const lowCode =`
 
-@form: user-registration
+@form: rsvp
 theme: light
-mode: email
-method: post
-sendTo: info@example.com, admin@example.com
-id: myForm
-class: block
 
+- diet*
+  select
+  options: Vegan, vegetarian, Carnivorous, Other
+  dependents: other
 
--name*
--email*
--subject*
--message*
+-other*:text
+  dependsOn: diet, Other
 
--password*
- placeholder: ***
-
-- dob!*:datetime-local:
-
-- rating:range
-min: 0
-max: 10
-
-- name*
-- surname*
-
-- ! email * 
-  id: user-email
-  required
-- telephone*
-
-- dob*:date
-
-- Diet*
-  manyof
-  options: Vegan, Pescitarian, Meat
-
-- country-state*
-  id: dsel
-  class: active  
-  options: Zambia, South Africa, Zimbabwe  
-  Zambia: Lusaka, Copperbelt  
-  South Africa: Gauteng, North West, Limpopo  
-  Zimbabwe: Midlands, Mashonaland West
-
-
--!*role
-  selectOne
+-!*role:select
   options: Attendee, Presenter
   default: Attendee
   dependents: topic, mode
-
 
 - topic*:text
   dependsOn: role, Presenter
@@ -78,6 +41,7 @@ max: 10
  oneof
  options: virtual,physical,hybrid
  dependsOn: role, Presenter
+
 	`; 
 
 
@@ -88,6 +52,7 @@ const formObjects = new FormiqueLowCodeParser(lowCodeToAst);
 //
 const formSchema = formObjects.formSchema;
 
+/*
 
   const formSchemaR = [[
   'dynamicSingleSelect',       // Input type (required)
@@ -128,12 +93,12 @@ const formSchema = formObjects.formSchema;
     }
   ]
 ]];
-
+*/
 
 const formSettings= formObjects.formSettings;
 const formParams = formObjects.formParams;
 
-//console.log(JSON.stringify(formSchema,null,2));
+console.log(JSON.stringify(formSchema,null,2));
 
 
 const form = new Formique(formSchema, formSettings, formParams);

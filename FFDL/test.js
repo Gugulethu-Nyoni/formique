@@ -26,49 +26,16 @@ class: block
 
 const lowCode =`
 
-@form: user-registration
-theme: dark
-mode: email
-sendTo: info@example.com, admin@example.com
-id: myForm
-class: block
-
-- ! email * 
-  id: user-email
-  required
-  class: input-field
-- name
-- telephone*
-
-- dob:date
-
-- Diet*
-  oneof
-  options: Vegan, Pescitarian, Meat
-
-- country-state*
-  id: dsel
-  class: active  
-  options: Zambia, South Africa, Zimbabwe  
-  Zambia: Lusaka, Copperbelt  
-  South Africa: Gauteng, North West, Limpopo  
-  Zimbabwe: Midlands, Mashonaland West
-
-
--!*role
+- diet*
   selectOne
-  options: Attendee, Presenter
-  default: Attendee
-  dependents: topic, mode
+  options: Vegan, vegetarian, Carnivorous, Other
+  dependents: other, address
+
+-other*:text
+  dependsOn: diet, Other
 
 
-- topic*:text
-  dependsOn: role, Presenter
 
-- mode*
- oneof
- options: virtual,physical,hybrid
- dependsOn: role, Presenter
 	`; 
 
 
@@ -77,5 +44,4 @@ const formSchema = ast.formSchema;
 const formSettings= ast.formSettings;
 const formParams = ast.formParams;
 
-
-//console.log(JSON.stringify(ast,null,2));
+console.log(JSON.stringify(ast,null,2));
