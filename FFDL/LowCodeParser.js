@@ -361,12 +361,34 @@ cleanFieldName(str) {
     .replace(/[^\w-]/g, '');
 }
 */
-
+/*
 cleanFieldName(str) {
 const anyFirstChunk = str.split(':')[0]; 
   return anyFirstChunk
     .trim()
     .replace(/[^\w-]/g, '');
+}
+
+*/
+
+cleanFieldName(str) {
+  const [rawName = '', rawType = ''] = str.split(':');
+
+  const input_name = rawName
+    .trim()
+    .replace(/[^\w-]/g, ''); // keeps letters, digits, underscores, hyphens
+
+  const input_type = rawType.trim(); // untouched for now
+
+  return { input_name, input_type };
+}
+
+
+
+cleanToInputType(str) {
+  return str
+    .toLowerCase()    
+    .replace(/[^a-z]/g, '');
 }
 
 toTitleCase(str) {
@@ -521,7 +543,7 @@ if (fieldName.includes('-')) {
 // second option - explicit field name directive 
   if (fieldName.includes(':')) {
     const chunks = fieldName.split(':');
-    console.log("LAPHA",chunks[1]);
+    //console.log("LAPHA",chunks[1]);
     return chunks[1]; // e.g., 'date' from 'dob:date'
   }
 
@@ -558,8 +580,8 @@ getOptionValuesByKey(attributes, targetKey) {
 
 buildDynamicSingleSelect(node, rawFieldName) {
 
-const fieldName = this.cleanFieldName(rawFieldName);
-
+const cleanString = this.cleanFieldName(rawFieldName);
+const fieldName = cleanString.input_name;
 
 let fieldSchema = []; 
 fieldSchema.push('dynamicSingleSelect',fieldName, this.toTitleCase(fieldName)); 
@@ -707,17 +729,30 @@ this.formSettings[key] = sendToEmails
   buildField(node) {
   //console.log(`Processing FormField: ${node.name} with ${node.attributes.length} attributes`);
   const rawFieldName = node.name;
-  const cleanFieldName = this.cleanFieldName(rawFieldName);
+  const cleanString = this.cleanFieldName(rawFieldName);
   //const fieldType = this.inferInputType(cleanFieldName);
   
+const cleanFieldName = cleanString.input_name;
+let fieldType; 
+
+if (cleanString.input_type) {
+fieldType = this.cleanToInputType(cleanString.input_type);
+}
+
+
+
   let attributeKeys;
-  let fieldType;  
+
+if (!fieldType) {
 
   if (node.attributes.length > 0) {
   attributeKeys = this.extractAttributeKeys(node.attributes);
   fieldType = this.inputTypeResolver(cleanFieldName, attributeKeys); 
 }  else {
 fieldType = this.inferInputType(cleanFieldName);
+
+}
+
 
 }
 

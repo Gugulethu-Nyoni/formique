@@ -26,6 +26,11 @@ sendTo: info@example.com, admin@example.com
 id: myForm
 class: block
 
+-password*
+ placeholder: ***
+
+- dob!*:datetime-local:
+
 - rating:range
 min: 0
 max: 10
@@ -122,7 +127,7 @@ const formSchema = formObjects.formSchema;
 const formSettings= formObjects.formSettings;
 const formParams = formObjects.formParams;
 
-console.log(JSON.stringify(formSchema,null,2));
+//console.log(JSON.stringify(formSchema,null,2));
 
 
 const form = new Formique(formSchema, formSettings, formParams);

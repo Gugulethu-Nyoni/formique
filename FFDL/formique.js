@@ -419,7 +419,7 @@ renderForm() {
     // Process each field synchronously
     const formHTML = this.formSchema.map(field => {
 
-        console.log(JSON.stringify(this.formSchema,null,2));
+        //console.log(JSON.stringify(this.formSchema,null,2));
 
         const [type, name, label, validate, attributes = {},options] = field;
         return this.renderField(type, name, label, validate, attributes, options);
@@ -430,7 +430,7 @@ renderForm() {
 
 renderField(type, name, label, validate, attributes, options) {
 
-  console.log("First call", JSON.stringify(options,null,2));
+  //console.log("First call", JSON.stringify(options,null,2));
 
     const fieldRenderMap = {
         'text': this.renderTextField,
@@ -503,7 +503,7 @@ hasFileInputs(form) {
 
 
 async handleEmailSubmission(formId) {
-  console.log(`Starting email submission for form ID: ${formId}`); // Debug log
+  //console.log(`Starting email submission for form ID: ${formId}`); // Debug log
   
   const form = document.getElementById(formId);
   if (!form) {
@@ -3164,7 +3164,7 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
 // Function to render the dynamic select field and update based on user selection
 renderDynamicSingleSelectField(type, name, label, validate, attributes, options) {
 
-  console.log(JSON.stringify(options,null,2));
+  //console.log(JSON.stringify(options,null,2));
   
 // Step 1: Transform the data into an array of objects
 const mainCategoryOptions = options.flat().map(item => {
