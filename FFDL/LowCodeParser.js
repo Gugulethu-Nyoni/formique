@@ -263,6 +263,7 @@ this.regularInputTypes = [
   amount: { type: 'number', priority: 9 },
   quantity: { type: 'number', priority: 9 },
   qty: { type: 'number', priority: 8 },
+  age: { type: 'number', priority: 8 },
   sum: { type: 'number', priority: 7 },
   value: { type: 'number', priority: 7 },
   percent: { type: 'number', priority: 8 },
@@ -295,7 +296,77 @@ this.regularInputTypes = [
       // Special cases
       color: { type: 'color', priority: 10 },
       search: { type: 'search', priority: 10 },
-      range: { type: 'range', priority: 10 }
+      range: { type: 'range', priority: 10 },
+
+      // File uploads
+  file: { type: 'file', priority: 10 },
+  upload: { type: 'file', priority: 9 },
+  document: { type: 'file', priority: 8 },
+  attachment: { type: 'file', priority: 8 },
+  resume: { type: 'file', priority: 7 },
+  cv: { type: 'file', priority: 7 },
+  portfolio: { type: 'file', priority: 7 },
+  
+  // Image-specific
+  image: { type: 'file', accept: 'image/*', priority: 10 },
+  photo: { type: 'file', accept: 'image/*', priority: 9 },
+  avatar: { type: 'file', accept: 'image/*', priority: 9 },
+  picture: { type: 'file', accept: 'image/*', priority: 8 },
+  logo: { type: 'file', accept: 'image/*', priority: 8 },
+  banner: { type: 'file', accept: 'image/*', priority: 7 },
+  thumbnail: { type: 'file', accept: 'image/*', priority: 7 },
+  
+  // Media files
+  video: { type: 'file', accept: 'video/*', priority: 9 },
+  audio: { type: 'file', accept: 'audio/*', priority: 9 },
+  recording: { type: 'file', accept: 'audio/*', priority: 7 },
+  
+  // Specific file types
+  pdf: { type: 'file', accept: '.pdf', priority: 8 },
+  spreadsheet: { type: 'file', accept: '.csv,.xls,.xlsx', priority: 7 },
+  excel: { type: 'file', accept: '.xls,.xlsx', priority: 8 },
+  word: { type: 'file', accept: '.doc,.docx', priority: 8 },
+  presentation: { type: 'file', accept: '.ppt,.pptx', priority: 7 },
+  
+  // Multiple files
+  files: { type: 'file', multiple: true, priority: 8 },
+  images: { type: 'file', accept: 'image/*', multiple: true, priority: 8 },
+  gallery: { type: 'file', accept: 'image/*', multiple: true, priority: 7 },
+
+
+gender: { type: 'radio', priority: 10 },
+  sex: { type: 'radio', priority: 9 },
+  title: { type: 'select', priority: 8 },
+  pronoun: { type: 'select', priority: 8 },
+  salutation: { type: 'select', priority: 7 },
+
+  // Boolean (Yes/No)
+  newsletter: { type: 'radio', priority: 7 },
+  agree: { type: 'radio', priority: 6 },
+  smoker: { type: 'radio', priority: 5 },
+  terms: { type: 'radio', priority: 6 },
+
+  // Categories
+  maritalstatus: { type: 'select', priority: 7 },
+  employment: { type: 'select', priority: 7 },
+  education: { type: 'select', priority: 6 },
+  status: { type: 'select', priority: 5 },
+
+  // Location
+  country: { type: 'select', priority: 9 },
+  language: { type: 'select', priority: 6 },
+  region: { type: 'select', priority: 5 },
+  state: { type: 'select', priority: 5 },
+
+  // Surveys/Ratings
+  rating: { type: 'radio', priority: 5 },
+  satisfaction: { type: 'radio', priority: 5 },
+  feedback: { type: 'radio', priority: 4 },
+
+
+  reset: { type: 'reset', priority: 10 },
+
+
     };
     
     // Default fallback

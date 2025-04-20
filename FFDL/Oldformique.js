@@ -148,17 +148,14 @@ generateFormId() {
 
 
 initDependencyGraph() {
-  console.log('[initDependencyGraph] Initializing dependency graph');
   this.dependencyGraph = {};
 
   this.formSchema.forEach((field) => {
     const [type, name, label, validate, attributes = {}] = field;
     const fieldId = attributes.id || name;
-    console.log(`[initDependencyGraph] Processing field: ${fieldId} (type: ${type})`);
 
     if (attributes.dependents) {
-      console.log(`[initDependencyGraph] Field ${fieldId} has dependents:`, attributes.dependents);
-      
+      // Initialize dependency array for the parent field
       this.dependencyGraph[fieldId] = attributes.dependents.map((dependentName) => {
         const dependentField = this.formSchema.find(
           ([, depName]) => depName === dependentName
@@ -166,222 +163,118 @@ initDependencyGraph() {
 
         if (dependentField) {
           const dependentAttributes = dependentField[4] || {};
-          const dependentFieldId = dependentAttributes.id || dependentName;
+          const dependentFieldId = dependentAttributes.id || dependentName; // Get dependent field ID
+
           return {
             dependent: dependentFieldId,
             condition: dependentAttributes.condition || null,
-            fieldType: dependentField[0]
           };
         } else {
-          console.warn(`[initDependencyGraph] Dependent field "${dependentName}" not found in schema.`);
-          return null;
+          console.warn(`Dependent field "${dependentName}" not found in schema.`);
         }
-      }).filter(Boolean);
-
-      this.dependencyGraph[fieldId].push({ 
-        state: null,
-        fieldType: type,
-        name: name // Store the name for checkbox/radio group handling
       });
 
-      this.attachInputChangeListener(fieldId, type, name);
+      // Add state tracking for the parent field
+      this.dependencyGraph[fieldId].push({ state: null });
+
+      // console.log("Graph", this.dependencyGraph[fieldId]);
+
+      // Attach the input change event listener to the parent field
+      this.attachInputChangeListener(fieldId);
     }
 
     // Hide dependent fields initially
     if (attributes.dependents) {
+
       attributes.dependents.forEach((dependentName) => {
         const dependentField = this.formSchema.find(
           ([, depName]) => depName === dependentName
         );
-        
-        if (dependentField) {
-          const dependentAttributes = dependentField[4] || {};
-          const dependentFieldId = dependentAttributes.id || dependentName;
-          const inputBlock = document.getElementById(`${dependentFieldId}-block`);
+        const dependentAttributes = dependentField ? dependentField[4] || {} : {};
+        const dependentFieldId = dependentAttributes.id || dependentName;
 
-          if (inputBlock) {
-            inputBlock.style.display = 'none';
-            
-            const inputs = inputBlock.querySelectorAll('input, select, textarea');
-            inputs.forEach((input) => {
-              input.setAttribute('data-original-required', input.required);
-              input.required = false;
-              
-              if (input.type === 'checkbox' || input.type === 'radio') {
-                input.checked = false;
-              } else {
-                input.value = '';
-              }
-            });
-          }
+        //alert(dependentFieldId);
+
+        const inputBlock = document.querySelector(`#${dependentFieldId}-block`);
+        //alert(inputBlock);
+        
+
+        if (inputBlock) {
+         // alert(dependentName);
+          inputBlock.style.display = 'none'; // Hide dependent field by default
         }
       });
     }
   });
 
-  // Check initial values
-  this.formSchema.forEach((field) => {
-    const [type, name, label, validate, attributes = {}] = field;
-    const fieldId = attributes.id || name;
-    
-    if (attributes.dependents) {
-      const initialValue = this.getFieldValue(fieldId, type, name);
-      if (initialValue !== null && initialValue !== undefined) {
-        this.handleParentFieldChange(fieldId, initialValue);
-      }
-    }
-  });
+ // console.log("Dependency Graph:", this.dependencyGraph);
 }
 
-attachInputChangeListener(fieldId, fieldType, fieldName) {
-  console.log(`[attachInputChangeListener] Setting up listener for ${fieldId} (type: ${fieldType})`);
-  
-  if (fieldType === 'checkbox' || fieldType === 'radio') {
-    // For checkbox/radio groups, listen to changes on the wrapper block
-    const wrapper = document.getElementById(`${fieldId}-block`);
-    if (!wrapper) {
-      console.warn(`[attachInputChangeListener] No wrapper found for ${fieldId}`);
-      return;
-    }
 
-    // Listen to changes on all inputs within the wrapper
-    const inputs = wrapper.querySelectorAll('input[type="checkbox"], input[type="radio"]');
-    inputs.forEach(input => {
-      input.addEventListener('change', () => {
-        const value = this.getFieldValue(fieldId, fieldType, fieldName);
-        this.handleParentFieldChange(fieldId, value);
-      });
+// Attach Event Listeners
+attachInputChangeListener(parentField) {
+  const fieldElement = document.getElementById(parentField);
+  //alert(parentField);
+
+  if (fieldElement) {
+    fieldElement.addEventListener('input', (event) => {
+      const value = event.target.value;
+      this.handleParentFieldChange(parentField, value);
     });
-
-    // Trigger initial state
-    const initialValue = this.getFieldValue(fieldId, fieldType, fieldName);
-    this.handleParentFieldChange(fieldId, initialValue);
-  } else {
-    // Standard field handling
-    const fieldElement = document.getElementById(fieldId);
-    if (fieldElement) {
-      const eventType = fieldElement.type === 'select-one' ? 'change' : 'input';
-      fieldElement.addEventListener(eventType, () => {
-        const value = this.getFieldValue(fieldId);
-        this.handleParentFieldChange(fieldId, value);
-      });
-      
-      const initialValue = this.getFieldValue(fieldId);
-      this.handleParentFieldChange(fieldId, initialValue);
-    }
-  }
-}
-
-getFieldValue(fieldId, fieldType = null, fieldName = null) {
-  if (fieldType === 'checkbox' || fieldType === 'radio') {
-    // Handle checkbox/radio groups
-    const wrapper = document.getElementById(`${fieldId}-block`);
-    if (!wrapper) return null;
-
-    const inputs = wrapper.querySelectorAll(`input[name="${fieldName}"]`);
-    if (inputs.length === 0) return null;
-
-    if (fieldType === 'checkbox') {
-      // For checkboxes, return array of checked values
-      return Array.from(inputs)
-        .filter(input => input.checked)
-        .map(input => input.value);
-    } else {
-      // For radios, return the selected value
-      const selected = Array.from(inputs).find(input => input.checked);
-      return selected ? selected.value : null;
-    }
-  }
-
-  // Standard field handling
-  const fieldElement = document.getElementById(fieldId);
-  if (!fieldElement) return null;
-  
-  if (fieldElement.type === 'checkbox') {
-    return fieldElement.checked;
-  } else if (fieldElement.type === 'radio') {
-    const radioGroup = document.querySelectorAll(`input[name="${fieldElement.name}"]`);
-    for (const radio of radioGroup) {
-      if (radio.checked) return radio.value;
-    }
-    return null;
-  } else if (fieldElement.tagName === 'SELECT' && fieldElement.multiple) {
-    return Array.from(fieldElement.selectedOptions).map(opt => opt.value);
-  } else {
-    return fieldElement.value;
   }
 }
 
 
 handleParentFieldChange(parentFieldId, value) {
-  console.log(`[handleParentFieldChange] Parent ${parentFieldId} changed to:`, value);
   const dependencies = this.dependencyGraph[parentFieldId];
-  console.log(`[handleParentFieldChange] Dependencies for ${parentFieldId}:`, dependencies);
 
   if (dependencies) {
-    dependencies.forEach((dep) => {
+    // Update the state of the parent field
+    this.dependencyGraph[parentFieldId].forEach((dep) => {
       if (dep.state !== undefined) {
-        console.log(`[handleParentFieldChange] Updating state for ${parentFieldId} to:`, value);
-        dep.state = value;
+        dep.state = value; // Set state to the selected value
       }
     });
 
+    // Log the updated dependency graph for the parent field
+   // console.log(`Updated Dependency Graph for ${parentFieldId}:`, this.dependencyGraph[parentFieldId]);
+
+    // Notify all observers (dependent fields)
     dependencies.forEach((dependency) => {
       if (dependency.dependent) {
-        const observerId = dependency.dependent + "-block";
-        console.log(`[handleParentFieldChange] Processing dependent ${dependency.dependent} (observerId: ${observerId})`);
-        
-        const inputBlock = document.getElementById(observerId);
-        console.log(`[handleParentFieldChange] Found block for ${observerId}?`, !!inputBlock);
+        const observerId = dependency.dependent + "-block"; // Ensure we're targeting the wrapper
+        const inputBlock = document.getElementById(observerId); // Find the wrapper element
 
         if (inputBlock) {
-          let conditionMet = false;
+          // Check if the condition for the observer is satisfied
+          const conditionMet = typeof dependency.condition === 'function'
+            ? dependency.condition(value)
+            : value === dependency.condition;
 
-          if (typeof dependency.condition === 'function') {
-            conditionMet = dependency.condition(value);
-            console.log(`[handleParentFieldChange] Function condition result: ${conditionMet}`);
-          } else if (Array.isArray(value)) {
-            conditionMet = value.includes(dependency.condition);
-            console.log(`[handleParentFieldChange] Array condition check (${value} includes ${dependency.condition}): ${conditionMet}`);
-          } else if (typeof value === 'boolean') {
-            conditionMet = value === dependency.condition;
-            console.log(`[handleParentFieldChange] Boolean condition check (${value} === ${dependency.condition}): ${conditionMet}`);
-          } else {
-            conditionMet = value == dependency.condition;
-            console.log(`[handleParentFieldChange] Equality check (${value} == ${dependency.condition}): ${conditionMet}`);
-          }
+          // Debug the condition evaluation
+         // console.log(`Checking condition for ${observerId}: `, value, "==", dependency.condition, "Result:", conditionMet);
 
-          console.log(`[handleParentFieldChange] Setting ${observerId} display to ${conditionMet ? 'block' : 'none'}`);
+          // Toggle visibility based on the condition
           inputBlock.style.display = conditionMet ? 'block' : 'none';
 
+          // Adjust the 'required' attribute for all inputs within the block based on visibility
           const inputs = inputBlock.querySelectorAll('input, select, textarea');
-          console.log(`[handleParentFieldChange] Found ${inputs.length} inputs in block`);
-          
           inputs.forEach((input) => {
-            console.log(`[handleParentFieldChange] Processing input ${input.id || input.name} (type: ${input.type})`);
-            
             if (conditionMet) {
-              const originalRequired = input.getAttribute('data-original-required');
-              console.log(`[handleParentFieldChange] Restoring required to original: ${originalRequired}`);
-              input.required = originalRequired === 'true';
+              input.required = input.getAttribute('data-original-required') === 'true'; // Restore original required state
             } else {
-              console.log(`[handleParentFieldChange] Saving required state: ${input.required}`);
-              input.setAttribute('data-original-required', input.required);
-              input.required = false;
-              
-              if (input.type === 'checkbox' || input.type === 'radio') {
-                console.log(`[handleParentFieldChange] Resetting ${input.type}`);
-                input.checked = false;
-              } else {
-                input.value = '';
-              }
+              input.setAttribute('data-original-required', input.required); // Save original required state
+              input.required = false; // Remove required attribute when hiding
             }
           });
+        } else {
+          console.warn(`Wrapper block with ID ${observerId} not found.`);
         }
       }
     });
   }
 }
+
 // Register observers for each dependent field
 registerObservers() {
   this.formSchema.forEach((field) => {

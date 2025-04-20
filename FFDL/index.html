@@ -18,29 +18,24 @@ import FormiqueLowCodeParser from './LowCodeParser.js';
 
 const lowCode =`
 
-@form: rsvp
+@form: midyear
 theme: light
 
-- diet*
-  select
-  options: Vegan, vegetarian, Carnivorous, Other
-  dependents: other
 
--other*:text
-  dependsOn: diet, Other
+- gender*
+ options: Male, Female, Other
+ dependents: accomodation
 
--!*role:select
-  options: Attendee, Presenter
-  default: Attendee
-  dependents: topic, mode
+- accomodation*:select
+options: hotel, BnB, Res
+dependsOn: gender, female
+dependents: location
 
-- topic*:text
-  dependsOn: role, Presenter
+- location!*:select
+options: CDB, Township, Other Town
+dependsOn: accomodation, BnB
 
-- mode*
- oneof
- options: virtual,physical,hybrid
- dependsOn: role, Presenter
+-reset
 
 	`; 
 
@@ -98,7 +93,7 @@ const formSchema = formObjects.formSchema;
 const formSettings= formObjects.formSettings;
 const formParams = formObjects.formParams;
 
-console.log(JSON.stringify(formSchema,null,2));
+//console.log(JSON.stringify(formSchema,null,2));
 
 
 const form = new Formique(formSchema, formSettings, formParams);
