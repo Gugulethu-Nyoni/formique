@@ -386,10 +386,18 @@ cleanFieldName(str) {
 
 
 cleanToInputType(str) {
-  return str
-    .toLowerCase()    
-    .replace(/[^a-z]/g, '');
+  const cleaned = str.trim().toLowerCase();
+
+  if (cleaned.includes('datetime-local')) {
+    // Keep only letters and hyphen
+    return cleaned.replace(/[^a-z-]/g, '');
+  }
+
+  // Otherwise, keep only letters
+  return cleaned.replace(/[^a-z]/g, '');
 }
+
+
 
 toTitleCase(str) {
   return str
