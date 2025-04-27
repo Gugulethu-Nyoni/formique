@@ -965,41 +965,50 @@ window.handleRemoveOption = (fieldId, index) => {
 
 
  $effect(() => {
-
   const formattedSchema = formSchema.value.map(field => {
     const definition = fieldDefinitions[field.type];
     const validations = {};
     const attributes = {};
 
-    // Process ALL attributes consistently
+    // Process validations and attributes separately
     Object.entries(field.attributes).forEach(([key, config]) => {
       if (!config.active) return;
 
-      if (key === 'dependents') {
-        attributes[key] = config.value
-          .split(',')
-          .map(s => s.trim())
-          .filter(Boolean);
-      } else {
-        attributes[key] = config.value;
+      // Handle validations (required, minLength, etc.)
+      if (globalValidations.includes(key) || (definition.validations?.includes(key))) {
+        validations[key] = config.value;
+      } 
+      // Handle attributes (id, class, dependsOn, etc.)
+      else {
+        if (key === 'dependents') {
+          attributes[key] = config.value
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+        } else {
+          attributes[key] = config.value;
+        }
       }
     });
 
-    // Build the schema array
+    // Build the schema array with proper structure
     const fieldSchema = [
       field.type,
       field.name,
       field.label
     ];
 
+    // Add validations if any exist
     if (Object.keys(validations).length > 0) {
       fieldSchema.push(validations);
     }
 
-    if (Object.keys(attributes).length > 0) {
+    // Add attributes if any exist (or if we need empty object for structure)
+    if (Object.keys(attributes).length > 0 || field.choices?.length) {
       fieldSchema.push(attributes);
     }
 
+    // Add options if field has choices
     if (field.choices?.length) {
       const options = field.choices
         .filter(opt => opt.value.trim())
@@ -1018,28 +1027,25 @@ window.handleRemoveOption = (fieldId, index) => {
   });
 
   // JSON stringify replacer to handle functions
- const replacer = (key, value) => {
-  if (value?.__isFunction) {
-    return value.value; // Return raw function string (no quotes)
-  }
-  if (typeof value === 'function') {
-    return value.toString();
-  }
-  return value;
-};
-
+  const replacer = (key, value) => {
+    if (value?.__isFunction) {
+      return value.value; // Return raw function string (no quotes)
+    }
+    if (typeof value === 'function') {
+      return value.toString();
+    }
+    return value;
+  };
 
   // Update the output
- const output = JSON.stringify(formattedSchema, replacer, 2)
-  .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
-  .replace(/"__isFunction": true,/g, '') // Remove the function marker
-  .replace(/"value": ((?:\\"|[^"])*)/g, '$1') // Unwrap raw function values
-  .replace(/"/g, "'"); // Replace remaining quotes with single quotessingle quotes for other valuesalues
+  const output = JSON.stringify(formattedSchema, replacer, 2)
+    .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
+    .replace(/"__isFunction": true,/g, '') // Remove the function marker
+    .replace(/"value": ((?:\\"|[^"])*)/g, '$1') // Unwrap raw function values
+    .replace(/"/g, "'"); // Replace remaining quotes with single quotes
 
   document.getElementById('schema-output').value = output;
 });
-
-
 
 });
 
