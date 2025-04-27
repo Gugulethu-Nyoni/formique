@@ -182,7 +182,7 @@ const getConditionalityHTML = (field) => {
         </div>
         
         <div class="form-actions">
-          <button type="reset" class="reset-btn">Reset Logic</button>
+          <button type="reset" class="reset-btn"> Reset Conditionality Logic</button>
         </div>
       </form>
     </div>
@@ -816,7 +816,8 @@ window.handleOptionUpdate = (fieldId, index, property, value) => {
   formSchema.value = formSchema.value.map(field => {
     if (field.id === fieldId && field.choices && field.choices[index]) {
       const updatedChoices = [...field.choices];
-      
+      //const lowerCaseValue = value.toLowerCase();
+      //alert(lowerCaseValue);
       // Auto-generate label when value changes and label is empty
       if (property === 'value') {
         const currentOption = updatedChoices[index];
@@ -1042,7 +1043,7 @@ window.handleRemoveOption = (fieldId, index) => {
       const options = field.choices
         .filter(opt => opt.value.trim())
         .map(opt => ({
-          value: opt.value.trim(),
+          value: opt.value.trim().toLowerCase(),
           label: opt.label.trim() || formatLabelFromValue(opt.value),
           ...(opt.selected && { selected: true })
         }));
