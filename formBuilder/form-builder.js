@@ -184,30 +184,39 @@ const getConditionalityHTML = (field) => {
 
 
 
-// Add this new handler to the window object
 window.handleDependentFieldsChange = (fieldId, selectElement) => {
-  console.log('handleDependentFieldsChange called', {fieldId, selectedOptions: Array.from(selectElement.selectedOptions).map(o => o.value)}); // DEBUG
-  
-  
+  console.log('handleDependentFieldsChange called', {
+    fieldId,
+    selectedOptions: Array.from(selectElement.selectedOptions).map(o => o.value)
+  });
+
   const selectedOptions = Array.from(selectElement.selectedOptions)
     .map(option => option.value);
-  
+
   formSchema.value = formSchema.value.map(field => {
     if (field.id === fieldId) {
+      const updatedDependents = {
+        ...field.attributes.dependents,
+        value: selectedOptions.join(','),
+        active: selectedOptions.length > 0
+      };
+
+      console.log(`Updated dependents for field ${fieldId}:`, updatedDependents);
+
       return {
         ...field,
         attributes: {
           ...field.attributes,
-          dependents: {
-            ...field.attributes.dependents,
-            value: selectedOptions.join(',')
-          }
+          dependents: updatedDependents
         }
       };
     }
+
+    console.log(`Unchanged dependents for field ${field.id}:`, field.attributes.dependents);
     return field;
   });
 };
+
 
   // Helper functions for rendering
   const getFieldPreviewHTML = (field) => {
@@ -974,6 +983,8 @@ window.handleRemoveOption = (fieldId, index) => {
     // Process ALL attributes and separate into validations/attributes
     Object.entries(field.attributes).forEach(([key, config]) => {
       if (!config.active) return;
+
+      alert(key);
 
       if (key === 'dependents') {
         attributes[key] = config.value
