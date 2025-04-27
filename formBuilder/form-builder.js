@@ -685,10 +685,13 @@ window.handleUpdateValue = (fieldId, key, value) => {
       //alert(key);
 
       if (key === 'condition') {
-        updatedAttributes[key] = {
-          value: (v) => v === value,
-          active: true
-        };
+  // Create a function string with the actual value embedded
+  const functionString = `(v) => v === '${value}'`;
+  updatedAttributes[key] = {
+    value: functionString,  // Store as string
+    active: true
+  };
+
       } else {
         updatedAttributes[key] = {
           ...field.attributes[key],
@@ -1015,7 +1018,11 @@ window.handleRemoveOption = (fieldId, index) => {
   });
 
   // JSON stringify replacer to handle functions
-  const replacer = (key, value) => {
+ const replacer = (key, value) => {
+  // If the value is a function string we created
+  if (typeof value === 'string' && value.startsWith('(v) =>')) {
+    return value; // Return as-is without additional quotes
+  }
   if (typeof value === 'function') {
     return value.toString();
   }
@@ -1027,7 +1034,7 @@ window.handleRemoveOption = (fieldId, index) => {
  const output = JSON.stringify(formattedSchema, replacer, 2)
   .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
   .replace(/"/g, "'");          // Use single quotes for values
-  
+
   document.getElementById('schema-output').value = output;
 });
 
