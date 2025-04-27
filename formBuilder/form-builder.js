@@ -682,6 +682,8 @@ window.handleUpdateValue = (fieldId, key, value) => {
     if (field.id === fieldId) {
       const updatedAttributes = { ...field.attributes };
 
+      //alert(key);
+
       if (key === 'condition') {
         updatedAttributes[key] = {
           value: (v) => v === `${value}`,
@@ -1016,12 +1018,14 @@ window.handleRemoveOption = (fieldId, index) => {
 
   
   // Update the output
-  const output = JSON.stringify(formattedSchema, null, 2)
-    .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
-    .replace(/"/g, "'");          // Use single quotes for values
-  
-  document.getElementById('schema-output').value = output;
-});
+  const output = JSON.stringify(formattedSchema, function(key, value) {
+  if (typeof value === 'function') {
+    return value.toString();
+  }
+  return value;
+}, 2)
+  .replace(/"(\w+)":/g, '$1:')
+  .replace(/"/g, "'");
 
 
 
