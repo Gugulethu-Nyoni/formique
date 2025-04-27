@@ -686,7 +686,7 @@ window.handleUpdateValue = (fieldId, key, value) => {
 
       if (key === 'condition') {
         updatedAttributes[key] = {
-          value: (v) => v === `${value}`,
+          value: (v) => v === value,
           active: true
         };
       } else {
@@ -961,71 +961,74 @@ window.handleRemoveOption = (fieldId, index) => {
 
 
 
-  $effect(() => {
+ $effect(() => {
 
   const formattedSchema = formSchema.value.map(field => {
-  const definition = fieldDefinitions[field.type];
-  const validations = {};
-  const attributes = {};
+    const definition = fieldDefinitions[field.type];
+    const validations = {};
+    const attributes = {};
 
-  // Process ALL attributes consistently
-  Object.entries(field.attributes).forEach(([key, config]) => {
-    if (!config.active) return;
+    // Process ALL attributes consistently
+    Object.entries(field.attributes).forEach(([key, config]) => {
+      if (!config.active) return;
 
-    //alert(key);
+      if (key === 'dependents') {
+        attributes[key] = config.value
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
+      } else {
+        attributes[key] = config.value;
+      }
+    });
 
-    if (key === 'dependents') {
-      attributes[key] = config.value
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
-    } else {
-      attributes[key] = config.value;
+    // Build the schema array
+    const fieldSchema = [
+      field.type,
+      field.name,
+      field.label
+    ];
+
+    if (Object.keys(validations).length > 0) {
+      fieldSchema.push(validations);
     }
+
+    if (Object.keys(attributes).length > 0) {
+      fieldSchema.push(attributes);
+    }
+
+    if (field.choices?.length) {
+      const options = field.choices
+        .filter(opt => opt.value.trim())
+        .map(opt => ({
+          value: opt.value.trim(),
+          label: opt.label.trim() || formatLabelFromValue(opt.value),
+          ...(opt.selected && { selected: true })
+        }));
+
+      if (options.length) {
+        fieldSchema.push(options);
+      }
+    }
+
+    return fieldSchema;
   });
 
-  // Build the schema array
-  const fieldSchema = [
-    field.type,
-    field.name,
-    field.label
-  ];
-
-  if (Object.keys(validations).length > 0) {
-    fieldSchema.push(validations);
-  }
-
-  if (Object.keys(attributes).length > 0) {
-    fieldSchema.push(attributes);
-  }
-
-  if (field.choices?.length) {
-    const options = field.choices
-      .filter(opt => opt.value.trim())
-      .map(opt => ({
-        value: opt.value.trim(),
-        label: opt.label.trim() || formatLabelFromValue(opt.value),
-        ...(opt.selected && { selected: true })
-      }));
-
-    if (options.length) {
-      fieldSchema.push(options);
+  // JSON stringify replacer to handle functions
+  const replacer = (key, value) => {
+    if (typeof value === 'function') {
+      return value.toString();
     }
-  }
+    return value;
+  };
 
-  return fieldSchema;
-});
-
-  
   // Update the output
-  const output = JSON.stringify(formattedSchema, function(key, value) {
-  if (typeof value === 'function') {
-    return value.toString();
-  }
-  return value;
-}, 2)
-  .replace(/"(\w+)":/g, '$1:')
-  .replace(/"/g, "'");
+  const output = JSON.stringify(formattedSchema, replacer, 2)
+    .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
+    .replace(/"/g, "'");          // Use single quotes for values
+
+  document.getElementById('schema-output').value = output;
+});
 
 
 
