@@ -684,13 +684,12 @@ window.handleUpdateValue = (fieldId, key, value) => {
 
       //alert(key);
 
-      if (key === 'condition') {
-  // Create a function string with the actual value embedded
-  const functionString = `(v) => v === '${value}'`;
+     if (key === 'condition') {
   updatedAttributes[key] = {
-    value: functionString,  // Store as string
+    value: `(v) => v === '${value}'`,  // Store as raw string
     active: true
   };
+
 
       } else {
         updatedAttributes[key] = {
@@ -1019,9 +1018,9 @@ window.handleRemoveOption = (fieldId, index) => {
 
   // JSON stringify replacer to handle functions
  const replacer = (key, value) => {
-  // If the value is a function string we created
-  if (typeof value === 'string' && value.startsWith('(v) =>')) {
-    return value; // Return as-is without additional quotes
+  // Handle condition functions (output raw, without quotes)
+  if (key === 'condition' && typeof value === 'string' && value.startsWith('(v) =>')) {
+    return { __raw_function: value }; // Special marker
   }
   if (typeof value === 'function') {
     return value.toString();
@@ -1033,7 +1032,8 @@ window.handleRemoveOption = (fieldId, index) => {
   // Update the output
  const output = JSON.stringify(formattedSchema, replacer, 2)
   .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
-  .replace(/"/g, "'");          // Use single quotes for values
+  .replace(/"__raw_function":\s*"((?:\\"|[^"])*)"/g, '$1') // Unwrap raw functions
+  .replace(/"/g, "'");          // Use single quotes for other valuesalues
 
   document.getElementById('schema-output').value = output;
 });
