@@ -524,7 +524,6 @@ const getAttributesHTML = (field, definition) => {
   const definition = fieldDefinitions[field.type];
 
 
-  // Prepare options HTML if field has options
   const optionsHTML = field.choices ? `
   <div class="accordion">
     <div class="accordion-header">
@@ -548,12 +547,12 @@ const getAttributesHTML = (field, definition) => {
                    oninput="handleOptionUpdate('${field.id}', ${index}, 'label', this.value)"
                    onclick="event.stopPropagation()">
             <label class="option-selected" onclick="event.stopPropagation()">
-              <input type="${field.type === 'radio' ? 'radio' : 'checkbox'}" 
+              <input type="${['radio', 'singleSelect'].includes(field.type) ? 'radio' : 'checkbox'}" 
                      name="${field.id}-selected"
                      ${option.selected ? 'checked' : ''}
                      onchange="handleOptionUpdate('${field.id}', ${index}, 'selected', this.checked)"
                      onclick="event.stopPropagation()">
-              Selected
+              ${['radio', 'singleSelect'].includes(field.type) ? 'Default' : 'Selected'}
             </label>
             <button class="remove-option" 
                     onclick="handleRemoveOption('${field.id}', ${index}); event.stopPropagation()">×</button>
@@ -561,7 +560,7 @@ const getAttributesHTML = (field, definition) => {
         `).join('')}
       </div>
       <button class="add-option" 
-        onclick="handleAddOption('${field.id}', event)">+ Add Option</button>
+              onclick="handleAddOption('${field.id}', event)">+ Add Option</button>
     </div>
   </div>
 ` : '';
@@ -811,53 +810,69 @@ window.handleAddOption = (fieldId, e) => {
 
 
 
-// Update handleOptionUpdate to handle selected state
 window.handleOptionUpdate = (fieldId, index, property, value) => {
   formSchema.value = formSchema.value.map(field => {
     if (field.id === fieldId && field.choices && field.choices[index]) {
       const updatedChoices = [...field.choices];
-      //const lowerCaseValue = value.toLowerCase();
-      //alert(lowerCaseValue);
-      // Auto-generate label when value changes and label is empty
+      const currentOption = updatedChoices[index];
+      
+      // Handle value updates
       if (property === 'value') {
-        const currentOption = updatedChoices[index];
-        if (!currentOption.label || currentOption.label === currentOption.value) {
-          const generatedLabel = value 
-            ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
-            : '';
+        const lowerValue = value; //.toLowerCase(); // Ensure lowercase value
+        const shouldUpdateLabel = !currentOption.label || currentOption.label === currentOption.value;
+        
+        updatedChoices[index] = {
+          ...currentOption,
+          value: lowerValue,
+          ...(shouldUpdateLabel && {
+            label: formatLabelFromValue(lowerValue) // Generate proper label
+          })
+        };
+        
+        return { ...field, choices: updatedChoices };
+      }
+      
+      // Handle selection updates
+      if (property === 'selected') {
+        // For radio/singleSelect fields - exclusive selection
+        if (value && ['radio', 'singleSelect'].includes(field.type)) {
+          updatedChoices.forEach((opt, i) => {
+            opt.selected = (i === index); // Only true for current selection
+          });
+        } 
+        // For checkbox/multiSelect fields - multiple selection
+        else {
           updatedChoices[index] = {
             ...currentOption,
-            value: value,
-            label: generatedLabel
-          };
-          return {
-            ...field,
-            choices: updatedChoices
+            selected: value
           };
         }
+        
+        return { ...field, choices: updatedChoices };
       }
       
-      // For radio buttons, only one can be selected
-      if (property === 'selected' && value === true && field.type === 'radio') {
-        updatedChoices.forEach((opt, i) => {
-          if (i !== index) opt.selected = false;
-        });
+      // Handle label updates (direct edits)
+      if (property === 'label') {
+        updatedChoices[index] = {
+          ...currentOption,
+          label: value
+        };
+        
+        return { ...field, choices: updatedChoices };
       }
-      
-      updatedChoices[index] = {
-        ...updatedChoices[index],
-        [property]: property === 'selected' ? value : value
-      };
-      
-      return {
-        ...field,
-        choices: updatedChoices
-      };
     }
     return field;
   });
 };
 
+// Helper function (should be defined elsewhere in your code)
+function formatLabelFromValue(value) {
+  if (!value) return '';
+  return value
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
 // Handle removing options
 window.handleRemoveOption = (fieldId, index) => {
   formSchema.value = formSchema.value.map(field => {
