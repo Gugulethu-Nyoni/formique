@@ -166,7 +166,7 @@ const getConditionalityHTML = (field) => {
                  value="${field.attributes.condition?.value || ''}"
                  placeholder="Some Value Expected from the Selected Field"
                  oninput="handleUpdateValue('${field.id}', 'condition', this.value)">
-          <small>JavaScript condition that must be true to show this field</small>
+          <small>Enter Some Value Expected from the Selected Field</small>
         </div>
         
         <div class="form-row">
