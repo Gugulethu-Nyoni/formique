@@ -106,13 +106,15 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  const newField = {
+   const newField = {
     id: fieldId,
-    type: type,
+    type,
     name: `${type}-${Date.now()}`,
     label: definition.label,
+    // Add reactive tracking for the name
+    get reactiveName() { return this.name; },
+    get reactiveLabel() { return this.label; },
     attributes: defaultAttributes,
-    //options: {},
     choices: definition.hasOptions ? [{ value: '', label: '' }] : undefined
   };
   
@@ -122,74 +124,104 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 
-
-const getConditionalityHTML = (field) => {
-  // Get all other fields in the form (excluding current field)
-  const otherFields = formSchema.value.filter(f => f.id !== field.id);
-  
-  // Generate options for dependsOn dropdown
-  const dependsOnOptions = otherFields.map(f => 
-    `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
-      ${f.label}
-    </option>`
-  ).join('');
-  
-  // Generate options for dependents multi-select
-  const dependentsOptions = otherFields.map(f => {
-    const selected = field.attributes.dependents?.value 
-      ? field.attributes.dependents.value.split(',').includes(f.name)
-      : false;
-    return `<option value="${f.name}" ${selected ? 'selected' : ''}>
-      ${f.label} 
-    </option>`;
-  }).join('');
-  
-  return `
-  <div class="accordion">
-    <div class="accordion-header">
-      <span>Conditional Logic</span>
-      <span class="accordion-icon">▼</span>
-    </div>
-    <div class="accordion-content hidden">
-      <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
-        <div class="form-row">
-          <label>This field depends on:</label>
-          <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)">
-            <option value="">-- None --</option>
-            ${dependsOnOptions}
-          </select>
-          <small>Select a field that controls this field's visibility</small>
-        </div>
-        
-        <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}">
-          <label>Condition:</label>
-          <input type="text" 
-                 name="condition"
-                 value="${field.attributes.condition?.value || ''}"
-                 placeholder="Some Value Expected from the Selected Field"
-                 oninput="handleUpdateValue('${field.id}', 'condition', this.value)">
-          <small>Enter Some Value Expected from the Selected Field</small>
-        </div>
-        
-        <div class="form-row">
-          <label>Fields that depend on this one:</label>
-          <select multiple 
-                 name="dependents"
-                 onchange="handleDependentFieldsChange('${field.id}', this)">
-            ${dependentsOptions}
-          </select>
-          <small>Hold Ctrl/Cmd to select multiple fields</small>
-        </div>
-        
-        <div class="form-actions">
-          <button type="reset" class="reset-btn"> Reset Conditionality Logic</button>
-        </div>
-      </form>
-    </div>
-  </div>
-`;
+const getReactiveFieldOptions = (currentFieldId) => {
+  return $effect(() => {
+    return formSchema.value
+      .filter(field => field.id !== currentFieldId)
+      .map(field => ({
+        value: field.name,
+        label: field.label,
+        id: field.id
+      }));
+  });
 };
 
+
+
+const getConditionalityHTML = (field) => {
+  // Make the function reactive to formSchema changes
+  return $effect(() => {
+    // Get current state of other fields (reactively)
+    const otherFields = formSchema.value.filter(f => f.id !== field.id);
+    
+    // Generate reactive options
+    const dependsOnOptions = otherFields.map(f => 
+      `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
+        ${f.label}
+      </option>`
+    ).join('');
+    
+    const dependentsOptions = otherFields.map(f => {
+      const selected = field.attributes.dependents?.value 
+        ? field.attributes.dependents.value.split(',').includes(f.name)
+        : false;
+      return `<option value="${f.name}" ${selected ? 'selected' : ''}>
+        ${f.label}
+      </option>`;
+    }).join('');
+
+    return `
+    <div class="accordion">
+      <div class="accordion-header">
+        <span>Conditional Logic</span>
+        <span class="accordion-icon">▼</span>
+      </div>
+      <div class="accordion-content hidden">
+        <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
+          <div class="form-row">
+            <label>This field depends on:</label>
+            <select name="dependsOn" 
+                    onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)"
+                    ${otherFields.length === 0 ? 'disabled' : ''}>
+              <option value="">-- None --</option>
+              ${dependsOnOptions}
+            </select>
+            <small>
+              ${otherFields.length === 0 
+                ? 'Add more fields to enable dependencies' 
+                : 'Select a field that controls this field\'s visibility'}
+            </small>
+          </div>
+          
+          <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}>
+            <label>Condition:</label>
+            <input type="text" 
+                   name="condition"
+                   value="${field.attributes.condition?.value || ''}"
+                   placeholder="Some Value Expected from the Selected Field"
+                   oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
+                   ${!field.attributes.dependsOn?.value ? 'disabled' : ''}>
+            <small>
+              ${!field.attributes.dependsOn?.value
+                ? 'Select a field first'
+                : 'Enter expected value from the selected field'}
+            </small>
+          </div>
+          
+          <div class="form-row">
+            <label>Fields that depend on this one:</label>
+            <select multiple 
+                   name="dependents"
+                   onchange="handleDependentFieldsChange('${field.id}', this)"
+                   ${otherFields.length === 0 ? 'disabled' : ''}>
+              ${dependentsOptions}
+            </select>
+            <small>
+              ${otherFields.length === 0 
+                ? 'Add more fields to set dependents' 
+                : 'Hold Ctrl/Cmd to select multiple fields'}
+            </small>
+          </div>
+          
+          <div class="form-actions">
+            <button type="reset" class="reset-btn">Reset Conditionality Logic</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    `;
+  });
+};
 
 
 window.handleDependentFieldsChange = (fieldId, selectElement) => {
