@@ -970,24 +970,28 @@ window.handleRemoveOption = (fieldId, index) => {
     const validations = {};
     const attributes = {};
 
-    // Process validations and attributes separately
+    // Process ALL attributes and separate into validations/attributes
     Object.entries(field.attributes).forEach(([key, config]) => {
       if (!config.active) return;
 
-      // Handle validations (required, minLength, etc.)
-      if (globalValidations.includes(key) || (definition.validations?.includes(key))) {
-        validations[key] = config.value;
+      // Handle conditional logic attributes (ALWAYS in attributes)
+      if (key === 'dependents') {
+        attributes[key] = config.value
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
       } 
-      // Handle attributes (id, class, dependsOn, etc.)
+      // Handle dependsOn and condition (ALWAYS in attributes)
+      else if (key === 'dependsOn' || key === 'condition') {
+        attributes[key] = config.value;
+      }
+      // Handle validation attributes (required, minLength, etc.)
+      else if (globalValidations.includes(key) || (definition.validations?.includes(key))) {
+        validations[key] = config.value;
+      }
+      // Everything else goes in attributes
       else {
-        if (key === 'dependents') {
-          attributes[key] = config.value
-            .split(',')
-            .map(s => s.trim())
-            .filter(Boolean);
-        } else {
-          attributes[key] = config.value;
-        }
+        attributes[key] = config.value;
       }
     });
 
@@ -1003,7 +1007,7 @@ window.handleRemoveOption = (fieldId, index) => {
       fieldSchema.push(validations);
     }
 
-    // Add attributes if any exist (or if we need empty object for structure)
+    // Add attributes if any exist OR if we have options (to maintain structure)
     if (Object.keys(attributes).length > 0 || field.choices?.length) {
       fieldSchema.push(attributes);
     }
@@ -1046,6 +1050,10 @@ window.handleRemoveOption = (fieldId, index) => {
 
   document.getElementById('schema-output').value = output;
 });
+
+
+
+ 
 
 });
 
