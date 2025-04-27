@@ -188,6 +188,7 @@ const getConditionalityHTML = (field) => {
 window.handleDependentFieldsChange = (fieldId, selectElement) => {
   console.log('handleDependentFieldsChange called', {fieldId, selectedOptions: Array.from(selectElement.selectedOptions).map(o => o.value)}); // DEBUG
   
+  
   const selectedOptions = Array.from(selectElement.selectedOptions)
     .map(option => option.value);
   
@@ -1052,7 +1053,7 @@ window.handleRemoveOption = (fieldId, index) => {
   document.getElementById('schema-output').value = output;
 });
 
- 
+
 
 });
 
