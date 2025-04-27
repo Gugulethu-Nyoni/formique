@@ -145,15 +145,16 @@ const getConditionalityHTML = (field) => {
   }).join('');
   
   return `
-    <div class="accordion">
-      <div class="accordion-header">
-        <span>Conditional Logic</span>
-        <span class="accordion-icon">▼</span>
-      </div>
-      <div class="accordion-content hidden">
+  <div class="accordion">
+    <div class="accordion-header">
+      <span>Conditional Logic</span>
+      <span class="accordion-icon">▼</span>
+    </div>
+    <div class="accordion-content hidden">
+      <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
         <div class="form-row">
           <label>This field depends on:</label>
-          <select onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)">
+          <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)">
             <option value="">-- None --</option>
             ${dependsOnOptions}
           </select>
@@ -163,6 +164,7 @@ const getConditionalityHTML = (field) => {
         <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}">
           <label>Condition:</label>
           <input type="text" 
+                 name="condition"
                  value="${field.attributes.condition?.value || ''}"
                  placeholder="Some Value Expected from the Selected Field"
                  oninput="handleUpdateValue('${field.id}', 'condition', this.value)">
@@ -172,14 +174,20 @@ const getConditionalityHTML = (field) => {
         <div class="form-row">
           <label>Fields that depend on this one:</label>
           <select multiple 
+                 name="dependents"
                  onchange="handleDependentFieldsChange('${field.id}', this)">
             ${dependentsOptions}
           </select>
           <small>Hold Ctrl/Cmd to select multiple fields</small>
         </div>
-      </div>
+        
+        <div class="form-actions">
+          <button type="reset" class="reset-btn">Reset Logic</button>
+        </div>
+      </form>
     </div>
-  `;
+  </div>
+`;
 };
 
 
@@ -217,6 +225,24 @@ window.handleDependentFieldsChange = (fieldId, selectElement) => {
   });
 };
 
+
+
+window.handleResetConditionalLogic = (fieldId) => {
+  formSchema.value = formSchema.value.map(field => {
+    if (field.id === fieldId) {
+      return {
+        ...field,
+        attributes: {
+          ...field.attributes,
+          dependsOn: { active: false, value: '' },
+          condition: { active: false, value: '' },
+          dependents: { active: false, value: '' }
+        }
+      };
+    }
+    return field;
+  });
+};
 
   // Helper functions for rendering
   const getFieldPreviewHTML = (field) => {
