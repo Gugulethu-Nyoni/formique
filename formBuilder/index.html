@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Drag & Drop Form Builder</title>
+  <link rel="stylesheet" href="./form-builder.css">
+</head>
+<body>
+  <div class="toolbox">
+    <h2>Field Toolbox</h2>
+    <div id="field-toolbox">
+      <!-- Field types will be added dynamically -->
+    </div>
+  </div>
+
+  <div class="canvas" id="form-canvas">
+    <h2>Form Canvas</h2>
+    <div id="fields-container"></div>
+  </div>
+
+  <div class="schema-output">
+    <h2>Form Schema</h2>
+    <textarea id="schema-output" rows="10" style="width: 100%;" readonly></textarea>
+  </div>
+
+  <!-- Single script import -->
+  <script type="module" src="./form-builder.js"></script>
+</body>
+</html>

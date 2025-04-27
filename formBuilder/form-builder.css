@@ -1,0 +1,283 @@
+ body { 
+      font-family: sans-serif; 
+      margin: 20px; 
+      display: grid; 
+      grid-template-columns: 300px 1fr; 
+      gap: 20px; 
+    }
+    .toolbox { 
+      border: 1px solid #ddd; 
+      padding: 15px; 
+      max-height: 500px; 
+      overflow: scroll;
+
+    }
+    .canvas { 
+      border: 1px dashed #ccc; 
+      min-height: 500px;
+      padding: 20px; 
+    }
+    .field-preview { 
+      border: 1px solid #eee; 
+      padding: 10px; 
+      margin-bottom: 10px; 
+      cursor: move; 
+    }
+    .form-field { 
+      border: 1px solid #ddd; 
+      padding: 15px; 
+      margin-bottom: 15px; 
+      background: #f9f9f9; 
+    }
+    .config-panel { 
+      border-top: 1px solid #eee; 
+      margin-top: 15px; 
+      padding-top: 15px; 
+    }
+    .hidden { 
+      display: none; 
+    }
+    [draggable="true"] { 
+      user-select: none; 
+    }
+    .schema-output { 
+      grid-column: 1 / -1; 
+    }
+
+
+    .validations-container, .attributes-container {
+  margin: 10px 0;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.validation-toggle, .attribute-toggle {
+  margin: 5px;
+  padding: 5px 10px;
+  background: #e0e0e0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.validation-toggle.active, .attribute-toggle.active {
+  background: #4CAF50;
+  color: white;
+}
+
+.validation-toggle:hover, .attribute-toggle:hover {
+  background: #d0d0d0;
+}
+
+.validation-toggle.active:hover, .attribute-toggle.active:hover {
+  background: #45a049;
+}
+
+
+
+/* Accordion styles */
+.accordion {
+  margin-top: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.accordion-header {
+  padding: 8px 12px;
+  background: #f5f5f5;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.accordion-header:hover {
+  background: #eee;
+}
+
+.accordion-content {
+  padding: 8px 12px;
+  background: white;
+  border-top: 1px solid #eee;
+}
+
+.accordion-icon {
+  transition: transform 0.2s;
+}
+
+.accordion-expanded .accordion-icon {
+  transform: rotate(180deg);
+}
+
+/* Compact field styles */
+.compact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.field-preview-content {
+  margin-top: 8px;
+}
+
+/* Add these new styles while keeping all existing ones */
+
+/* Enhanced Toggle Styles */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.toggle-container:last-child {
+  border-bottom: none;
+}
+
+.toggle-label {
+  flex-grow: 1;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #4CAF50;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+.validation-item, .attribute-item {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.value-input {
+  margin-top: 8px;
+}
+
+.value-input input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+
+.validation-item, .attribute-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.value-input {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.value-input input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Keep existing toggle switch styles */
+
+
+/* Editable Label Styles */
+.editable-label {
+  cursor: text;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: all 0.2s;
+  display: inline-block;
+  min-height: 1em;
+}
+
+.editable-label:hover {
+  background-color: #f0f0f0;
+}
+
+.editable-label.editing {
+  background-color: #fff9c4;
+  outline: none;
+  box-shadow: 0 0 0 2px #ddd;
+  min-width: 100px;
+}
+
+/* Field Header Adjustments */
+.field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.field-header h4 {
+  margin: 0;
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accordion-header {
+  cursor: pointer;
+}
