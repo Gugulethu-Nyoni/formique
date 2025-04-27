@@ -684,10 +684,11 @@ window.handleUpdateValue = (fieldId, key, value) => {
 
       //alert(key);
 
-     if (key === 'condition') {
+    if (key === 'condition') {
   updatedAttributes[key] = {
-    value: `(v) => v === '${value}'`,  // Store as raw string
-    active: true
+    value: `(v) => v === '${value.replace(/'/g, "\\'")}'`, // Escape single quotes
+    active: true,
+    __isFunction: true // Mark as function to handle later
   };
 
 
@@ -1018,9 +1019,8 @@ window.handleRemoveOption = (fieldId, index) => {
 
   // JSON stringify replacer to handle functions
  const replacer = (key, value) => {
-  // Handle condition functions (output raw, without quotes)
-  if (key === 'condition' && typeof value === 'string' && value.startsWith('(v) =>')) {
-    return { __raw_function: value }; // Special marker
+  if (value?.__isFunction) {
+    return value.value; // Return raw function string (no quotes)
   }
   if (typeof value === 'function') {
     return value.toString();
@@ -1032,8 +1032,9 @@ window.handleRemoveOption = (fieldId, index) => {
   // Update the output
  const output = JSON.stringify(formattedSchema, replacer, 2)
   .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
-  .replace(/"__raw_function":\s*"((?:\\"|[^"])*)"/g, '$1') // Unwrap raw functions
-  .replace(/"/g, "'");          // Use single quotes for other valuesalues
+  .replace(/"__isFunction": true,/g, '') // Remove the function marker
+  .replace(/"value": ((?:\\"|[^"])*)/g, '$1') // Unwrap raw function values
+  .replace(/"/g, "'"); // Replace remaining quotes with single quotessingle quotes for other valuesalues
 
   document.getElementById('schema-output').value = output;
 });
