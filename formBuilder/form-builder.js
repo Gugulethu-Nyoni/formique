@@ -680,16 +680,21 @@ window.handleToggleActive = (fieldId, key, active) => {
 window.handleUpdateValue = (fieldId, key, value) => {
   formSchema.value = formSchema.value.map(field => {
     if (field.id === fieldId) {
-      const updatedAttributes = {
-        ...field.attributes,
-        [key]: {
+      const updatedAttributes = { ...field.attributes };
+
+      if (key === 'condition') {
+        updatedAttributes[key] = {
+          value: (v) => v === `${value}`,
+          active: true
+        };
+      } else {
+        updatedAttributes[key] = {
           ...field.attributes[key],
           value: value,
-          active: !!value // THIS IS CRUCIAL
-        }
-      };
-      
-      // Return completely new field object
+          active: !!value
+        };
+      }
+
       return {
         ...field,
         attributes: updatedAttributes
@@ -698,6 +703,7 @@ window.handleUpdateValue = (fieldId, key, value) => {
     return field;
   });
 };
+
 
 
 
