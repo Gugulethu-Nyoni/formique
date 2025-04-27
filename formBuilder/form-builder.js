@@ -1016,17 +1016,18 @@ window.handleRemoveOption = (fieldId, index) => {
 
   // JSON stringify replacer to handle functions
   const replacer = (key, value) => {
-    if (typeof value === 'function') {
-      return value.toString();
-    }
-    return value;
-  };
+  if (typeof value === 'function') {
+    return value.toString();
+  }
+  return value;
+};
+
 
   // Update the output
-  const output = JSON.stringify(formattedSchema, replacer, 2)
-    .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
-    .replace(/"/g, "'");          // Use single quotes for values
-
+ const output = JSON.stringify(formattedSchema, replacer, 2)
+  .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
+  .replace(/"/g, "'");          // Use single quotes for values
+  
   document.getElementById('schema-output').value = output;
 });
 
