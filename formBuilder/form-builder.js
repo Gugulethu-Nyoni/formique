@@ -975,16 +975,17 @@ window.handleRemoveOption = (fieldId, index) => {
 
 
  $effect(() => {
+  console.log("[Effect Triggered]"); // Track how often this runs
+
   const formattedSchema = formSchema.value.map(field => {
     const definition = fieldDefinitions[field.type];
     const validations = {};
     const attributes = {};
 
-    // Process ALL attributes and separate into validations/attributes
     Object.entries(field.attributes).forEach(([key, config]) => {
       if (!config.active) return;
 
-      alert(key);
+      console.log(`Processing attribute: ${key}`);
 
       if (key === 'dependents') {
         attributes[key] = config.value
@@ -1003,26 +1004,14 @@ window.handleRemoveOption = (fieldId, index) => {
       }
     });
 
-    // Build base schema with guaranteed structure
     const fieldSchema = [
       field.type,
       field.name,
       field.label,
-      {}, // Always include validations object
-      {}  // Always include attributes object
+      Object.keys(validations).length ? validations : {},
+      Object.keys(attributes).length ? attributes : {}
     ];
 
-    // Populate validations if they exist
-    if (Object.keys(validations).length > 0) {
-      fieldSchema[3] = validations;
-    }
-
-    // Populate attributes if they exist
-    if (Object.keys(attributes).length > 0) {
-      fieldSchema[4] = attributes;
-    }
-
-    // Add options for fields that have choices
     if (field.choices?.length) {
       const options = field.choices
         .filter(opt => opt.value.trim())
@@ -1040,30 +1029,27 @@ window.handleRemoveOption = (fieldId, index) => {
     return fieldSchema;
   });
 
-  // JSON stringify replacer to handle functions
+  console.log("[Schema Built]");
+
   const replacer = (key, value) => {
-    if (value?.__isFunction) {
-      return value.value;
-    }
-    if (typeof value === 'function') {
-      return value.toString();
-    }
+    if (value?.__isFunction) return value.value;
+    if (typeof value === 'function') return value.toString();
     return value;
   };
 
-  // Update the output
-  const output = JSON.stringify(formattedSchema, replacer, 2)
+  const rawOutput = JSON.stringify(formattedSchema, replacer, 2);
+
+  const output = rawOutput
     .replace(/"(\w+)":/g, '$1:')
     .replace(/"__isFunction": true,/g, '')
     .replace(/"value": ((?:\\"|[^"])*)/g, '$1')
     .replace(/"/g, "'")
-    // Clean up empty objects
-    .replace(/{}/g, '{}')
     .replace(/{}, \{\}/g, '{}, {}');
 
   document.getElementById('schema-output').value = output;
-});
 
+  console.log("[Schema Rendered]");
+});
 
 
 });
