@@ -974,45 +974,43 @@ window.handleRemoveOption = (fieldId, index) => {
     Object.entries(field.attributes).forEach(([key, config]) => {
       if (!config.active) return;
 
-      // Handle conditional logic attributes (ALWAYS in attributes)
       if (key === 'dependents') {
         attributes[key] = config.value
           .split(',')
           .map(s => s.trim())
           .filter(Boolean);
       } 
-      // Handle dependsOn and condition (ALWAYS in attributes)
       else if (key === 'dependsOn' || key === 'condition') {
         attributes[key] = config.value;
       }
-      // Handle validation attributes (required, minLength, etc.)
       else if (globalValidations.includes(key) || (definition.validations?.includes(key))) {
         validations[key] = config.value;
       }
-      // Everything else goes in attributes
       else {
         attributes[key] = config.value;
       }
     });
 
-    // Build the schema array with proper structure
+    // Build base schema with guaranteed structure
     const fieldSchema = [
       field.type,
       field.name,
-      field.label
+      field.label,
+      {}, // Always include validations object
+      {}  // Always include attributes object
     ];
 
-    // Add validations if any exist
+    // Populate validations if they exist
     if (Object.keys(validations).length > 0) {
-      fieldSchema.push(validations);
+      fieldSchema[3] = validations;
     }
 
-    // Add attributes if any exist OR if we have options (to maintain structure)
-    if (Object.keys(attributes).length > 0 || field.choices?.length) {
-      fieldSchema.push(attributes);
+    // Populate attributes if they exist
+    if (Object.keys(attributes).length > 0) {
+      fieldSchema[4] = attributes;
     }
 
-    // Add options if field has choices
+    // Add options for fields that have choices
     if (field.choices?.length) {
       const options = field.choices
         .filter(opt => opt.value.trim())
@@ -1033,7 +1031,7 @@ window.handleRemoveOption = (fieldId, index) => {
   // JSON stringify replacer to handle functions
   const replacer = (key, value) => {
     if (value?.__isFunction) {
-      return value.value; // Return raw function string (no quotes)
+      return value.value;
     }
     if (typeof value === 'function') {
       return value.toString();
@@ -1043,15 +1041,16 @@ window.handleRemoveOption = (fieldId, index) => {
 
   // Update the output
   const output = JSON.stringify(formattedSchema, replacer, 2)
-    .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
-    .replace(/"__isFunction": true,/g, '') // Remove the function marker
-    .replace(/"value": ((?:\\"|[^"])*)/g, '$1') // Unwrap raw function values
-    .replace(/"/g, "'"); // Replace remaining quotes with single quotes
+    .replace(/"(\w+)":/g, '$1:')
+    .replace(/"__isFunction": true,/g, '')
+    .replace(/"value": ((?:\\"|[^"])*)/g, '$1')
+    .replace(/"/g, "'")
+    // Clean up empty objects
+    .replace(/{}/g, '{}')
+    .replace(/{}, \{\}/g, '{}, {}');
 
   document.getElementById('schema-output').value = output;
 });
-
-
 
  
 
