@@ -130,7 +130,7 @@ const getConditionalityHTML = (field) => {
   // Generate options for dependsOn dropdown
   const dependsOnOptions = otherFields.map(f => 
     `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
-      ${f.label} (${f.name})
+      ${f.label}
     </option>`
   ).join('');
   
@@ -140,7 +140,7 @@ const getConditionalityHTML = (field) => {
       ? field.attributes.dependents.value.split(',').includes(f.name)
       : false;
     return `<option value="${f.name}" ${selected ? 'selected' : ''}>
-      ${f.label} (${f.name})
+      ${f.label} 
     </option>`;
   }).join('');
   
