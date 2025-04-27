@@ -160,7 +160,7 @@ const getConditionalityHTML = (field) => {
           <small>Select a field that controls this field's visibility</small>
         </div>
         
-        <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:none"' : ''}">
+        <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}">
           <label>Condition:</label>
           <input type="text" 
                  value="${field.attributes.condition?.value || ''}"
@@ -964,7 +964,7 @@ window.handleRemoveOption = (fieldId, index) => {
   Object.entries(field.attributes).forEach(([key, config]) => {
     if (!config.active) return;
 
-    alert(key);
+    //alert(key);
 
     if (key === 'dependents') {
       attributes[key] = config.value
