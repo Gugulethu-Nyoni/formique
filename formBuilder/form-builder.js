@@ -186,6 +186,8 @@ const getConditionalityHTML = (field) => {
 
 // Add this new handler to the window object
 window.handleDependentFieldsChange = (fieldId, selectElement) => {
+  console.log('handleDependentFieldsChange called', {fieldId, selectedOptions: Array.from(selectElement.selectedOptions).map(o => o.value)}); // DEBUG
+  
   const selectedOptions = Array.from(selectElement.selectedOptions)
     .map(option => option.value);
   
@@ -676,6 +678,8 @@ window.handleToggleActive = (fieldId, key, active) => {
 };
 
 window.handleUpdateValue = (fieldId, key, value) => {
+  console.log('handleUpdateValue called', {fieldId, key, value}); // DEBUG
+  
   formSchema.value = formSchema.value.map(field => {
     if (field.id === fieldId) {
       const updatedAttributes = {
@@ -688,10 +692,12 @@ window.handleUpdateValue = (fieldId, key, value) => {
       
       // If dependsOn changes, we might need to show/hide the condition input
       if (key === 'dependsOn') {
+        console.log('dependsOn updated, looking for condition row'); // DEBUG
         const fieldElement = document.querySelector(`[data-id="${fieldId}"]`);
         if (fieldElement) {
           const conditionRow = fieldElement.querySelector('.accordion-content .form-row:nth-child(2)');
           if (conditionRow) {
+            console.log('found condition row, setting display:', !!value); // DEBUG
             conditionRow.style.display = value ? 'flex' : 'none';
           }
         }
@@ -702,7 +708,6 @@ window.handleUpdateValue = (fieldId, key, value) => {
     return field;
   });
 };
-
 
 // Validate option value (not empty)
 window.validateOptionValue = (fieldId, index, inputElement) => {
@@ -953,12 +958,30 @@ window.handleRemoveOption = (fieldId, index) => {
   };
 
   // Update schema output whenever formSchema changes
- $effect(() => {
+ // Update schema output whenever formSchema changes
+$effect(() => {
   const formattedSchema = formSchema.value.map(field => {
     const definition = fieldDefinitions[field.type];
     const validations = {};
     const attributes = {};
+
+     console.log('Schema effect running, current formSchema:', JSON.parse(JSON.stringify(formSchema.value))); // DEBUG
+
+console.log('Processing field:', field.id, field.name); // DEBUG
     
+    // Process conditionality attributes
+    if (field.attributes.dependsOn?.active && field.attributes.dependsOn.value) {
+      console.log('Field has dependsOn:', field.attributes.dependsOn.value); // DEBUG
+    }
+    if (field.attributes.condition?.active && field.attributes.condition.value) {
+      console.log('Field has condition:', field.attributes.condition.value); // DEBUG
+    }
+    if (field.attributes.dependents?.active && field.attributes.dependents.value) {
+      console.log('Field has dependents:', field.attributes.dependents.value); // DEBUG
+    }
+     
+    
+    // Process all attributes including conditionality ones
     Object.entries(field.attributes).forEach(([key, config]) => {
       if (!config.active) return;
       
@@ -967,60 +990,57 @@ window.handleRemoveOption = (fieldId, index) => {
       if (definition.validations?.includes(key)) {
         validations[key] = value;
       } else {
-        // Handle special conditional attributes
+        // Handle conditionality attributes specially
         if (key === 'dependsOn' && value) {
           attributes.dependsOn = value;
         } 
         else if (key === 'dependents' && value) {
-          attributes.dependents = value.split(',').map(s => s.trim()).filter(s => s);
-        } 
+          attributes.dependents = value.split(',').map(s => s.trim()).filter(Boolean);
+        }
         else if (key === 'condition' && value) {
-          // For the schema, we'll output it as a string that can be eval'd
-          // In a real app, you might want to parse this into a proper function
-          attributes.condition = `(value) => ${value}`;
-        } 
-        else if (config.type !== 'boolean' || value) {
-          // Only include boolean attributes if they're true
+          attributes.condition = value; // Store as plain string
+        }
+        else {
+          // Regular attributes
           attributes[key] = value;
         }
       }
     });
     
-    const baseSchema = [
+    // Build the schema array
+    const fieldSchema = [
       field.type,
-      field.name,  // Programmatic reference
-      field.label, // User-friendly label
+      field.name,
+      field.label,
       validations,
       attributes
     ];
     
     // Add options if they exist
-    if (field.choices && field.choices.length > 0) {
-      const cleanOptions = field.choices
+    if (field.choices?.length) {
+      const options = field.choices
         .filter(opt => opt.value.trim())
         .map(opt => ({
-          value: opt.value.trim().toLowerCase(),
-          label: opt.label.trim() || 
-                 opt.value.trim().charAt(0).toUpperCase() + 
-                 opt.value.trim().slice(1).toLowerCase(),
-          ...(opt.selected ? { selected: true } : {})
+          value: opt.value.trim(),
+          label: opt.label.trim() || formatLabelFromValue(opt.value),
+          ...(opt.selected && { selected: true })
         }));
       
-      if (cleanOptions.length > 0) {
-        baseSchema.push(cleanOptions);
+      if (options.length) {
+        fieldSchema.push(options);
       }
     }
     
-    return baseSchema;
+    return fieldSchema;
   });
   
-  document.getElementById('schema-output').value = 
-    JSON.stringify(formattedSchema, null, 2)
+  // Update the output
+  const output = JSON.stringify(formattedSchema, null, 2)
     .replace(/"(\w+)":/g, '$1:')
     .replace(/"/g, "'");
+  
+  document.getElementById('schema-output').value = output;
 });
-
-
 
 
 
