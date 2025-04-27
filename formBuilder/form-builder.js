@@ -958,49 +958,27 @@ window.handleRemoveOption = (fieldId, index) => {
   };
 
   // Update schema output whenever formSchema changes
- // Update schema output whenever formSchema changes
-$effect(() => {
+ $effect(() => {
   const formattedSchema = formSchema.value.map(field => {
     const definition = fieldDefinitions[field.type];
     const validations = {};
     const attributes = {};
-
-     console.log('Schema effect running, current formSchema:', JSON.parse(JSON.stringify(formSchema.value))); // DEBUG
-
-console.log('Processing field:', field.id, field.name); // DEBUG
-    
-    // Process conditionality attributes
-    if (field.attributes.dependsOn?.active && field.attributes.dependsOn.value) {
-      console.log('Field has dependsOn:', field.attributes.dependsOn.value); // DEBUG
-    }
-    if (field.attributes.condition?.active && field.attributes.condition.value) {
-      console.log('Field has condition:', field.attributes.condition.value); // DEBUG
-    }
-    if (field.attributes.dependents?.active && field.attributes.dependents.value) {
-      console.log('Field has dependents:', field.attributes.dependents.value); // DEBUG
-    }
-     
     
     // Process all attributes including conditionality ones
     Object.entries(field.attributes).forEach(([key, config]) => {
-      if (!config.active) return;
+      // Skip if not active or no value
+      if (!config.active || (config.value === '' && config.type !== 'boolean')) return;
       
       const value = config.type === 'boolean' ? true : config.value;
       
-      if (definition.validations?.includes(key)) {
+      if (definition.validations?.includes(key) || globalValidations.includes(key)) {
         validations[key] = value;
       } else {
         // Handle conditionality attributes specially
-        if (key === 'dependsOn' && value) {
-          attributes.dependsOn = value;
-        } 
-        else if (key === 'dependents' && value) {
-          attributes.dependents = value.split(',').map(s => s.trim()).filter(Boolean);
-        }
-        else if (key === 'condition' && value) {
-          attributes.condition = value; // Store as plain string
-        }
-        else {
+        if (key === 'dependsOn' || key === 'condition' || key === 'dependents') {
+          // Don't add these as regular attributes - they'll be handled in the conditionality object
+          return;
+        } else {
           // Regular attributes
           attributes[key] = value;
         }
@@ -1011,10 +989,36 @@ console.log('Processing field:', field.id, field.name); // DEBUG
     const fieldSchema = [
       field.type,
       field.name,
-      field.label,
-      validations,
-      attributes
+      field.label
     ];
+    
+    // Add validations if they exist
+    if (Object.keys(validations).length > 0) {
+      fieldSchema.push(validations);
+    }
+    
+    // Add attributes if they exist
+    if (Object.keys(attributes).length > 0) {
+      fieldSchema.push(attributes);
+    }
+    
+    // Add conditionality if configured
+    const conditionality = {};
+    if (field.attributes.dependsOn?.active && field.attributes.dependsOn.value) {
+      conditionality.dependsOn = field.attributes.dependsOn.value;
+      
+      if (field.attributes.condition?.active && field.attributes.condition.value) {
+        conditionality.condition = field.attributes.condition.value;
+      }
+    }
+    
+    if (field.attributes.dependents?.active && field.attributes.dependents.value) {
+      conditionality.dependents = field.attributes.dependents.value.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    
+    if (Object.keys(conditionality).length > 0) {
+      fieldSchema.push({ conditionality });
+    }
     
     // Add options if they exist
     if (field.choices?.length) {
@@ -1036,13 +1040,11 @@ console.log('Processing field:', field.id, field.name); // DEBUG
   
   // Update the output
   const output = JSON.stringify(formattedSchema, null, 2)
-    .replace(/"(\w+)":/g, '$1:')
-    .replace(/"/g, "'");
+    .replace(/"(\w+)":/g, '$1:')  // Remove quotes from keys
+    .replace(/"/g, "'");          // Use single quotes for values
   
   document.getElementById('schema-output').value = output;
 });
-
-
 
 });
 
