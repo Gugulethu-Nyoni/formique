@@ -139,12 +139,13 @@ const getReactiveFieldOptions = (currentFieldId) => {
 
 
 const getConditionalityHTML = (field) => {
-  // Make the function reactive to formSchema changes
-  return $effect(() => {
-    // Get current state of other fields (reactively)
+  // Create a container to hold the HTML string
+  let html = '';
+  
+  // Reactive update function
+  const updateHTML = () => {
     const otherFields = formSchema.value.filter(f => f.id !== field.id);
     
-    // Generate reactive options
     const dependsOnOptions = otherFields.map(f => 
       `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
         ${f.label}
@@ -152,15 +153,11 @@ const getConditionalityHTML = (field) => {
     ).join('');
     
     const dependentsOptions = otherFields.map(f => {
-      const selected = field.attributes.dependents?.value 
-        ? field.attributes.dependents.value.split(',').includes(f.name)
-        : false;
-      return `<option value="${f.name}" ${selected ? 'selected' : ''}>
-        ${f.label}
-      </option>`;
+      const selected = field.attributes.dependents?.value?.split(',').includes(f.name);
+      return `<option value="${f.name}" ${selected ? 'selected' : ''}>${f.label}</option>`;
     }).join('');
 
-    return `
+    html = `
     <div class="accordion">
       <div class="accordion-header">
         <span>Conditional Logic</span>
@@ -170,57 +167,46 @@ const getConditionalityHTML = (field) => {
         <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
           <div class="form-row">
             <label>This field depends on:</label>
-            <select name="dependsOn" 
-                    onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)"
-                    ${otherFields.length === 0 ? 'disabled' : ''}>
+            <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)">
               <option value="">-- None --</option>
               ${dependsOnOptions}
             </select>
-            <small>
-              ${otherFields.length === 0 
-                ? 'Add more fields to enable dependencies' 
-                : 'Select a field that controls this field\'s visibility'}
-            </small>
           </div>
           
-          <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}>
+          <div class="form-row">
             <label>Condition:</label>
             <input type="text" 
                    name="condition"
                    value="${field.attributes.condition?.value || ''}"
-                   placeholder="Some Value Expected from the Selected Field"
-                   oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
-                   ${!field.attributes.dependsOn?.value ? 'disabled' : ''}>
-            <small>
-              ${!field.attributes.dependsOn?.value
-                ? 'Select a field first'
-                : 'Enter expected value from the selected field'}
-            </small>
+                   oninput="handleUpdateValue('${field.id}', 'condition', this.value)">
           </div>
           
           <div class="form-row">
             <label>Fields that depend on this one:</label>
             <select multiple 
                    name="dependents"
-                   onchange="handleDependentFieldsChange('${field.id}', this)"
-                   ${otherFields.length === 0 ? 'disabled' : ''}>
+                   onchange="handleDependentFieldsChange('${field.id}', this)">
               ${dependentsOptions}
             </select>
-            <small>
-              ${otherFields.length === 0 
-                ? 'Add more fields to set dependents' 
-                : 'Hold Ctrl/Cmd to select multiple fields'}
-            </small>
           </div>
           
-          <div class="form-actions">
-            <button type="reset" class="reset-btn">Reset Conditionality Logic</button>
-          </div>
+          <button type="reset" class="reset-btn">Reset</button>
         </form>
       </div>
     </div>
     `;
+  };
+
+  // Initial render
+  updateHTML();
+
+  // Set up reactive updates
+  $effect(() => {
+    updateHTML();
+    return () => {}; // Cleanup (empty in this case)
   });
+
+  return html;
 };
 
 
