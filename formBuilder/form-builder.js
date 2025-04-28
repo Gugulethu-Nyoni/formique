@@ -306,29 +306,26 @@ const getConditionalityHTML = (field) => {
 
 // Handle dependent field changes, ensuring selections persist
 window.handleDependentFieldsChange = (fieldId, selectElement) => {
-  debounce(() => {
-    const selectedOptions = Array.from(selectElement.selectedOptions)
-      .map(option => option.value);
-
-    formSchema.value = formSchema.value.map(field => {
-      if (field.id === fieldId) {
-        const updatedDependents = {
-          ...field.attributes.dependents,
-          value: selectedOptions.join(','),
-          active: selectedOptions.length > 0
-        };
-
-        return {
-          ...field,
-          attributes: {
-            ...field.attributes,
-            dependents: updatedDependents
+  // Get current selections immediately before any re-render can happen
+  const selectedOptions = Array.from(selectElement.selectedOptions)
+    .map(option => option.value);
+  
+  // Update state without triggering full re-render
+  formSchema.value = formSchema.value.map(field => {
+    if (field.id === fieldId) {
+      return {
+        ...field,
+        attributes: {
+          ...field.attributes,
+          dependents: {
+            value: selectedOptions.join(','),
+            active: selectedOptions.length > 0
           }
-        };
-      }
-      return field;
-    });
-  }, 300); // Debounce the dependent field update to prevent UI reset
+        }
+      };
+    }
+    return field;
+  });
 };
 
 
@@ -347,7 +344,12 @@ window.handleResetConditionalLogic = (fieldId) => {
     }
     return field;
   });
+  
+  // Prevent form submission
+  return false;
 };
+
+
 
   // Helper functions for rendering
   const getFieldPreviewHTML = (field) => {
@@ -730,18 +732,31 @@ if (!accordionStates.value[field.id]) {
 // Helper function for conditionality content
 const getConditionalityContent = (field) => {
   const container = document.createElement('div');
+  let lastRenderTime = 0;
+  const renderDebounceTime = 500; // ms
   
   const updateHTML = () => {
+    const now = Date.now();
+    if (now - lastRenderTime < renderDebounceTime) {
+      return;
+    }
+    lastRenderTime = now;
+    
     const otherFields = formSchema.value.filter(f => f.id !== field.id);
     
+    // Get current values before re-rendering
+    const currentDependsOn = field.attributes.dependsOn?.value || '';
+    const currentCondition = field.attributes.condition?.value || '';
+    const currentDependents = field.attributes.dependents?.value?.split(',') || [];
+    
     const dependsOnOptions = otherFields.map(f => 
-      `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
+      `<option value="${f.name}" ${currentDependsOn === f.name ? 'selected' : ''}>
         ${f.label}
       </option>`
     ).join('');
     
     const dependentsOptions = otherFields.map(f => {
-      const selected = field.attributes.dependents?.value?.split(',').includes(f.name);
+      const selected = currentDependents.includes(f.name);
       return `<option value="${f.name}" ${selected ? 'selected' : ''}>${f.label}</option>`;
     }).join('');
 
@@ -749,23 +764,21 @@ const getConditionalityContent = (field) => {
       <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
         <div class="form-row">
           <label>This field depends on:</label>
-          <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)"
+          <select name="dependsOn" 
+                  onchange="handleConditionalChange('${field.id}', 'dependsOn', this.value)"
                   ${otherFields.length ? '' : 'disabled'}>
             <option value="">-- None --</option>
             ${dependsOnOptions}
           </select>
-          <small>${otherFields.length ? 'Select controlling field' : 'No other fields available'}</small>
         </div>
         
-        <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}>
+        <div class="form-row" ${!currentDependsOn ? 'style="display:block"' : ''}>
           <label>Condition:</label>
           <input type="text" 
                  name="condition"
-                 value="${field.attributes.condition?.value || ''}"
+                 value="${currentCondition.replace(/^\(v\) => v === '|'$/g, '').replace(/'/g, '')}"
                  placeholder="Expected value"
-                 oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
-                 ${!field.attributes.dependsOn?.value ? '' : ''}>
-          <small>${field.attributes.dependsOn?.value ? 'Enter expected value' : 'Select a field first'}</small>
+                 oninput="handleConditionalChange('${field.id}', 'condition', this.value)">
         </div>
         
         <div class="form-row">
@@ -789,14 +802,60 @@ const getConditionalityContent = (field) => {
   // Initial render
   updateHTML();
 
-  // Set up reactive updates
+  // Set up reactive updates with debouncing
   $effect(() => {
-    formSchema.value;
-    field.label;
-    updateHTML();
+    const timer = setTimeout(() => {
+      updateHTML();
+    }, renderDebounceTime);
+    
+    return () => clearTimeout(timer);
   });
 
   return container;
+};
+
+
+
+
+window.handleConditionalChange = (fieldId, key, value) => {
+  // Debounce the state update
+  debounce(() => {
+    formSchema.value = formSchema.value.map(field => {
+      if (field.id === fieldId) {
+        const updatedAttributes = { ...field.attributes };
+        
+        if (key === 'dependsOn') {
+          updatedAttributes[key] = {
+            ...updatedAttributes[key],
+            value: value,
+            active: !!value
+          };
+          
+          // Clear condition if dependsOn is cleared
+          if (!value) {
+            updatedAttributes.condition = {
+              ...updatedAttributes.condition,
+              value: '',
+              active: false
+            };
+          }
+        } 
+        else if (key === 'condition') {
+          updatedAttributes[key] = {
+            value: `(v) => v === '${value.replace(/'/g, "\\'")}'`,
+            active: !!value,
+            __isFunction: true
+          };
+        }
+        
+        return {
+          ...field,
+          attributes: updatedAttributes
+        };
+      }
+      return field;
+    });
+  }, 300);
 };
 
 
