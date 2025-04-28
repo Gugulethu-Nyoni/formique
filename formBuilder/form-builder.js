@@ -305,36 +305,38 @@ const getConditionalityHTML = (field) => {
 
 
 window.handleDependentFieldsChange = (fieldId, selectElement) => {
-  console.log('handleDependentFieldsChange called', {
-    fieldId,
-    selectedOptions: Array.from(selectElement.selectedOptions).map(o => o.value)
-  });
+  debounce(() => {
+    console.log('handleDependentFieldsChange called', {
+      fieldId,
+      selectedOptions: Array.from(selectElement.selectedOptions).map(o => o.value)
+    });
 
-  const selectedOptions = Array.from(selectElement.selectedOptions)
-    .map(option => option.value);
+    const selectedOptions = Array.from(selectElement.selectedOptions)
+      .map(option => option.value);
 
-  formSchema.value = formSchema.value.map(field => {
-    if (field.id === fieldId) {
-      const updatedDependents = {
-        ...field.attributes.dependents,
-        value: selectedOptions.join(','),
-        active: selectedOptions.length > 0
-      };
+    formSchema.value = formSchema.value.map(field => {
+      if (field.id === fieldId) {
+        const updatedDependents = {
+          ...field.attributes.dependents,
+          value: selectedOptions.join(','),
+          active: selectedOptions.length > 0
+        };
 
-      console.log(`Updated dependents for field ${fieldId}:`, updatedDependents);
+        console.log(`Updated dependents for field ${fieldId}:`, updatedDependents);
 
-      return {
-        ...field,
-        attributes: {
-          ...field.attributes,
-          dependents: updatedDependents
-        }
-      };
-    }
+        return {
+          ...field,
+          attributes: {
+            ...field.attributes,
+            dependents: updatedDependents
+          }
+        };
+      }
 
-    console.log(`Unchanged dependents for field ${field.id}:`, field.attributes.dependents);
-    return field;
-  });
+      console.log(`Unchanged dependents for field ${field.id}:`, field.attributes.dependents);
+      return field;
+    });
+  }, 300); // Debounce the dependent field change update as well
 };
 
 
@@ -846,35 +848,42 @@ window.handleToggleActive = (fieldId, key, active) => {
 };
 
 window.handleUpdateValue = (fieldId, key, value) => {
-  formSchema.value = formSchema.value.map(field => {
-    if (field.id === fieldId) {
-      const updatedAttributes = { ...field.attributes };
+  debounce(() => {
+    formSchema.value = formSchema.value.map(field => {
+      if (field.id === fieldId) {
+        const updatedAttributes = { ...field.attributes };
 
-      //alert(key);
+        if (key === 'condition') {
+          updatedAttributes[key] = {
+            value: `(v) => v === '${value.replace(/'/g, "\\'")}'`, // Escape single quotes
+            active: true,
+            __isFunction: true // Mark as function to handle later
+          };
+        } else {
+          updatedAttributes[key] = {
+            ...field.attributes[key],
+            value: value,
+            active: !!value
+          };
+        }
 
-    if (key === 'condition') {
-  updatedAttributes[key] = {
-    value: `(v) => v === '${value.replace(/'/g, "\\'")}'`, // Escape single quotes
-    active: true,
-    __isFunction: true // Mark as function to handle later
-  };
-
-
-      } else {
-        updatedAttributes[key] = {
-          ...field.attributes[key],
-          value: value,
-          active: !!value
+        return {
+          ...field,
+          attributes: updatedAttributes
         };
       }
+      return field;
+    });
+  }, 300); // Adjust debounce delay as necessary
+};
 
-      return {
-        ...field,
-        attributes: updatedAttributes
-      };
-    }
-    return field;
-  });
+
+
+let debounceTimeout;
+
+const debounce = (func, delay) => {
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(func, delay);
 };
 
 
