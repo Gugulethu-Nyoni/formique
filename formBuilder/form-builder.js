@@ -35,11 +35,23 @@ document.addEventListener('click', (e) => {
   
   const fieldId = accordion.id.split('-')[1];
   const accordionType = accordion.id.split('-')[3];
-  const content = header.nextElementSibling;
-  const icon = header.querySelector('.accordion-icon');
   
-  // Toggle state
-  const newState = !accordionStates.value[fieldId][accordionType];
+  // Ensure the field exists in accordionStates
+  if (!accordionStates.value[fieldId]) {
+    accordionStates.value = {
+      ...accordionStates.value,
+      [fieldId]: {
+        options: false,
+        validations: false,
+        attributes: false,
+        conditionality: false
+      }
+    };
+  }
+  
+  // Get current state (default to false if not set)
+  const currentState = accordionStates.value[fieldId][accordionType] || false;
+  const newState = !currentState;
   
   // Update state
   accordionStates.value = {
@@ -51,10 +63,12 @@ document.addEventListener('click', (e) => {
   };
   
   // Update UI
+  const content = header.nextElementSibling;
+  const icon = header.querySelector('.accordion-icon');
+  
   content.classList.toggle('hidden');
   icon.textContent = newState ? '▲' : '▼';
 });
-
 
   // State for the currently selected field in canvas
   const selectedField = $state(null);
@@ -98,8 +112,35 @@ document.addEventListener('click', (e) => {
 
   // Add field to canvas function
  const addFieldToCanvas = (type) => {
-  const definition = fieldDefinitions[type];
+
   const fieldId = `field-${Date.now()}`;
+
+
+// Initialize its accordionStates
+  accordionStates.value = {
+    ...accordionStates.value,
+    [fieldId]: {
+      attributes: false,
+      conditionality: false,
+      validations: false
+    }
+  };
+
+
+/*
+ // Initialize accordion state for this field
+  accordionStates.value = {
+    ...accordionStates.value,
+    [fieldId]: {
+      options: false,
+      validations: false,
+      attributes: false,
+      conditionality: false
+    }
+  };
+*/
+
+  const definition = fieldDefinitions[type];
   
   // Initialize with global defaults first
   const defaultAttributes = {
@@ -506,6 +547,20 @@ const getAttributesHTML = (field, definition) => {
 
   // Render field to canvas
   const renderField = (field) => {
+
+if (!accordionStates.value[field.id]) {
+    accordionStates.value = {
+      ...accordionStates.value,
+      [field.id]: {
+        options: false,
+        validations: false,
+        attributes: false,
+        conditionality: false
+      }
+    };
+  }
+
+
   const container = document.getElementById('fields-container');
   const fieldElement = document.createElement('div');
   fieldElement.className = 'form-field compact-field';
