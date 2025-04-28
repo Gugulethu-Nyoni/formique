@@ -696,9 +696,40 @@ const getAttributesHTML = (field, definition) => {
   fieldElement.querySelector('.configure-btn').addEventListener('click', () => {
     selectedField.value = field;
   });
+
+
+
+  const setupAllAccordions = (element) => {
+  element.querySelectorAll('.accordion').forEach(accordion => {
+    const header = accordion.querySelector('.accordion-header');
+    const content = accordion.querySelector('.accordion-content');
+    
+    // Only add listeners if not already present
+    if (!header._accordionInitialized) {
+      header.addEventListener('click', (e) => {
+        if (e.target.closest('input, select, button, [contenteditable]')) return;
+        
+        accordion.classList.toggle('accordion-expanded');
+        content.classList.toggle('hidden');
+        
+        // Smooth transition
+        if (content.classList.contains('hidden')) {
+          content.style.maxHeight = '0';
+        } else {
+          content.style.maxHeight = `${content.scrollHeight}px`;
+        }
+      });
+      header._accordionInitialized = true;
+    }
+  });
+};
   
   container.appendChild(fieldElement);
 };
+
+
+
+
 
 // New helper function for reactive conditionality
 const createConditionalityHTML = (field) => {
@@ -708,6 +739,7 @@ const createConditionalityHTML = (field) => {
   const updateHTML = () => {
     const otherFields = formSchema.value.filter(f => f.id !== field.id);
     
+
     const dependsOnOptions = otherFields.map(f => 
       `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
         ${f.label}
@@ -1012,84 +1044,8 @@ window.handleRemoveOption = (fieldId, index) => {
 
 
 
-  // React to field selection changes
-  $effect(() => {
-    const field = selectedField.value;
-    if (!field) {
-      configPanel.classList.add('hidden');
-      return;
-    }
 
-    configPanel.classList.remove('hidden');
-    const definition = fieldDefinitions[field.type];
-    
-    configPanel.innerHTML = `
-      <div class="compact-config">
-        <h3>${definition.label} Configuration</h3>
-        
-        <div class="form-row">
-          <label>Field Name:</label>
-          <input type="text" id="config-name" value="${field.name}">
-        </div>
-        
-        <div class="form-row">
-          <label>Label:</label>
-          <input type="text" id="config-label" value="${field.label}">
-        </div>
-        
-        <div class="accordion">
-          <div class="accordion-header">
-            <span>Advanced Settings</span>
-            <span class="accordion-icon">▼</span>
-          </div>
-          <div class="accordion-content hidden">
-            ${field.choices ? `
-              <div class="form-row">
-                <label>Options:</label>
-                <textarea id="config-options">${field.choices.map(o => o.value).join('\n')}</textarea>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-        
-        <div class="form-actions">
-          <button id="save-config">Save</button>
-          <button id="cancel-config">Cancel</button>
-        </div>
-      </div>
-    `;
 
-    // Bind configuration inputs
-    bind('#config-name', { 
-      input: (e) => { field.name = e.target.value; } 
-    });
-    
-    bind('#config-label', { 
-      input: (e) => { field.label = e.target.value; } 
-    });
-    
-    bind('#save-config', { 
-      click: () => { 
-        // Update options if they exist
-        if (field.choices) {
-          const optionsText = document.getElementById('config-options').value;
-          field.choices = optionsText.split('\n').map(value => ({
-            value: value.trim(),
-            label: value.trim()
-          }));
-        }
-        
-        formSchema.value = formSchema.value.map(f => 
-          f.id === field.id ? field : f
-        );
-        selectedField.value = null;
-      } 
-    });
-    
-    bind('#cancel-config', { 
-      click: () => { selectedField.value = null; } 
-    });
-  });
 
   // Global functions for validation/attribute updates
   window.updateValidation = (fieldId, validation, checked) => {
