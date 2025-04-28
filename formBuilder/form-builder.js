@@ -264,7 +264,7 @@ const getConditionalityHTML = (field) => {
                    value="${field.attributes.condition?.value || ''}"
                    placeholder="Expected value"
                    oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
-                   ${!field.attributes.dependsOn?.value ? 'disabled' : ''}>
+                   ${!field.attributes.dependsOn?.value ? '' : ''}>
             <small>${field.attributes.dependsOn?.value ? 'Enter expected value' : 'Select a field first'}</small>
           </div>
           
@@ -771,7 +771,7 @@ const getConditionalityContent = (field) => {
                  value="${field.attributes.condition?.value || ''}"
                  placeholder="Expected value"
                  oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
-                 ${!field.attributes.dependsOn?.value ? 'disabled' : ''}>
+                 ${!field.attributes.dependsOn?.value ? '' : ''}>
           <small>${field.attributes.dependsOn?.value ? 'Enter expected value' : 'Select a field first'}</small>
         </div>
         
