@@ -16,6 +16,46 @@ window.addEventListener('DOMContentLoaded', () => {
   // State for the form schema
   const formSchema = $state([]);
   
+
+  // Add this at the top with your other state declarations
+const accordionStates = $state({});
+
+// Add this in your DOMContentLoaded handler
+document.addEventListener('click', (e) => {
+  const header = e.target.closest('.accordion-header');
+  if (!header) return;
+  
+  const accordion = header.closest('.accordion');
+  if (!accordion) return;
+  
+  // Don't handle clicks on interactive elements
+  if (e.target.closest('input, select, button, [contenteditable]')) {
+    return;
+  }
+  
+  const fieldId = accordion.id.split('-')[1];
+  const accordionType = accordion.id.split('-')[3];
+  const content = header.nextElementSibling;
+  const icon = header.querySelector('.accordion-icon');
+  
+  // Toggle state
+  const newState = !accordionStates.value[fieldId][accordionType];
+  
+  // Update state
+  accordionStates.value = {
+    ...accordionStates.value,
+    [fieldId]: {
+      ...accordionStates.value[fieldId],
+      [accordionType]: newState
+    }
+  };
+  
+  // Update UI
+  content.classList.toggle('hidden');
+  icon.textContent = newState ? '▲' : '▼';
+});
+
+
   // State for the currently selected field in canvas
   const selectedField = $state(null);
 
@@ -297,87 +337,6 @@ window.handleResetConditionalLogic = (fieldId) => {
     }
   };
 
-  // Update the getValidationsHTML and getAttributesHTML functions to use toggle switches
-/*
-const getValidationsHTML = (field, definition) => {
-  if (!definition.validations?.length) return '<p>No validations available</p>';
-  
-  return definition.validations.map(validation => {
-    const attr = field.attributes[validation];
-    const isBoolean = typeof attr.value === 'boolean';
-    
-    return `
-      <div class="validation-item">
-        <div class="toggle-container">
-          <span class="toggle-label">${validation}</span>
-          <label class="toggle-switch">
-            <input type="checkbox" 
-                   ${attr.active ? 'checked' : ''}
-                   onchange="handleToggleActive('${field.id}', '${validation}', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        ${!isBoolean ? `
-          <div class="value-input" style="display: ${attr.active ? 'block' : 'none'}">
-            <input type="text" 
-                   value="${attr.value}"
-                   onchange="handleUpdateValue('${field.id}', '${validation}', this.value)"
-                   placeholder="Enter ${validation} value">
-          </div>
-        ` : ''}
-      </div>
-    `;
-  }).join('');
-};
-
-
-
-
-const getAttributesHTML = (field, definition) => {
-  if (!definition.attributes?.length) return '<p>No attributes available</p>';
-  return definition.attributes.map(attr => `
-    <div class="toggle-container">
-      <span class="toggle-label">${attr}</span>
-      <label class="toggle-switch">
-        <input type="checkbox" 
-               ${field.attributes[attr] ? 'checked' : ''}
-               onchange="handleToggle('${field.id}', 'attributes', '${attr}', this.checked)">
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-  `).join('');
-};
-
-// Replace the individual update functions with a unified handler
-window.handleToggle = (fieldId, type, key, checked) => {
-  formSchema.value = formSchema.value.map(field => {
-    if (field.id === fieldId) {
-      return {
-        ...field,
-        attributes: {
-          ...field.attributes,
-          [key]: checked
-        }
-      };
-    }
-    return field;
-  });
-  
-  // Update visual state immediately
-  const fieldElement = document.querySelector(`[data-id="${fieldId}"]`);
-  if (fieldElement) {
-    const checkbox = fieldElement.querySelector(`input[onchange*="${key}"]`);
-    if (checkbox) {
-      const slider = checkbox.nextElementSibling;
-      if (slider) {
-        slider.style.backgroundColor = checked ? '#4CAF50' : '#ccc';
-      }
-    }
-  }
-};
-
-*/
-
 
 // Update the CSS to include toggle switch styles (add to your existing CSS)
 const toggleStyles = `
@@ -554,46 +513,58 @@ const getAttributesHTML = (field, definition) => {
   
   const definition = fieldDefinitions[field.type];
 
+  // Generate unique IDs for each accordion
+  const accordionIds = {
+    options: `accordion-${field.id}-options`,
+    validations: `accordion-${field.id}-validations`,
+    attributes: `accordion-${field.id}-attributes`,
+    conditionality: `accordion-${field.id}-conditionality`
+  };
+
+  // Initialize accordion states if they don't exist
+  if (!accordionStates.value[field.id]) {
+    accordionStates.value = {
+      ...accordionStates.value,
+      [field.id]: {
+        options: false,
+        validations: false,
+        attributes: false,
+        conditionality: false
+      }
+    };
+  }
+
   // Prepare options HTML if field has options
   const optionsHTML = field.choices ? `
-  <div class="accordion">
-    <div class="accordion-header">
-      <span>Options</span>
-      <span class="accordion-icon">▼</span>
-    </div>
-    <div class="accordion-content hidden">
-      <div class="options-container">
-        ${field.choices.map((option, index) => `
-          <div class="option-item" data-index="${index}">
-            <input type="text" 
-                   value="${option.value}" 
-                   placeholder="Value (required)"
-                   class="${!option.value ? 'error' : ''}"
-                   oninput="handleOptionUpdate('${field.id}', ${index}, 'value', this.value)"
-                   onblur="validateOptionValue('${field.id}', ${index}, this)"
+    <div class="options-container">
+      ${field.choices.map((option, index) => `
+        <div class="option-item" data-index="${index}">
+          <input type="text" 
+                 value="${option.value}" 
+                 placeholder="Value (required)"
+                 class="${!option.value ? 'error' : ''}"
+                 oninput="handleOptionUpdate('${field.id}', ${index}, 'value', this.value)"
+                 onblur="validateOptionValue('${field.id}', ${index}, this)"
+                 onclick="event.stopPropagation()">
+          <input type="text" 
+                 value="${option.label || ''}" 
+                 placeholder="Label (auto-generated)"
+                 oninput="handleOptionUpdate('${field.id}', ${index}, 'label', this.value)"
+                 onclick="event.stopPropagation()">
+          <label class="option-selected" onclick="event.stopPropagation()">
+            <input type="${['radio', 'singleSelect'].includes(field.type) ? 'radio' : 'checkbox'}" 
+                   name="${field.id}-selected"
+                   ${option.selected ? 'checked' : ''}
+                   onchange="handleOptionUpdate('${field.id}', ${index}, 'selected', this.checked)"
                    onclick="event.stopPropagation()">
-            <input type="text" 
-                   value="${option.label || ''}" 
-                   placeholder="Label (auto-generated)"
-                   oninput="handleOptionUpdate('${field.id}', ${index}, 'label', this.value)"
-                   onclick="event.stopPropagation()">
-            <label class="option-selected" onclick="event.stopPropagation()">
-              <input type="${['radio', 'singleSelect'].includes(field.type) ? 'radio' : 'checkbox'}" 
-                     name="${field.id}-selected"
-                     ${option.selected ? 'checked' : ''}
-                     onchange="handleOptionUpdate('${field.id}', ${index}, 'selected', this.checked)"
-                     onclick="event.stopPropagation()">
-              ${['radio', 'singleSelect'].includes(field.type) ? 'Default' : 'Selected'}
-            </label>
-            <button class="remove-option" 
-                    onclick="handleRemoveOption('${field.id}', ${index}); event.stopPropagation()">×</button>
-          </div>
-        `).join('')}
-      </div>
-      <button class="add-option" 
-              onclick="handleAddOption('${field.id}', event)">+ Add Option</button>
+            ${['radio', 'singleSelect'].includes(field.type) ? 'Default' : 'Selected'}
+          </label>
+          <button class="remove-option" 
+                  onclick="handleRemoveOption('${field.id}', ${index}); event.stopPropagation()">×</button>
+        </div>
+      `).join('')}
     </div>
-  </div>
+    <button class="add-option" onclick="handleAddOption('${field.id}', event)">+ Add Option</button>
   ` : '';
 
   // Create main HTML structure
@@ -611,34 +582,50 @@ const getAttributesHTML = (field, definition) => {
       <small class="field-type">${definition.label}</small>
     </div>
 
-    ${optionsHTML}
+    <div class="accordion" id="${accordionIds.options}">
+      <div class="accordion-header">
+        <span>Options</span>
+        <span class="accordion-icon">${accordionStates.value[field.id]?.options ? '▲' : '▼'}</span>
+      </div>
+      <div class="accordion-content ${accordionStates.value[field.id]?.options ? '' : 'hidden'}">
+        ${optionsHTML}
+      </div>
+    </div>
     
-    <div class="accordion">
+    <div class="accordion" id="${accordionIds.validations}">
       <div class="accordion-header">
         <span>Validations</span>
-        <span class="accordion-icon">▼</span>
+        <span class="accordion-icon">${accordionStates.value[field.id]?.validations ? '▲' : '▼'}</span>
       </div>
-      <div class="accordion-content hidden">
+      <div class="accordion-content ${accordionStates.value[field.id]?.validations ? '' : 'hidden'}">
         ${getValidationsHTML(field, definition)}
       </div>
     </div>
     
-    <div class="accordion">
+    <div class="accordion" id="${accordionIds.attributes}">
       <div class="accordion-header">
         <span>Attributes</span>
-        <span class="accordion-icon">▼</span>
+        <span class="accordion-icon">${accordionStates.value[field.id]?.attributes ? '▲' : '▼'}</span>
       </div>
-      <div class="accordion-content hidden">
+      <div class="accordion-content ${accordionStates.value[field.id]?.attributes ? '' : 'hidden'}">
         ${getAttributesHTML(field, definition)}
       </div>
     </div>
 
-    <div id="conditionality-${field.id}"></div>
+    <div class="accordion" id="${accordionIds.conditionality}">
+      <div class="accordion-header">
+        <span>Conditional Logic</span>
+        <span class="accordion-icon">${accordionStates.value[field.id]?.conditionality ? '▲' : '▼'}</span>
+      </div>
+      <div class="accordion-content ${accordionStates.value[field.id]?.conditionality ? '' : 'hidden'}">
+        <!-- Conditionality content will be inserted here -->
+      </div>
+    </div>
   `;
 
-  // Append reactive conditionality section
-  const conditionalityContainer = fieldElement.querySelector(`#conditionality-${field.id}`);
-  conditionalityContainer.appendChild(createConditionalityHTML(field));
+  // Append conditionality content
+  const conditionalityContent = fieldElement.querySelector(`#${accordionIds.conditionality} .accordion-content`);
+  conditionalityContent.appendChild(getConditionalityContent(field));
 
   // Label editing functionality
   const labelElement = fieldElement.querySelector('.editable-label');
@@ -670,60 +657,21 @@ const getAttributesHTML = (field, definition) => {
     labelElement.style.minWidth = '';
   });
 
-  // Accordion toggle functionality
-  fieldElement.querySelectorAll('.accordion-header').forEach(header => {
-    header.addEventListener('click', (e) => {
-      const isHeaderClick = (
-        e.target === header || 
-        e.target.classList.contains('accordion-icon') || 
-        (e.target.tagName === 'SPAN' && !e.target.closest('.options-container'))
-      );
-      
-      if (isHeaderClick) {
-        const content = header.nextElementSibling;
-        content.classList.toggle('hidden');
-        header.parentElement.classList.toggle('accordion-expanded');
-      }
-    }, true);
-  });
-
   // Field actions
   fieldElement.querySelector('.remove-btn').addEventListener('click', () => {
     formSchema.value = formSchema.value.filter(f => f.id !== field.id);
     fieldElement.remove();
+    
+    // Clean up accordion state
+    const newStates = {...accordionStates.value};
+    delete newStates[field.id];
+    accordionStates.value = newStates;
   });
   
   fieldElement.querySelector('.configure-btn').addEventListener('click', () => {
     selectedField.value = field;
   });
 
-
-
-  const setupAllAccordions = (element) => {
-  element.querySelectorAll('.accordion').forEach(accordion => {
-    const header = accordion.querySelector('.accordion-header');
-    const content = accordion.querySelector('.accordion-content');
-    
-    // Only add listeners if not already present
-    if (!header._accordionInitialized) {
-      header.addEventListener('click', (e) => {
-        if (e.target.closest('input, select, button, [contenteditable]')) return;
-        
-        accordion.classList.toggle('accordion-expanded');
-        content.classList.toggle('hidden');
-        
-        // Smooth transition
-        if (content.classList.contains('hidden')) {
-          content.style.maxHeight = '0';
-        } else {
-          content.style.maxHeight = `${content.scrollHeight}px`;
-        }
-      });
-      header._accordionInitialized = true;
-    }
-  });
-};
-  
   container.appendChild(fieldElement);
 };
 
@@ -731,15 +679,13 @@ const getAttributesHTML = (field, definition) => {
 
 
 
-// New helper function for reactive conditionality
-const createConditionalityHTML = (field) => {
+// Helper function for conditionality content
+const getConditionalityContent = (field) => {
   const container = document.createElement('div');
-  container.className = 'conditionality-container';
   
   const updateHTML = () => {
     const otherFields = formSchema.value.filter(f => f.id !== field.id);
     
-
     const dependsOnOptions = otherFields.map(f => 
       `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
         ${f.label}
@@ -752,51 +698,43 @@ const createConditionalityHTML = (field) => {
     }).join('');
 
     container.innerHTML = `
-    <div class="accordion">
-      <div class="accordion-header">
-        <span>Conditional Logic</span>
-        <span class="accordion-icon">▼</span>
-      </div>
-      <div class="accordion-content hidden">
-        <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
-          <div class="form-row">
-            <label>This field depends on:</label>
-            <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)"
-                    ${otherFields.length ? '' : 'disabled'}>
-              <option value="">-- None --</option>
-              ${dependsOnOptions}
-            </select>
-            <small>${otherFields.length ? 'Select controlling field' : 'No other fields available'}</small>
-          </div>
-          
-          <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}>
-            <label>Condition:</label>
-            <input type="text" 
-                   name="condition"
-                   value="${field.attributes.condition?.value || ''}"
-                   placeholder="Expected value"
-                   oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
-                   ${!field.attributes.dependsOn?.value ? 'disabled' : ''}>
-            <small>${field.attributes.dependsOn?.value ? 'Enter expected value' : 'Select a field first'}</small>
-          </div>
-          
-          <div class="form-row">
-            <label>Fields that depend on this one:</label>
-            <select multiple 
-                   name="dependents"
-                   onchange="handleDependentFieldsChange('${field.id}', this)"
-                   ${otherFields.length ? '' : 'disabled'}>
-              ${dependentsOptions}
-            </select>
-            <small>${otherFields.length ? 'Ctrl/Cmd to multi-select' : 'Add more fields first'}</small>
-          </div>
-          
-          <div class="form-actions">
-            <button type="reset" class="reset-btn">Reset Logic</button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
+        <div class="form-row">
+          <label>This field depends on:</label>
+          <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)"
+                  ${otherFields.length ? '' : 'disabled'}>
+            <option value="">-- None --</option>
+            ${dependsOnOptions}
+          </select>
+          <small>${otherFields.length ? 'Select controlling field' : 'No other fields available'}</small>
+        </div>
+        
+        <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}>
+          <label>Condition:</label>
+          <input type="text" 
+                 name="condition"
+                 value="${field.attributes.condition?.value || ''}"
+                 placeholder="Expected value"
+                 oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
+                 ${!field.attributes.dependsOn?.value ? 'disabled' : ''}>
+          <small>${field.attributes.dependsOn?.value ? 'Enter expected value' : 'Select a field first'}</small>
+        </div>
+        
+        <div class="form-row">
+          <label>Fields that depend on this one:</label>
+          <select multiple 
+                 name="dependents"
+                 onchange="handleDependentFieldsChange('${field.id}', this)"
+                 ${otherFields.length ? '' : 'disabled'}>
+            ${dependentsOptions}
+          </select>
+          <small>${otherFields.length ? 'Ctrl/Cmd to multi-select' : 'Add more fields first'}</small>
+        </div>
+        
+        <div class="form-actions">
+          <button type="reset" class="reset-btn">Reset Logic</button>
+        </div>
+      </form>
     `;
   };
 
@@ -805,10 +743,9 @@ const createConditionalityHTML = (field) => {
 
   // Set up reactive updates
   $effect(() => {
-    formSchema.value; // Create dependency
-    field.label; // Also react to label changes
+    formSchema.value;
+    field.label;
     updateHTML();
-    return () => {};
   });
 
   return container;
@@ -1259,5 +1196,48 @@ const conditionalityStyles = `
 
 // Add to existing style injection
 styleElement.textContent += conditionalityStyles;
+
+
+const accordionStyles = `
+.accordion {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.accordion-header {
+  padding: 10px;
+  background: #f9f9f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.accordion-header:hover {
+  background: #f0f0f0;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.accordion-content:not(.hidden) {
+  max-height: 1000px; /* Adjust based on your content */
+  padding: 10px;
+}
+
+.accordion-icon {
+  font-size: 0.8em;
+  transition: transform 0.3s ease;
+}
+`;
+
+// Add to your style injection
+styleElement.textContent += accordionStyles;
 
 
