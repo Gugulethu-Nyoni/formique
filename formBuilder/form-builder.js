@@ -139,10 +139,11 @@ const getReactiveFieldOptions = (currentFieldId) => {
 
 
 const getConditionalityHTML = (field) => {
-  // Create a container to hold the HTML string
-  let html = '';
+  // Create container div
+  const container = document.createElement('div');
+  container.className = 'conditionality-container';
   
-  // Reactive update function
+  // Update function
   const updateHTML = () => {
     const otherFields = formSchema.value.filter(f => f.id !== field.id);
     
@@ -157,7 +158,7 @@ const getConditionalityHTML = (field) => {
       return `<option value="${f.name}" ${selected ? 'selected' : ''}>${f.label}</option>`;
     }).join('');
 
-    html = `
+    container.innerHTML = `
     <div class="accordion">
       <div class="accordion-header">
         <span>Conditional Logic</span>
@@ -167,30 +168,39 @@ const getConditionalityHTML = (field) => {
         <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
           <div class="form-row">
             <label>This field depends on:</label>
-            <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)">
+            <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)"
+                    ${otherFields.length ? '' : 'disabled'}>
               <option value="">-- None --</option>
               ${dependsOnOptions}
             </select>
+            <small>${otherFields.length ? 'Select controlling field' : 'No other fields available'}</small>
           </div>
           
-          <div class="form-row">
+          <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}>
             <label>Condition:</label>
             <input type="text" 
                    name="condition"
                    value="${field.attributes.condition?.value || ''}"
-                   oninput="handleUpdateValue('${field.id}', 'condition', this.value)">
+                   placeholder="Expected value"
+                   oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
+                   ${!field.attributes.dependsOn?.value ? 'disabled' : ''}>
+            <small>${field.attributes.dependsOn?.value ? 'Enter expected value' : 'Select a field first'}</small>
           </div>
           
           <div class="form-row">
             <label>Fields that depend on this one:</label>
             <select multiple 
                    name="dependents"
-                   onchange="handleDependentFieldsChange('${field.id}', this)">
+                   onchange="handleDependentFieldsChange('${field.id}', this)"
+                   ${otherFields.length ? '' : 'disabled'}>
               ${dependentsOptions}
             </select>
+            <small>${otherFields.length ? 'Ctrl/Cmd to multi-select' : 'Add more fields first'}</small>
           </div>
           
-          <button type="reset" class="reset-btn">Reset</button>
+          <div class="form-actions">
+            <button type="reset" class="reset-btn">Reset Logic</button>
+          </div>
         </form>
       </div>
     </div>
@@ -202,11 +212,14 @@ const getConditionalityHTML = (field) => {
 
   // Set up reactive updates
   $effect(() => {
+    // Track both formSchema and field label changes
+    formSchema.value;
+    field.label;
     updateHTML();
-    return () => {}; // Cleanup (empty in this case)
+    return () => {};
   });
 
-  return html;
+  return container;
 };
 
 
@@ -541,7 +554,7 @@ const getAttributesHTML = (field, definition) => {
   
   const definition = fieldDefinitions[field.type];
 
-
+  // Prepare options HTML if field has options
   const optionsHTML = field.choices ? `
   <div class="accordion">
     <div class="accordion-header">
@@ -581,9 +594,9 @@ const getAttributesHTML = (field, definition) => {
               onclick="handleAddOption('${field.id}', event)">+ Add Option</button>
     </div>
   </div>
-` : '';
+  ` : '';
 
-  
+  // Create main HTML structure
   fieldElement.innerHTML = `
     <div class="field-header">
       <h4 contenteditable="true" class="editable-label">${field.label}</h4>
@@ -598,7 +611,7 @@ const getAttributesHTML = (field, definition) => {
       <small class="field-type">${definition.label}</small>
     </div>
 
-     ${optionsHTML}
+    ${optionsHTML}
     
     <div class="accordion">
       <div class="accordion-header">
@@ -620,26 +633,26 @@ const getAttributesHTML = (field, definition) => {
       </div>
     </div>
 
-    ${getConditionalityHTML(field)}
+    <div id="conditionality-${field.id}"></div>
   `;
 
-  // Add label edit functionality
+  // Append reactive conditionality section
+  const conditionalityContainer = fieldElement.querySelector(`#conditionality-${field.id}`);
+  conditionalityContainer.appendChild(createConditionalityHTML(field));
+
+  // Label editing functionality
   const labelElement = fieldElement.querySelector('.editable-label');
   
-  // Handle label editing
   labelElement.addEventListener('blur', () => {
     const newLabel = labelElement.textContent.trim();
     if (newLabel && newLabel !== field.label) {
       field.label = newLabel;
-      // Trigger reactive update
-      formSchema.value = [...formSchema.value];
+      formSchema.value = [...formSchema.value]; // Trigger reactive update
     } else {
-      // Revert if empty or unchanged
-      labelElement.textContent = field.label;
+      labelElement.textContent = field.label; // Revert if empty/unchanged
     }
   });
 
-  // Improve editing experience
   labelElement.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -647,7 +660,6 @@ const getAttributesHTML = (field, definition) => {
     }
   });
 
-  // Visual feedback during editing
   labelElement.addEventListener('focus', () => {
     labelElement.classList.add('editing');
     labelElement.style.minWidth = `${labelElement.scrollWidth}px`;
@@ -658,41 +670,120 @@ const getAttributesHTML = (field, definition) => {
     labelElement.style.minWidth = '';
   });
 
-  // Add accordion toggle functionality
-// In the renderField function, update the accordion handler:
-// In the renderField function, update the accordion handler:
-fieldElement.querySelectorAll('.accordion-header').forEach(header => {
-  header.addEventListener('click', (e) => {
-    // Check if the click target is specifically the header elements we want
-    const isHeaderClick = (
-      e.target === header || 
-      e.target.classList.contains('accordion-icon') || 
-      (e.target.tagName === 'SPAN' && !e.target.closest('.options-container'))
-    );
-    
-    if (isHeaderClick) {
-      const content = header.nextElementSibling;
-      content.classList.toggle('hidden');
-      header.parentElement.classList.toggle('accordion-expanded');
-    }
+  // Accordion toggle functionality
+  fieldElement.querySelectorAll('.accordion-header').forEach(header => {
+    header.addEventListener('click', (e) => {
+      const isHeaderClick = (
+        e.target === header || 
+        e.target.classList.contains('accordion-icon') || 
+        (e.target.tagName === 'SPAN' && !e.target.closest('.options-container'))
+      );
+      
+      if (isHeaderClick) {
+        const content = header.nextElementSibling;
+        content.classList.toggle('hidden');
+        header.parentElement.classList.toggle('accordion-expanded');
+      }
+    }, true);
   });
-}, true); // Use capture phase to ensure we get the event first
 
-
-
-  // Add remove functionality
+  // Field actions
   fieldElement.querySelector('.remove-btn').addEventListener('click', () => {
     formSchema.value = formSchema.value.filter(f => f.id !== field.id);
     fieldElement.remove();
   });
   
-  // Add configure functionality
   fieldElement.querySelector('.configure-btn').addEventListener('click', () => {
     selectedField.value = field;
   });
   
   container.appendChild(fieldElement);
 };
+
+// New helper function for reactive conditionality
+const createConditionalityHTML = (field) => {
+  const container = document.createElement('div');
+  container.className = 'conditionality-container';
+  
+  const updateHTML = () => {
+    const otherFields = formSchema.value.filter(f => f.id !== field.id);
+    
+    const dependsOnOptions = otherFields.map(f => 
+      `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
+        ${f.label}
+      </option>`
+    ).join('');
+    
+    const dependentsOptions = otherFields.map(f => {
+      const selected = field.attributes.dependents?.value?.split(',').includes(f.name);
+      return `<option value="${f.name}" ${selected ? 'selected' : ''}>${f.label}</option>`;
+    }).join('');
+
+    container.innerHTML = `
+    <div class="accordion">
+      <div class="accordion-header">
+        <span>Conditional Logic</span>
+        <span class="accordion-icon">▼</span>
+      </div>
+      <div class="accordion-content hidden">
+        <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
+          <div class="form-row">
+            <label>This field depends on:</label>
+            <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)"
+                    ${otherFields.length ? '' : 'disabled'}>
+              <option value="">-- None --</option>
+              ${dependsOnOptions}
+            </select>
+            <small>${otherFields.length ? 'Select controlling field' : 'No other fields available'}</small>
+          </div>
+          
+          <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}>
+            <label>Condition:</label>
+            <input type="text" 
+                   name="condition"
+                   value="${field.attributes.condition?.value || ''}"
+                   placeholder="Expected value"
+                   oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
+                   ${!field.attributes.dependsOn?.value ? 'disabled' : ''}>
+            <small>${field.attributes.dependsOn?.value ? 'Enter expected value' : 'Select a field first'}</small>
+          </div>
+          
+          <div class="form-row">
+            <label>Fields that depend on this one:</label>
+            <select multiple 
+                   name="dependents"
+                   onchange="handleDependentFieldsChange('${field.id}', this)"
+                   ${otherFields.length ? '' : 'disabled'}>
+              ${dependentsOptions}
+            </select>
+            <small>${otherFields.length ? 'Ctrl/Cmd to multi-select' : 'Add more fields first'}</small>
+          </div>
+          
+          <div class="form-actions">
+            <button type="reset" class="reset-btn">Reset Logic</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    `;
+  };
+
+  // Initial render
+  updateHTML();
+
+  // Set up reactive updates
+  $effect(() => {
+    formSchema.value; // Create dependency
+    field.label; // Also react to label changes
+    updateHTML();
+    return () => {};
+  });
+
+  return container;
+};
+
+
+
   // Create configuration panel
   const configPanel = document.createElement('div');
   configPanel.id = 'config-panel';
