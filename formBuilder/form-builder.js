@@ -304,13 +304,9 @@ const getConditionalityHTML = (field) => {
 };
 
 
+// Handle dependent field changes, ensuring selections persist
 window.handleDependentFieldsChange = (fieldId, selectElement) => {
   debounce(() => {
-    console.log('handleDependentFieldsChange called', {
-      fieldId,
-      selectedOptions: Array.from(selectElement.selectedOptions).map(o => o.value)
-    });
-
     const selectedOptions = Array.from(selectElement.selectedOptions)
       .map(option => option.value);
 
@@ -322,8 +318,6 @@ window.handleDependentFieldsChange = (fieldId, selectElement) => {
           active: selectedOptions.length > 0
         };
 
-        console.log(`Updated dependents for field ${fieldId}:`, updatedDependents);
-
         return {
           ...field,
           attributes: {
@@ -332,13 +326,10 @@ window.handleDependentFieldsChange = (fieldId, selectElement) => {
           }
         };
       }
-
-      console.log(`Unchanged dependents for field ${field.id}:`, field.attributes.dependents);
       return field;
     });
-  }, 300); // Debounce the dependent field change update as well
+  }, 300); // Debounce the dependent field update to prevent UI reset
 };
-
 
 
 window.handleResetConditionalLogic = (fieldId) => {
@@ -874,8 +865,9 @@ window.handleUpdateValue = (fieldId, key, value) => {
       }
       return field;
     });
-  }, 300); // Adjust debounce delay as necessary
+  }, 300); // Delay update to avoid constant re-rendering
 };
+
 
 
 
