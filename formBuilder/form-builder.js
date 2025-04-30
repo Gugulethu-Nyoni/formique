@@ -306,26 +306,29 @@ const getConditionalityHTML = (field) => {
 
 // Handle dependent field changes, ensuring selections persist
 window.handleDependentFieldsChange = (fieldId, selectElement) => {
-  // Get current selections immediately before any re-render can happen
-  const selectedOptions = Array.from(selectElement.selectedOptions)
-    .map(option => option.value);
-  
-  // Update state without triggering full re-render
-  formSchema.value = formSchema.value.map(field => {
-    if (field.id === fieldId) {
-      return {
-        ...field,
-        attributes: {
-          ...field.attributes,
-          dependents: {
-            value: selectedOptions.join(','),
-            active: selectedOptions.length > 0
+  debounce(() => {
+    const selectedOptions = Array.from(selectElement.selectedOptions)
+      .map(option => option.value);
+
+    formSchema.value = formSchema.value.map(field => {
+      if (field.id === fieldId) {
+        const updatedDependents = {
+          ...field.attributes.dependents,
+          value: selectedOptions.join(','),
+          active: selectedOptions.length > 0
+        };
+
+        return {
+          ...field,
+          attributes: {
+            ...field.attributes,
+            dependents: updatedDependents
           }
-        }
-      };
-    }
-    return field;
-  });
+        };
+      }
+      return field;
+    });
+  }, 300); // Debounce the dependent field update to prevent UI reset
 };
 
 
@@ -345,10 +348,16 @@ window.handleResetConditionalLogic = (fieldId) => {
     return field;
   });
   
-  // Prevent form submission
-  return false;
+  // No re-render needed - just update the conditionality UI directly
+  const fieldElement = document.querySelector(`[data-id="${fieldId}"]`);
+  if (fieldElement) {
+    const conditionalityContent = fieldElement.querySelector('.conditionality-content');
+    if (conditionalityContent) {
+      const field = formSchema.value.find(f => f.id === fieldId);
+      conditionalityContent.innerHTML = getConditionalityHTML(field);
+    }
+  }
 };
-
 
 
   // Helper functions for rendering
@@ -540,10 +549,8 @@ const getAttributesHTML = (field, definition) => {
   }).join('');
 };
 
-  // Render field to canvas
   const renderField = (field) => {
-
-if (!accordionStates.value[field.id]) {
+  if (!accordionStates.value[field.id]) {
     accordionStates.value = {
       ...accordionStates.value,
       [field.id]: {
@@ -554,7 +561,6 @@ if (!accordionStates.value[field.id]) {
       }
     };
   }
-
 
   const container = document.getElementById('fields-container');
   const fieldElement = document.createElement('div');
@@ -571,23 +577,10 @@ if (!accordionStates.value[field.id]) {
     conditionality: `accordion-${field.id}-conditionality`
   };
 
-  // Initialize accordion states if they don't exist
-  if (!accordionStates.value[field.id]) {
-    accordionStates.value = {
-      ...accordionStates.value,
-      [field.id]: {
-        options: false,
-        validations: false,
-        attributes: false,
-        conditionality: false
-      }
-    };
-  }
-
   // Prepare options HTML if field has options
-  const optionsHTML = field.choices ? `
+  const optionsHTML = definition.hasOptions ? `
     <div class="options-container">
-      ${field.choices.map((option, index) => `
+      ${(field.choices || [{ value: '', label: '' }]).map((option, index) => `
         <div class="option-item" data-index="${index}">
           <input type="text" 
                  value="${option.value}" 
@@ -617,7 +610,7 @@ if (!accordionStates.value[field.id]) {
     <button class="add-option" onclick="handleAddOption('${field.id}', event)">+ Add Option</button>
   ` : '';
 
-  // Create main HTML structure
+  // Create main HTML structure - conditionally include options accordion
   fieldElement.innerHTML = `
     <div class="field-header">
       <h4 contenteditable="true" class="editable-label">${field.label}</h4>
@@ -632,6 +625,7 @@ if (!accordionStates.value[field.id]) {
       <small class="field-type">${definition.label}</small>
     </div>
 
+    ${definition.hasOptions ? `
     <div class="accordion" id="${accordionIds.options}">
       <div class="accordion-header">
         <span>Options</span>
@@ -641,6 +635,7 @@ if (!accordionStates.value[field.id]) {
         ${optionsHTML}
       </div>
     </div>
+    ` : ''}
     
     <div class="accordion" id="${accordionIds.validations}">
       <div class="accordion-header">
@@ -677,6 +672,7 @@ if (!accordionStates.value[field.id]) {
   const conditionalityContent = fieldElement.querySelector(`#${accordionIds.conditionality} .accordion-content`);
   conditionalityContent.appendChild(getConditionalityContent(field));
 
+  // Rest of the function remains the same...
   // Label editing functionality
   const labelElement = fieldElement.querySelector('.editable-label');
   
@@ -728,35 +724,21 @@ if (!accordionStates.value[field.id]) {
 
 
 
-
 // Helper function for conditionality content
 const getConditionalityContent = (field) => {
   const container = document.createElement('div');
-  let lastRenderTime = 0;
-  const renderDebounceTime = 500; // ms
   
   const updateHTML = () => {
-    const now = Date.now();
-    if (now - lastRenderTime < renderDebounceTime) {
-      return;
-    }
-    lastRenderTime = now;
-    
     const otherFields = formSchema.value.filter(f => f.id !== field.id);
     
-    // Get current values before re-rendering
-    const currentDependsOn = field.attributes.dependsOn?.value || '';
-    const currentCondition = field.attributes.condition?.value || '';
-    const currentDependents = field.attributes.dependents?.value?.split(',') || [];
-    
     const dependsOnOptions = otherFields.map(f => 
-      `<option value="${f.name}" ${currentDependsOn === f.name ? 'selected' : ''}>
+      `<option value="${f.name}" ${field.attributes.dependsOn?.value === f.name ? 'selected' : ''}>
         ${f.label}
       </option>`
     ).join('');
     
     const dependentsOptions = otherFields.map(f => {
-      const selected = currentDependents.includes(f.name);
+      const selected = field.attributes.dependents?.value?.split(',').includes(f.name);
       return `<option value="${f.name}" ${selected ? 'selected' : ''}>${f.label}</option>`;
     }).join('');
 
@@ -764,21 +746,23 @@ const getConditionalityContent = (field) => {
       <form class="conditional-form" onreset="handleResetConditionalLogic('${field.id}')">
         <div class="form-row">
           <label>This field depends on:</label>
-          <select name="dependsOn" 
-                  onchange="handleConditionalChange('${field.id}', 'dependsOn', this.value)"
+          <select name="dependsOn" onchange="handleUpdateValue('${field.id}', 'dependsOn', this.value)"
                   ${otherFields.length ? '' : 'disabled'}>
             <option value="">-- None --</option>
             ${dependsOnOptions}
           </select>
+          <small>${otherFields.length ? 'Select controlling field' : 'No other fields available'}</small>
         </div>
         
-        <div class="form-row" ${!currentDependsOn ? 'style="display:block"' : ''}>
+        <div class="form-row" ${!field.attributes.dependsOn?.value ? 'style="display:block"' : ''}>
           <label>Condition:</label>
           <input type="text" 
                  name="condition"
-                 value="${currentCondition.replace(/^\(v\) => v === '|'$/g, '').replace(/'/g, '')}"
+                 value="${field.attributes.condition?.value || ''}"
                  placeholder="Expected value"
-                 oninput="handleConditionalChange('${field.id}', 'condition', this.value)">
+                 oninput="handleUpdateValue('${field.id}', 'condition', this.value)"
+                 ${!field.attributes.dependsOn?.value ? '' : ''}>
+          <small>${field.attributes.dependsOn?.value ? 'Enter expected value' : 'Select a field first'}</small>
         </div>
         
         <div class="form-row">
@@ -802,60 +786,14 @@ const getConditionalityContent = (field) => {
   // Initial render
   updateHTML();
 
-  // Set up reactive updates with debouncing
+  // Set up reactive updates
   $effect(() => {
-    const timer = setTimeout(() => {
-      updateHTML();
-    }, renderDebounceTime);
-    
-    return () => clearTimeout(timer);
+    formSchema.value;
+    field.label;
+    updateHTML();
   });
 
   return container;
-};
-
-
-
-
-window.handleConditionalChange = (fieldId, key, value) => {
-  // Debounce the state update
-  debounce(() => {
-    formSchema.value = formSchema.value.map(field => {
-      if (field.id === fieldId) {
-        const updatedAttributes = { ...field.attributes };
-        
-        if (key === 'dependsOn') {
-          updatedAttributes[key] = {
-            ...updatedAttributes[key],
-            value: value,
-            active: !!value
-          };
-          
-          // Clear condition if dependsOn is cleared
-          if (!value) {
-            updatedAttributes.condition = {
-              ...updatedAttributes.condition,
-              value: '',
-              active: false
-            };
-          }
-        } 
-        else if (key === 'condition') {
-          updatedAttributes[key] = {
-            value: `(v) => v === '${value.replace(/'/g, "\\'")}'`,
-            active: !!value,
-            __isFunction: true
-          };
-        }
-        
-        return {
-          ...field,
-          attributes: updatedAttributes
-        };
-      }
-      return field;
-    });
-  }, 300);
 };
 
 
@@ -897,17 +835,27 @@ window.handleToggleActive = (fieldId, key, active) => {
   }
 };
 
+// Store debounce timers per field+key to avoid conflicts
+const debounceTimers = {};
+
 window.handleUpdateValue = (fieldId, key, value) => {
-  debounce(() => {
+  const isConditionalityUpdate = ['dependsOn', 'condition', 'dependents'].includes(key);
+  
+  // Clear any pending update for this field+key
+  const timerKey = `${fieldId}-${key}`;
+  clearTimeout(debounceTimers[timerKey]);
+  
+  // Debounce the update
+  debounceTimers[timerKey] = setTimeout(() => {
     formSchema.value = formSchema.value.map(field => {
       if (field.id === fieldId) {
         const updatedAttributes = { ...field.attributes };
 
         if (key === 'condition') {
           updatedAttributes[key] = {
-            value: `(v) => v === '${value.replace(/'/g, "\\'")}'`, // Escape single quotes
+            value: `(v) => v === '${value.replace(/'/g, "\\'")}'`,
             active: true,
-            __isFunction: true // Mark as function to handle later
+            __isFunction: true
           };
         } else {
           updatedAttributes[key] = {
@@ -924,9 +872,18 @@ window.handleUpdateValue = (fieldId, key, value) => {
       }
       return field;
     });
-  }, 300); // Delay update to avoid constant re-rendering
-};
 
+    // Only trigger re-render for non-conditionality updates
+    if (!isConditionalityUpdate) {
+      const field = formSchema.value.find(f => f.id === fieldId);
+      if (field) {
+        const existingElement = document.querySelector(`[data-id="${fieldId}"]`);
+        if (existingElement) existingElement.remove();
+        renderField(field);
+      }
+    }
+  }, 300);
+};
 
 
 
