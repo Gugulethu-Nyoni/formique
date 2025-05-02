@@ -723,7 +723,6 @@ const getAttributesHTML = (field, definition) => {
 
 
 
-
 // Helper function for conditionality content
 const getConditionalityContent = (field) => {
   const container = document.createElement('div');
