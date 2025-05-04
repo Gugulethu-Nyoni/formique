@@ -21,31 +21,34 @@ const lowCode =`
 @form: rsvp 
 theme: dark
 submitMode: email
-subject: Formique Test 1-2
+subject: Testing 1-2
 method: post
-sendTo: tashpemhiwa@gmail.com, info@webrave.co.za
+sendTo: gugunnn@gmail.com, info@webrave.co.za
 
+-rating:range
+  min: 0
+  max: 10
 
--name*
--surname*
+- name*
 - email*
-- message*
+- mobile*
+  
+- diet*
+  select
+  options: Vegan, Vegetarian, Carnivore, Other
+  dependents: other
+  
+- other:text*
+  dependsOn: diet, other
 
 -programming-scope
 options: FrontEnd, BackEnd
-FrontEnd: JS, Semantq, React
-BackEnd: Nodejs, PHP, Python
+FrontEnd: Javascript, Semantq, Vuejs
+BackEnd: Nodejs, Python, PHP, Django
 
--role*
- select
-options: Presenter, Attendee
-dependents: topic, mode 
 
--topic*
-dependsOn: role, Presenter
+  
 
--mode*
-dependsOn: role, Presenter
 
 
 `; 
