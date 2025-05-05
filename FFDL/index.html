@@ -19,7 +19,7 @@ import FormiqueLowCodeParser from './LowCodeParser.js';
 const lowCode =`
 
 @form: rsvp 
-theme: dark
+theme: blue
 submitMode: email
 subject: Formique Test 1-2
 method: post
@@ -36,8 +36,16 @@ options: FrontEnd, BackEnd
 FrontEnd: JS, Semantq, React
 BackEnd: Nodejs, PHP, Python
 
+
+- Country-State *
+options: USA, South Africa, Zimbabwe
+USA: Georgia, North Carolina, Dakota
+South Africa: Limpopo, Gauteng, KZN
+Zimbabwe: Midlands, Harare, Bulawayo
+
+
 -role*
- select
+ manyof
 options: Presenter, Attendee
 dependents: topic, mode 
 
