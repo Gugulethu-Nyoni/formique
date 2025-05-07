@@ -3436,13 +3436,14 @@ if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
 
 // Find the target div with id this.formContainerId
 const targetDiv = document.getElementById(this.formContainerId);
-
 let categoryId = attributes.id || name;
 
 
 if (targetDiv) {
   // Create a script element
   const scriptElement = document.createElement('script');
+  
+  /*
   scriptElement.textContent = `
   window.handleDynamicSingleSelect = function(category, fieldsetid) {
     //console.log("HERE", fieldsetid);
@@ -3459,6 +3460,35 @@ if (targetDiv) {
     }
   }
 `;
+*/
+
+window.handleDynamicSingleSelect = function(category, fieldsetid) {
+  // Hide all subcategory fields and remove 'required' attributes
+  document.querySelectorAll(`[class*="${fieldsetid}"]`).forEach(div => {
+    div.style.display = "none";
+    const inputs = div.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      if (input.hasAttribute('required')) {
+        input.removeAttribute('required');
+        // Store the required state in a data attribute for later restoration
+        input.dataset.wasRequired = "true";
+      }
+    });
+  });
+
+  // Show the selected category and restore 'required' if needed
+  const selectedCategoryFieldset = document.getElementById(category + '-options');
+  if (selectedCategoryFieldset) {
+    selectedCategoryFieldset.style.display = "block";
+    const inputs = selectedCategoryFieldset.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      if (input.dataset.wasRequired === "true") {
+        input.setAttribute('required', '');
+        delete input.dataset.wasRequired; // Clean up
+      }
+    });
+  }
+}
 
   // Append the script element to the target div
   targetDiv.appendChild(scriptElement);
