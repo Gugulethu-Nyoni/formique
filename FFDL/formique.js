@@ -3461,7 +3461,7 @@ if (targetDiv) {
   }
 `;
 */
-
+// refine handling of required conditional fields
 window.handleDynamicSingleSelect = function(category, fieldsetid) {
   // Hide all subcategory fields and remove 'required' attributes
   document.querySelectorAll(`[class*="${fieldsetid}"]`).forEach(div => {
