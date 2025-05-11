@@ -3493,7 +3493,7 @@ window.handleDynamicSingleSelect = function(category, fieldsetid) {
   // Append the script element to the target div
   targetDiv.appendChild(scriptElement);
 } else {
-  console.error(`Target div with id "${this.formContainerId}" not found.`);
+  console.error(`Target element with id "${this.formContainerId}" not found.`);
 }
 
 subCategoriesOptions.forEach(subCategory => {
