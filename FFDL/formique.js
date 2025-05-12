@@ -3570,7 +3570,6 @@ subCategoriesOptions.forEach(subCategory => {
 }
 
 
-
 renderMultipleSelectField(type, name, label, validate, attributes, options) {
   // Define valid validation attributes for multiple select fields
   const selectValidationAttributes = ['required', 'minlength', 'maxlength'];
