@@ -3635,7 +3635,7 @@ renderMultipleSelectField(type, name, label, validate, attributes, options) {
   }
 
   // Define multiple attribute for multi-select
-  const multipleAttr = 'multiple';
+  const multipleAttr = 'multiple'; // 
 
   let inputClass; 
   if ('class' in attributes) {
