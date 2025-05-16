@@ -1151,7 +1151,7 @@ this.formSchema.push(['submit','submit','Submit']);
 
 }
 
-  // class wrapper - nothing below
+  // class wrapper - nothing below this point
 
 }
 
@@ -1160,7 +1160,6 @@ this.formSchema.push(['submit','submit','Submit']);
 
 
 /* TESTING */
-
 
 const testAst = {
   "directive": {
