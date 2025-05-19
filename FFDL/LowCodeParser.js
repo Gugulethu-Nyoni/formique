@@ -1404,6 +1404,7 @@ const testAst = {
             ]
           }
         },
+        
         {
           "type": "FormProperty",
           "start": {
