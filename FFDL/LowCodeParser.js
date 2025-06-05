@@ -2359,7 +2359,5 @@ const testAst = {
 };
 
 
-
-
 //const getSchemas = new FormiqueParser(ast); 
 //console.log(JSON.stringify(getSchemas,null,2));
