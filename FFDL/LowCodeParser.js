@@ -6,6 +6,7 @@ this.ast = ast;
 this.formSchema=[];
 this.formSettings={};
 this.formParams={};
+
 this.formAttributes = [
   "action",
   "method",
