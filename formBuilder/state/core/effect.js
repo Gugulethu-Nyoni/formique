@@ -1,3 +1,4 @@
+//effect.js
 import { getCurrentEffect, setCurrentEffect } from './PulseCore.js';
 
 export function $effect(callback) {

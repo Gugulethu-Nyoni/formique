@@ -1,7 +1,21 @@
 // pulse.js
 import { PulseCore } from './PulseCore.js';
 
-export function pulse(initialValue) {
+export function pulse(initialValue, options = {}) {
+    const { key, storage = localStorage } = options;
+    
+    // Load from storage if key is provided
+    if (key) {
+        try {
+            const stored = storage.getItem(key);
+            if (stored !== null) {
+                initialValue = JSON.parse(stored);
+            }
+        } catch (e) {
+            console.warn(`Failed to parse stored value for key "${key}"`, e);
+        }
+    }
+
     const signal = new PulseCore(initialValue);
     
     return new Proxy(signal, {

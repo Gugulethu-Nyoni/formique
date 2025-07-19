@@ -1,6 +1,5 @@
-Here are some **syntax naming suggestions** for your Formique form SDL (Schema Definition Language) to make submit modes intuitive and consistent:
+**Syntax Naming Suggestions** for Formique form SDL (Schema Definition Language)
 
----
 
 ### **Submit Mode Naming Conventions**
 | Use Case               | Suggested `submitMode` Name | Notes                                                                 |
@@ -12,7 +11,6 @@ Here are some **syntax naming suggestions** for your Formique form SDL (Schema D
 | **RSVP/Events**       | `rsvp`                     | Semantic for event responses.                                         |
 | **Traditional POST**   | `post`                     | Fallback for non-API forms.                                           |
 
----
 
 ### **Parameter Names**
 | Purpose                     | Suggested Syntax               | Example                                   |
@@ -22,7 +20,7 @@ Here are some **syntax naming suggestions** for your Formique form SDL (Schema D
 | **HTTP Method**             | `method`                       | `method: "PUT"` (default: `POST`)         |
 | **Auto-Submit Handling**    | `submitOnPage: true/false`     | `submitOnPage: true` (default)            |
 
----
+
 
 ### **Example SDL Configs**
 #### 1. **Contact Form (Cloud Submit)**
@@ -62,8 +60,6 @@ const features = {
 };
 ```
 
----
-
 ### **Why These Names?**
 1. **Consistency**:  
    - Prefix `fa` for Formique-specific features.  
@@ -77,7 +73,6 @@ const features = {
    - Short (`fa`, `auth`) for quick typing.  
    - No ambiguity between `formAction` (local) vs. `cloudEndpoint` (Formique Cloud).  
 
----
 
 ### **Edge Cases Handled**
 - If `submitMode: "cloud"` but no `cloudEndpoint` is provided:  
@@ -85,7 +80,6 @@ const features = {
 - If `submitMode: "auth"` and no `redirectURL`:  
   Shows a success message instead of redirecting.  
 
----
 
 ### **Suggested Defaults**
 ```javascript
@@ -98,4 +92,3 @@ this.formSettings = {
 };
 ```
 
-Would you like adjustments for specific frameworks (e.g., React/Vue hooks)? Or additional validation rules tied to submit modes?
