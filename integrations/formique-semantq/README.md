@@ -101,6 +101,18 @@ For demo purposes, let's create a new route (page) in `src/routes/registration`.
 
 ## Step 2: Add the CSS (Optional)
 
+The NPM option:  
+
+```javascript
+npm i formique-css
+```
+
+```javascript
+import 'formique-css';
+```
+
+The CDN Option:
+
 Paste the following Formique CSS in the `<head>` section of `src/app.html`:
 
 ```html
