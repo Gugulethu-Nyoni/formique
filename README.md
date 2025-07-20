@@ -11,6 +11,10 @@
 
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/images/formique-js-form-builder-anyframework.png" alt="Formique JS Form Builder Example">
 
+If you want a quick guide for @formique/semantq please visit:
+[Formique Semantq Guide] (https://github.com/Gugulethu-Nyoni/formique/tree/main/integrations/formique-semantq)
+
+
 ## Table of Contents
 - [About Formique](#about-formique)
 - [Why Choose Formique?](#why-choose-formique)
