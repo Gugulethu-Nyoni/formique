@@ -104,7 +104,12 @@ For demo purposes, let's create a new route (page) in `src/routes/registration`.
 Paste the following Formique CSS in the `<head>` section of `src/app.html`:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.7/formique.min.css" formique-style>
+<script type="module"> import formique-css from https://cdn.jsdelivr.net/npm/formique-css@1.0.11/+esm </script>
+```
+
+OR
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.11/+esm" />
 ```
 
 **Note:** The provided Formique CSS is optional. Formique will function fully without it, allowing you full flexibility to apply your own styles. However, for convenience, a set of default class names is available to help you quickly style form containers, form elements, and input types. See the sections below for a complete list of available class names.
