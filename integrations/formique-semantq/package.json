@@ -1,8 +1,8 @@
 {
   "name": "@formique/semantq",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Formique is a native form builder for the Semantq JS Framework",
-  "main": "formique.mjs",
+  "main": "formique-semantq.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
