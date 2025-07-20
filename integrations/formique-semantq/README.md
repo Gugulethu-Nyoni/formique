@@ -99,7 +99,7 @@ For demo purposes, let's create a new route (page) in `src/routes/registration`.
      touch src/routes/registration/+page.Semantq
      ```
 
-## Step 2: Add the CSS
+## Step 2: Add the CSS (Optional)
 
 Paste the following Formique CSS in the `<head>` section of `src/app.html`:
 
@@ -107,7 +107,9 @@ Paste the following Formique CSS in the `<head>` section of `src/app.html`:
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.7/formique.min.css" formique-style>
 ```
 
-## Step 3: Install `formique-semantq`
+**Note:** The provided Formique CSS is optional. Formique will function fully without it, allowing you full flexibility to apply your own styles. However, for convenience, a set of default class names is available to help you quickly style form containers, form elements, and input types. See the sections below for a complete list of available class names.
+
+## Step 3: Install `@formique/semantq`
 
 To use Formique in your Semantq application, you need to install the `formique-semantq` package.
 
@@ -124,7 +126,7 @@ Add the following code to +page.Semantq:
 ```Semantq
 <script>
   import { onMount } from 'Semantq';
-  import Formique from 'formique-semantq';
+  import Formique from '@formique/semantq';
 
   // Define the form schema
   const formSchema = [
@@ -184,8 +186,238 @@ Once the server is running, you can view the form at:
 
 http://localhost:5173/registration
 
-> **Note** If you want to use a custom target element (form container) ID, you can do so by adding the item (property) `containerId: 'element-id'` in the `formSettings` object. This is particularly useful when you need to implement multiple Formique forms on a single page.
-Also, note that if the target element's ID is 'formique', you do not need to declare this item (property) in the `formSettings` object.
+
+## ✨ 1. Styling the Form
+
+Formique comes with a set of built-in themes to help you quickly style your forms. These themes are **headless and minimal**, allowing easy blending with your site's design system. They apply styling **primarily to the submit button background** and **the bottom border of focused inputs**, while maintaining a **light background** for most themes.
+
+### Available Built-in Themes:
+
+* `light`
+* `dark`
+* `pink`
+* `indigo`
+* `dark-blue`
+* `light-blue`
+* `dark-orange`
+* `bright-yellow`
+* `green`
+* `purple`
+* `midnight-blush`
+* `deep-blue`
+* `blue`
+* `brown`
+* `orange`
+
+> ⚠️ The `dark` theme is more opinionated with full dark background support. All others are intentionally minimal.
+
+To apply a theme, set the `theme` option in your `formSettings`:
+
+```js
+const formSettings = {
+  theme: 'indigo'
+};
+```
+If no theme is set, Formique will default to the dark theme. 
+
+### Fine-Grained Theme Control
+
+To override the button and focus color with your own custom color, use the `themeColor` option in hexadecimal format:
+
+```js
+const formSettings = {
+  themeColor: '#327ba8'  // Must be a valid hex value
+};
+```
+
+### Custom Styling
+
+Formique’s form classes are exposed for complete customization. You can target the form using `.formique`, and inputs with classes like `.formique-input`, `.formique-label`, `.formique-submit`. See section below.
+
+Example:
+
+```css
+.formique-input {
+  border-radius: 5px;
+  padding: 10px;
+}
+```
+
+
+## 2. Styling and Sizing the Form Container
+
+Formique renders inside a container `<div>` that you specify by ID.
+
+### Default Container
+
+```html
+<div id="formique" class=""></div>
+```
+
+### ⚙Custom Container ID
+
+You can use any custom container ID by declaring it in your `formSettings`:
+
+```js
+const formSettings = {
+  formContainerId: 'myForm'
+};
+```
+
+And in your HTML:
+
+```html
+<div id="myForm"></div>
+```
+
+### Built-in Container Size Classes
+
+Formique includes several responsive width utility classes that can be used directly on your form container:
+
+| Class Name     | Description       |
+| -- | -- |
+| `width-full`   | 100% width        |
+| `width-half`   | 50% width         |
+| `width-medium` | 600px fixed width |
+| `width-small`  | 400px fixed width |
+
+Example:
+
+```html
+<div id="formique" class="width-half"></div>
+```
+
+### Custom Inline Style Control
+
+If you want precise control over the container styling, use the `formContainerStyle` setting:
+
+```js
+const formSettings = {
+  formContainerStyle: 'width: 100%; max-width: 700px; padding: 2rem;'
+};
+```
+
+> This will override the container’s `style` attribute directly.
+
+
+
+
+## ✅ Complete List of `.formique`-Scoped CSS Classes
+
+Here is a clean, alphabetically grouped list of **all unique CSS class selectors** used in your Formique stylesheet:
+
+### 📦 Container & Layout
+
+* `.formique`
+* `.formique-form`
+* `.width-full`
+* `.width-half`
+* `.width-medium`
+* `.width-small`
+* `.width-custom`
+
+### 🏷️ Labels & Inputs
+
+* `.form-label`
+* `.form-input`
+* `.form-control`
+* `.form-textarea`
+* `.form-select`
+* `.form-select-input`
+* `.form-radio-input`
+* `.form-checkbox-input`
+
+### 📚 Input Wrappers
+
+* `.input-block`
+* `.radio-group`
+* `.checkbox-group`
+
+### 🎨 Themes
+
+* `.custom-theme`
+* `.dark-theme`
+* `.light-theme`
+* `.pink-theme`
+* `.indigo-theme`
+* `.dark-blue-theme`
+* `.light-blue-theme`
+* `.dark-orange-theme`
+* `.bright-yellow-theme`
+* `.green-theme`
+* `.purple-theme`
+* `.midnight-blush-theme`
+* `.deep-blue-theme`
+* `.blue-theme`
+* `.brown-theme`
+* `.orange-theme`
+
+### 🚀 Button
+
+* `.form-submit-btn`
+
+### 🔁 Loading
+
+* `#formiqueSpinner`
+* `.formique-spinner`
+* `.formique-spinner .message`
+
+### Status Messages
+
+* `.formique-success`
+* `.formique-error`
+
+
+
+## 📬 3. Contact Form Quick Setup
+
+Formique supports plug-and-play email contact forms using `@formique/semantq`.
+
+### 🔧 Basic Email Contact Setup
+
+```js
+const formSettings = {
+  submitMode: 'email',                  // Required
+  submitOnPage: true,                   // Required
+  successMessage: 'Survey filled successfully',  // Optional
+  errorMessage: 'Something went wrong',         // Optional
+  sendTo: ['contacts@yourwebsite.com']  // Your actual email
+};
+```
+
+### 📑 Defining a Form Schema
+
+Create your form fields using a simple schema array:
+
+```js
+const formSchema = [
+  ['text', 'name', 'Name', { required: true }],
+  ['text', 'surname', 'Surname', { required: true }],
+  ['email', 'email', 'Email', { required: true }, { style: 'color: red' }],
+  ['textarea', 'message', 'Your Message here', { required: true }]
+];
+```
+
+### Schema Syntax Recap
+
+Each form field follows this format:
+
+```js
+['field type', 'field name', 'Label', { inlineValidation }, { inputAttributes }, [options]]
+```
+
+Examples:
+
+* `text`, `email`, `textarea`, `select`, `checkbox`, `radio`
+* Inline validation can include `{ required: true }`
+* Additional HTML attributes (like `style`, `placeholder`, etc.) are supported.
+
+
+## ⚠️ Domain Verification for Email Submissions
+
+To enable email submissions, ensure your domain is **registered on your [useformique.com](https://useformique.com) account**.
+
+This is required for sender verification and spam protection.
 
 
 For more comprehensive details on Formique's features and usage and options visit the [Formique GitHub Repository](https://github.com/Gugulethu-Nyoni/formique).

@@ -479,7 +479,7 @@ renderField(type, name, label, validate, attributes, options) {
 showSuccessMessage(message) {
   const container = document.getElementById(this.formContainerId);
   container.innerHTML = `
-    <div class="formique-success">✓ ${message}</div>
+    <div class="formique-success"> ${message}</div>
     ${this.formSettings.redirectURL 
       ? `<meta http-equiv="refresh" content="2;url=${this.formSettings.redirectURL}">` 
       : ""}
@@ -490,7 +490,7 @@ showErrorMessage(message) {
   const container = document.getElementById(this.formContainerId);
   const errorDiv = document.createElement("div");
   errorDiv.className = "formique-error";
-  errorDiv.textContent = `✗ ${message}`;
+  errorDiv.textContent = `${message}`;
   container.prepend(errorDiv);
 }
 
@@ -601,6 +601,7 @@ async handleEmailSubmission(formId) {
                          data.message || 
                          'Your message has been sent successfully!';
     console.log(`Showing success message: ${successMessage}`);
+
     this.showSuccessMessage(successMessage);
 
   } catch (error) {

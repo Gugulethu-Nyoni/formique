@@ -67,6 +67,7 @@ class Formique extends FormBuilder {
     this.selectGroupClass = 'form-select';
     this.submitButtonClass = 'form-submit-btn';
     this.formContainerId = formSettings?.formContainerId || 'formique';
+    this.formContainerStyle = formSettings?.formContainerStyle || null;
     this.formId = this.formParams?.id || this.generateFormId();
     //console.log(this.formId);
     this.formAction = formParams?.action || 'https://httpbin.org/post';
@@ -75,6 +76,7 @@ class Formique extends FormBuilder {
     this.dependencyGraph = {};
     this.redirect = formSettings?.redirect ||'';
     this.redirectURL = formSettings?.redirectURL ||'';
+    this.activeTheme = formSettings.theme || null;
     this.themeColor = formSettings.themeColor || null;
      this.themeColorMap = {
       'primary': {
@@ -156,7 +158,14 @@ class Formique extends FormBuilder {
     }
     }.bind(this)); // Bind `this` to ensure it's correct inside the event listener
 
-   //
+
+
+  if (this.formContainerStyle) {
+  const formContainer = document.getElementById(this.formContainerId);
+  formContainer.setAttribute("style", this.formContainerStyle);
+  }
+
+
 
 // disable wrapper for DOM event listener
  //   });
@@ -338,6 +347,8 @@ registerObservers() {
 
 applyTheme(theme, formContainerId) {
     const formContainer = document.getElementById(formContainerId);
+    const spinnerContainer = document.getElementById('formiqueSpinner');
+
     if (!formContainer) {
         console.error(`Form container with ID ${formContainerId} not found.`);
         return;
@@ -346,6 +357,7 @@ applyTheme(theme, formContainerId) {
     // Clear any existing theme classes
     this.themes.forEach(t => formContainer.classList.remove(`${t}-theme`));
     formContainer.classList.remove('custom-theme');
+    spinnerContainer.classList.remove('custom-theme');
 
     // If themeColor is provided, use it to create a custom theme
     if (this.themeColor) {
@@ -371,6 +383,7 @@ applyTheme(theme, formContainerId) {
 
             const themeCSS = themeRules[1].trim();
             formContainer.classList.add(`${theme}-theme`, 'formique');
+            spinnerContainer.classList.add(`${theme}-theme`);
 
             const clonedStyle = document.createElement('style');
             clonedStyle.textContent = `#${formContainerId} { ${themeCSS} }`;
@@ -383,9 +396,14 @@ applyTheme(theme, formContainerId) {
 
 applyCustomTheme(formContainerId) {
     const formContainer = document.getElementById(formContainerId);
+    const spinnerContainer = document.getElementById('formiqueSpinner');
+
     if (!formContainer) return;
 
     formContainer.classList.add('custom-theme', 'formique');
+    spinnerContainer.classList.add('custom-theme');
+
+    this.activeTheme = 'custom-theme';
 
     // Calculate shadow color (semi-transparent themeColor)
     const shadowColor = this.hexToRgbA(this.themeColor, 0.3);
@@ -537,7 +555,7 @@ renderField(type, name, label, validate, attributes, options) {
 showSuccessMessage(message) {
   const container = document.getElementById(this.formContainerId);
   container.innerHTML = `
-    <div class="formique-success">✓ ${message}</div>
+    <div class="formique-success ${this.activeTheme}">${message}</div>
     ${this.formSettings.redirectURL 
       ? `<meta http-equiv="refresh" content="2;url=${this.formSettings.redirectURL}">` 
       : ""}
@@ -547,8 +565,8 @@ showSuccessMessage(message) {
 showErrorMessage(message) {
   const container = document.getElementById(this.formContainerId);
   const errorDiv = document.createElement("div");
-  errorDiv.className = "formique-error";
-  errorDiv.textContent = `✗ ${message}`;
+  errorDiv.className = `formique-error ${this.activeTheme}`;
+  errorDiv.textContent = `${message}`;
   container.prepend(errorDiv);
 }
 
@@ -561,119 +579,92 @@ hasFileInputs(form) {
 
 
 
-async handleEmailSubmission(formId) {
-  console.log(`Starting email submission for form ID: ${formId}`);
-  
-  const form = document.getElementById(formId);
-  if (!form) {
-    console.error(`Form with ID ${formId} not found`);
-    throw new Error(`Form with ID ${formId} not found`);
-  }
-
-  // Validate required settings - now checks if sendTo is array with at least one item
-  if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
-    console.error('formSettings.sendTo must be an array with at least one recipient email');
-    throw new Error('formSettings.sendTo must be an array with at least one recipient email');
-  }
-
-  // Serialize form data
-  const payload = {
-    formData: {},
-    metadata: {
-      recipients: this.formSettings.sendTo, // Now sending array
-      timestamp: new Date().toISOString()
-    }
-  };
-
-  let senderName = '';
-  let senderEmail = '';
-  let formSubject = '';
-
-  console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
-
-  // Process form fields (unchanged)
-  new FormData(form).forEach((value, key) => {
-    console.log(`Processing form field - Key: ${key}, Value: ${value}`);
-    payload.formData[key] = value;
-    
-    const lowerKey = key.toLowerCase();
-    if ((lowerKey === 'email' || lowerKey.includes('email'))) {
-      senderEmail = value;
-    }
-    if ((lowerKey === 'name' || lowerKey.includes('name'))) {
-      senderName = value;
-    }
-    if ((lowerKey === 'subject' || lowerKey.includes('subject'))) {
-      formSubject = value;
-    }
-  });
-
-  // Determine the email subject with fallback logic
-  payload.metadata.subject = formSubject || 
-                           this.formSettings.subject || 
-                           'Message From Contact Form';
-  
-  console.log('Determined email subject:', payload.metadata.subject);
-
-  // Add sender information to metadata
-  if (senderEmail) {
-    payload.metadata.sender = senderEmail;
-    payload.metadata.replyTo = senderName 
-      ? `${senderName} <${senderEmail}>` 
-      : senderEmail;
-  }
-
-  console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
-
+// A complete function to replace your old one
+// Use this function wherever you are currently using the fetch().then()... structure
+// This is the complete, final version of the class method.
+// It is an async arrow function, so 'this' is automatically correct.
+handleEmailSubmission = async (formId) => {
   try {
+    const form = document.getElementById(formId);
+    if (!form) throw new Error(`Form with ID ${formId} not found`);
+
+    // --- Start of Payload and Method Logic (as provided previously) ---
+    const payload = {
+      formData: {},
+      metadata: {
+        recipients: this.formSettings.sendTo,
+        timestamp: new Date().toISOString()
+      }
+    };
+    
+    let senderEmail = '';
+    let formSubject = '';
+
+    new FormData(form).forEach((value, key) => {
+        payload.formData[key] = value;
+        const lowerKey = key.toLowerCase();
+        if ((lowerKey === 'email' || lowerKey.includes('email'))) {
+          senderEmail = value;
+        }
+        if ((lowerKey === 'subject' || lowerKey.includes('subject'))) {
+          formSubject = value;
+        }
+    });
+
+    payload.metadata.subject = formSubject || this.formSettings.subject || 'Message From Contact Form';
+    if (senderEmail) {
+      payload.metadata.sender = senderEmail;
+      payload.metadata.replyTo = senderEmail;
+    }
+    // --- End of Payload and Method Logic ---
+
     const endpoint = this.formiqueEndpoint || this.formAction;
     const method = this.method || 'POST';
-    
-    console.log(`Preparing to send request to: ${endpoint}`);
-    console.log(`Request method: ${method}`);
-    console.log('Final payload being sent:', payload);
+
+    // Show spinner when request starts
+    document.getElementById("formiqueSpinner").style.display = "flex";
 
     const response = await fetch(endpoint, {
       method: method,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'X-Formique-Version': '1.0' 
+        'X-Formique-Version': '1.0'
       },
       body: JSON.stringify(payload)
     });
 
-    console.log(`Received response with status: ${response.status}`);
+    // The core fix: Read the response body as text first.
+    // This will not fail on an empty response.
+    const responseBodyText = await response.text();
+    let data = {};
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('API Error Response:', errorData);
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      document.getElementById("formiqueSpinner").style.display = "none";
-
+    // Only try to parse if the body isn't empty.
+    if (responseBodyText.length > 0) {
+      try {
+        data = JSON.parse(responseBodyText);
+      } catch (err) {
+        // This handles cases where the server returns non-JSON data.
+        console.warn("Response was not valid JSON or unexpected format:", err);
+      }
     }
 
-    const data = await response.json();
-    console.log('API Success Response:', data);
-    
-    const successMessage = this.formSettings.successMessage || 
-                         data.message || 
-                         'Your message has been sent successfully!';
-    console.log(`Showing success message: ${successMessage}`);
+    if (!response.ok) {
+      const errorMsg = data.error || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMsg);
+    }
+
+    const successMessage = this.formSettings.successMessage || data.message || "Your message has been sent successfully!";
     this.showSuccessMessage(successMessage);
 
   } catch (error) {
-    console.error('Email submission failed:', error);
-    const errorMessage = this.formSettings.errorMessage || 
-                       error.message || 
-                       'Failed to send message. Please try again later.';
-    console.log(`Showing error message: ${errorMessage}`);
+    console.error("Email submission failed:", error);
+    const errorMessage = this.formSettings.errorMessage || error.message || "Failed to send message. Please try again later.";
     this.showErrorMessage(errorMessage);
+  } finally {
+    // Ensure spinner is hidden on success or failure
     document.getElementById("formiqueSpinner").style.display = "none";
-
   }
-}
-
-
+};
 
 // Email validation helper
 validateEmail(email) {
@@ -751,7 +742,7 @@ if (formContainer) {
     errorMessageDiv.innerHTML = err; 
 
     // Append the new error message div to the form container
-    formContainer.appendChild(errorMessageDiv);
+    //formContainer.appendChild(errorMessageDiv);
   }
 });
 
@@ -3814,11 +3805,10 @@ renderSubmitButton(type, name, label, validate, attributes) {
   }
 
 
-const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
+const spinner = `<div class="" id="formiqueSpinner">
   <div class="formique-spinner"></div>
   <p class="message">Hang in tight, we are submitting your details…</p>
-</div>
-`;
+</div>`;
   // Construct the final HTML string
 
   const formHTML = `

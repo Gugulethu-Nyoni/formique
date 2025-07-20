@@ -7,7 +7,7 @@
 </head>
 <body>
 
-	<link rel="stylesheet" type="text/css" href="./formique-css.css"  />
+	<link rel="stylesheet" type="text/css" href="./formique-cssd.css"  />
 
 <script type="module">
 
@@ -18,6 +18,7 @@ const formSchema = [
   ['text', 'name', 'Name'],
   ['text', 'surname', 'Surname'],
   ['text', 'email', 'Email'],
+  ['textarea', 'message', 'Message'],
   ['submit', 'submit', 'Submit'],
 ];
 
@@ -29,14 +30,22 @@ const formParams =
 {
 	action: '#',
 	method: 'POST',
-	id: "myForm"
+	id: 'myForm',
+	//style: 'width: 100%;'
 }
 
 const formSettings = {
 
 	theme: 'orange',
 	formContainerId: 'regForm',
-	themeColor: '#4338ca'
+	formContainerStyle: 'width: 100%!important;',
+	themeColor: '#4338ca',
+	submitMode: 'email',
+	submitOnPage: true,
+	successMessage: 'Survey Filled Succesfully',
+	errorMessage: 'Something went wrong',
+	sendTo: ['gugunnn@gmail.com'],
+
 
 }
 
@@ -48,6 +57,6 @@ const form = new Formique(formSchema, formSettings, formParams);
 </body>
 
 
-<div id="regForm"></div>
+<div id="regForm" class=""></div>
 
 </html>

@@ -205,7 +205,7 @@
     --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     --formique-base-label: #555555;
     --formique-input-border: #dddddd;
-    --formique-focus-color: #6a4fbf;
+    --formique-focus-color: #555555;
     --formique-btn-bg: #777777;
     --formique-btn-text: #ffffff;
     --formique-btn-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -376,6 +376,10 @@
     --formique-max-width: 100%;
 }
 
+.formique.width-half {
+    --formique-max-width: 50%;
+}
+
 .formique.width-medium {
     --formique-max-width: 600px;
 }
@@ -386,4 +390,87 @@
 
 .formique.width-custom {
     /* To be set inline or via JS */
+}
+
+
+/* Spinner Container */
+#formiqueSpinner {
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--formique-font-family, 'Montserrat, sans-serif');
+    padding: 1rem;
+    border-radius: var(--formique-border-radius, 6px);
+    background-color: var(--formique-base-bg);
+    color: var(--formique-base-text);
+    margin-top: 1rem;
+}
+
+/* Spinner Circle */
+.formique-spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--formique-btn-bg);
+    animation: formique-spin 1s ease-in-out infinite;
+}
+
+/* Spinner Animation */
+@keyframes formique-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Message */
+#formiqueSpinner .message {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--formique-focus-color);
+}
+
+
+.formique-success, .formique-error {
+    /* Background with opacity to work with both themes */
+    background-color: var(--formique-base-bg); /* Based on --formique-btn-bg */
+    
+    /* Text styling using theme variables */
+    color: var(--formique-focus-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    
+    /* Border using focus color with opacity */
+    border: 1px solid var(--formique-focus-color); /* Based on --formique-btn-bg */
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Animation */
+    animation: fadeIn 0.3s ease-in-out;
+    
+    /* Shadow using theme variable */
+    box-shadow: var(--formique-base-shadow);
+}
+
+.formique-success::before {
+    content: "✓";
+    color: var(--formique-btn-bg); /* Using button background color for checkmark */
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.formique-error::before {
+    content: "✗";
+    color: var(--formique-btn-bg); /* Using button background color for checkmark */
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
