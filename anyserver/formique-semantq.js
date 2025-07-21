@@ -140,6 +140,8 @@ class Formique extends FormBuilder {
         this.applyTheme('dark', this.formContainerId);
       }
 
+      console.log("SETTINGS",this.formSettings);
+
      document.getElementById(`${this.formId}`).addEventListener('submit', function(event) {
  
       if (this.formSettings.submitMode === 'email') {
@@ -3805,7 +3807,7 @@ renderSubmitButton(type, name, label, validate, attributes) {
   }
 
 
-const spinner = `<div class="" id="formiqueSpinner">
+const spinner = `<div class="" id="formiqueSpinner" style="display:none;">
   <div class="formique-spinner"></div>
   <p class="message">Hang in tight, we are submitting your details…</p>
 </div>`;

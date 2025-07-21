@@ -12,7 +12,7 @@
 <script type="module">
 
  import Formique from './formique-semantq.js';
-
+ import { Form } from './semantqQL.js';
 
 const formSchema = [
   ['text', 'name', 'Name'],
@@ -50,6 +50,12 @@ const formSettings = {
 }
 
 const form = new Formique(formSchema, formSettings, formParams);
+
+
+/// SUBMISSION LOGIC
+
+const formData = new Form('myForm');
+console.log("Form Data here",JSON.stringify(formData,null, 2)); 
 
 </script>
 

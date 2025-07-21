@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title> Test Formique </title>
+</head>
+<body>
+
+	<link rel="stylesheet" type="text/css" href="./formique-css.css"  />
+
+<script type="module">
+
+ import Formique from './formique-semantq.js';
+ import smQL, { Form } from './semantqQL.js';
+
+const formSchema = [
+  ['text', 'name', 'Name'],
+  ['text', 'slug', 'Slug'],
+  ['text','description','Description'],
+  ['submit', 'submit', 'Submit'],
+];
+
+
+
+const formParams = {
+	action: '#',
+	method: 'POST',
+	id: 'myForm',
+	//style: 'width: 100%;'
+}
+
+const formSettings = {
+
+	theme: 'orange',
+	formContainerId: 'regFormContainer',
+	formContainerStyle: 'width: 100%!important;',
+	themeColor: '#4338ca',
+	
+
+
+}
+
+const form = new Formique(formSchema, formSettings, formParams);
+
+
+/// SUBMISSION LOGIC
+
+    // Instantiate the form capture ONCE
+//const formData = new Form('myForm', 'submit', { debug: true });
+
+let formData = null; 
+const formHandler = new Form('myForm');
+formHandler.form.addEventListener('form:captured', async e => {
+  formData = e.detail;  // Update on every capture
+ // console.log('Captured data (via event):', JSON.stringify(formData,null,2));
+
+
+//const result = await new smQL('http://localhost:3003/productcategory/productcategories', 'POST', formData, {log: true});
+
+
+const res = await new smQL('http://localhost:3003/productcategory/productcategories', 'POST', formData, {
+  formId: 'myForm'
+});
+
+
+});
+
+// Later you can access `formData` anywhere in this scope:
+//console.log('Latest formData:', formData);
+
+
+
+
+</script>
+
+
+</body>
+
+
+<div id="regFormContainer" class=""></div>
+
+</html>
