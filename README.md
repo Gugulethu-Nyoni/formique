@@ -196,7 +196,7 @@ There are two primary ways to install and use Formique in your project:
 2. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
     ```html
-      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.6/formique.umd.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.9/formique.umd.min.js"></script>
     ```
 
 ### Usage Example:
@@ -240,13 +240,68 @@ There are two primary ways to install and use Formique in your project:
         };
 
         // Initialize the form
-        const form = new Formique(formSchema, formParams, formSettings);
+        const form = new Formique(formSchema, formSettings, formParams);
     </script>
     ```
 
     **Note:** You can also use this instantiation with just the `formSchema`, leaving out the `formParams` and `formSettings`. This will apply the default dark theme and render the form inputs without the surrounding `<form>` element.
 
----
+# Full Vanilla JS Implementation
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Core - Formique</title>
+
+  <!-- Formique UMD JavaScript (core functionality) -->
+  <script src="https://cdn.jsdelivr.net/npm/formique@1.0.9/formique.umd.min.js"></script>
+
+  <!-- Formique CSS for styling -->
+  <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.12/formique-css.css" />
+
+  <!-- Initialize Formique via ES Module script -->
+  <script type="module">
+    // Define form structure
+    const formSchema = [
+      ['text', 'name', 'Name', { required: true }],
+      ['text', 'subject', 'Subject', { required: true }],
+      ['textarea', 'message', 'message', { required: true }],
+      ['submit', 'submit', 'submit']
+    ];
+
+    // Define form behavior and styling
+    const formSettings = {
+      theme: 'blue',                 // Predefined theme
+      formContainerId: 'myForm',     // ID of div where form is injected (optional if you used the id formique in your form container element)
+      submitOnPage: true,            // Enable client-side submission
+      errorMessage: 'Something went wrong'
+    };
+
+    // Define actual form HTML attributes
+    const formParams = {
+      method: 'POST',
+
+      // Developers: You can also include any standard form attributes here
+      // e.g., id, class, enctype, autocomplete, etc.
+      // See official docs for more: https://github.com/Gugulethu-Nyoni/formique
+    };
+
+    // Instantiate and render the form
+    const form = new Formique(formSchema, formSettings, formParams);
+  </script>
+</head>
+
+<body>
+
+  <!-- Target container where Formique will inject the form -->
+  <div id="myForm" class="width-half"></div>
+
+</body>
+</html>
+```
 
 ### Option B: Use Formique in a Node.js (Bundler) Environment
 
@@ -811,23 +866,165 @@ The following schema demonstrates how to implement dynamic dropdowns with nested
 ]
 ```
 
-## Styling the Form
+# ✨ Styling the Form 
 
-Additionally, Formique provides a set of CSS classes to facilitate the styling of various form elements. The default class names for different form components are as follows:
+Formique provides a robust and flexible system for styling forms, offering built-in themes, CSS classes for various components, and options for fine-grained customization of both form elements and the form container.
 
-- **Wrapper (div) for Input Elements:** `input-block`
-- **Input Fields:** `form-input`
-- **Radio Button Groups:** `radio-group`
-- **Checkbox Groups:** `checkbox-group`
-- **Select Dropdowns:** `form-select`
 
-These classes are predefined in the `formique.css` stylesheet. Developers can either use this stylesheet for consistent styling or create their own custom CSS based on these class names to suit their design preferences. Also, Formique implements these class names by default. 
+## Styling Form Elements
 
-The input class can be overidden by defining your preferred class names in the input attributes object e.g.
+Formique offers several ways to style form elements, from predefined themes to custom CSS.
+
+### Built-in Themes 
+
+Formique includes a set of **headless and minimal** built-in themes primarily affecting the **submit button background** and the **bottom border of focused inputs**. Most themes maintain a **light background**, with the `dark` theme being an exception as it offers full dark background support.
+
+**Available Themes:**
+
+  * `light`
+  * `dark`
+  * `pink`
+  * `indigo`
+  * `dark-blue`
+  * `light-blue`
+  * `dark-orange`
+  * `bright-yellow`
+  * `green`
+  * `purple`
+  * `midnight-blush`
+  * `deep-blue`
+  * `blue`
+  * `brown`
+  * `orange`
+
+To apply a theme, set the `theme` option in your `formSettings` object. If no theme is specified, Formique defaults to the `dark` theme.
 
 ```javascript
-{ class: 'form-control' }
+const formSettings = {
+  theme: 'indigo' // Example: Applies the 'indigo' theme
+};
 ```
+
+### Fine-Grained Theme Control 
+
+For precise control over the button and focus colors, use the `themeColor` option with a hexadecimal value.
+
+```javascript
+const formSettings = {
+  themeColor: '#327ba8' // Overrides the button and focus color
+};
+```
+
+### CSS Classes for Form Elements 🖌
+
+Formique provides a set of default CSS classes for various form components, enabling consistent styling. These classes are predefined in the `formique.css` stylesheet, which developers can use directly or as a reference for custom CSS.
+
+| Form Component                | Default Class Name      |
+| :---------------------------- | :---------------------- |
+| Wrapper (`div`) for Inputs    | `input-block`           |
+| Input Fields                  | `form-input`            |
+| Radio Button Groups           | `radio-group`           |
+| Checkbox Groups               | `checkbox-group`        |
+| Select Dropdowns              | `form-select`           |
+
+You can override the default input class by defining your preferred class name within the input attributes object, e.g., `{ class: 'form-control' }`.
+
+### Custom Styling with `.formique`-Scoped Classes
+
+Formique exposes its internal CSS classes, allowing for complete customization. You can target the form using `.formique` and individual elements with classes like `.formique-input`, `.formique-label`, and `.formique-submit`.
+
+```css
+.formique-input {
+  border-radius: 5px;
+  padding: 10px;
+}
+```
+
+
+## Styling and Sizing the Form Container
+
+Formique renders within a container `<div>`, which offers flexible styling and sizing options.
+
+### Default and Custom Container IDs
+
+By default, Formique uses a `<div>` with the ID `formique`:
+
+```html
+<div id="formique" class=""></div>
+```
+
+You can specify a custom container ID using the `formContainerId` option in your `formSettings`:
+
+```javascript
+const formSettings = {
+  formContainerId: 'myForm'
+};
+```
+
+And in your HTML:
+
+```html
+<div id="myForm"> Your Form will be displayed here </div>
+```
+
+### Built-in Container Size Classes
+
+Formique includes responsive width utility classes that can be applied directly to your form container:
+
+| Class Name     | Description       |
+| :------------- | :---------------- |
+| `width-full`   | 100% width        |
+| `width-half`   | 50% width         |
+| `width-medium` | 600px fixed width |
+| `width-small`  | 400px fixed width |
+
+Example:
+
+```html
+<div id="formique" class="width-half"></div>
+```
+
+### Custom Inline Style Control 
+
+For precise control over the container's inline styling, use the `formContainerStyle` setting. This will directly override the container's `style` attribute.
+
+```javascript
+const formSettings = {
+  formContainerStyle: 'width: 100%; max-width: 700px; padding: 2rem;'
+};
+```
+
+## Complete List of Formique CSS Classes
+
+Here's an alphabetically grouped list of all unique CSS class selectors used in Formique for comprehensive customization:
+
+### 📦 Container & Layout
+
+  * `.formique`
+  * `.formique-form`
+  * `.width-custom`
+  * `.width-full`
+  * `.width-half`
+  * `.width-medium`
+  * `.width-small`
+
+### 🏷️ Labels & Inputs
+
+  * `.form-checkbox-input`
+  * `.form-control`
+  * `.form-input`
+  * `.form-label`
+  * `.form-radio-input`
+  * `.form-select`
+  * `.form-select-input`
+  * `.form-textarea`
+
+### 📚 Input Wrappers
+
+  * `.checkbox-group`
+  * `.input-block`
+  * `.radio-group`
+
 ## Testing Form Submission with `submitOnPage`
 
 For testing purposes, you can define the `method` as `"POST"` in the `formParams` object. This allows you to simulate and test form submissions using Formique's built-in functionality.

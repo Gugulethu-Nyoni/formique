@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Core - Formique</title>
+
+  <!-- Formique UMD JavaScript (core functionality) -->
+  <script src="https://cdn.jsdelivr.net/npm/formique@1.0.9/formique.umd.min.js"></script>
+
+  <!-- Formique CSS for styling -->
+  <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.12/formique-css.css" />
+
+  <!-- Initialize Formique via ES Module script -->
+  <script type="module">
+    // Define form structure
+    const formSchema = [
+      ['text', 'name', 'Name', { required: true }],
+      ['text', 'subject', 'Subject', { required: true }],
+      ['textarea', 'message', 'message', { required: true }],
+      ['submit', 'submit', 'submit']
+    ];
+
+    // Define form behavior and styling
+    const formSettings = {
+      theme: 'blue',                 // Predefined theme
+      formContainerId: 'myForm',     // ID of div where form is injected (optional if you used the id formique in your form container element)
+      submitOnPage: true,            // Enable client-side submission
+      errorMessage: 'Something went wrong'
+    };
+
+    // Define actual form HTML attributes
+    const formParams = {
+      method: 'POST',
+
+      // Developers: You can also include any standard form attributes here
+      // e.g., id, class, enctype, autocomplete, etc.
+      // See official docs for more: https://github.com/Gugulethu-Nyoni/formique
+    };
+
+    // Instantiate and render the form
+    const form = new Formique(formSchema, formSettings, formParams);
+  </script>
+</head>
+
+<body>
+
+  <!-- Target container where Formique will inject the form -->
+  <div id="myForm" class="width-half"></div>
+
+</body>
+</html>

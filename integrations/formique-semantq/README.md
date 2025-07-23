@@ -42,7 +42,7 @@ Formique Semantq is a native Semantq JS framework Schema Defintion Language (SDL
 - **Mobile Responsive**: Forms are mobile responsive out of the box.
 - **Nested Dynamic Conditional Logic**: Implement complex conditional logic to show or hide form fields based on user input.
 - **Dynamic Dropdowns**: Create dropdowns whose options change dynamically based on other field selections.
-- **JavaScript-Driven Themes**: Apply themes dynamically using JavaScript for a customizable user interface.
+- **JavaScript-Driven Themes**: Apply themes or theme colors dynamically using JavaScript for a customizable user interface.
 - **WAI-ARIA and WCAG-Compliant HTML**: Ensure all form elements are accessible and meet WCAG standards.
 - **Progressive Enhancement**: Forms function with or without JavaScript, ensuring accessibility and functionality across all environments.
 
@@ -60,14 +60,6 @@ npx sv create
 npx sv create my-app
 ```
 
-#### Select the following options:
-
-- **SemantqKit minimal** (optional but preferred)
-- **Type checking with TypeScript** (optional but preferred)
-- **ESLint** (optional but preferred)
-- **npm** (required)
-
-
 > **Note:** Always refer to the latest official Semantq guide on how to create a Semantq app, as this may change. [Semantq Documentation: Creating a Project](https://Semantq.dev/docs/kit/creating-a-project)
 
 
@@ -77,7 +69,7 @@ npx sv create my-app
 npm run dev
 
 # or start the server and open the app in a new browser tab
-npm run dev -- --open
+npm run dev
 ```
 
 
