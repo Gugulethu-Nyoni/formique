@@ -189,9 +189,9 @@ There are two primary ways to install and use Formique in your project:
 
 1. **Include the CSS** in the head section of your HTML file:
 
-    ```html
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.6/formique.min.css" formique-style>
-    ```
+```html
+<link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.12/formique-css.css" />
+```
 
 2. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
@@ -207,7 +207,7 @@ There are two primary ways to install and use Formique in your project:
     <div id="formique"></div>
     ```
 
-    Alternatively, you can use a different container ID by setting `containerId: 'someelementid'` in the `formSettings` object.
+    Alternatively, you can use a different container ID by setting `formContainerId: 'someelementid'` in the `formSettings` object.
 
 2. Define your `formParams`, `formSchema`, and initialize Formique in a `<script>` block (placed below the previous script tag):
 

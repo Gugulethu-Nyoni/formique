@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Formique Class Library
+ * Formique Semantq Class Library
  * 
  * This library provides an extension of the FormBuilder class, allowing for dynamic form rendering, theming, 
  * and dependency management. The key functionalities include:
@@ -68,7 +68,7 @@ class Formique extends FormBuilder {
     this.submitButtonClass = 'form-submit-btn';
     this.formContainerId = formSettings?.formContainerId || 'formique';
     this.formId = this.formParams?.id || this.generateFormId();
-    console.log(this.formId);
+    //console.log(this.formId);
     this.formAction = formParams?.action || 'https://httpbin.org/post';
     this.method = 'POST';    
     this.formMarkUp = '';
@@ -84,14 +84,20 @@ class Formique extends FormBuilder {
       "dark-blue",
       "light-blue",
       "dark-orange",
+      "bright-yellow",
       "green",
       "purple",
-      "midnight-blush"
+      "midnight-blush",
+      "deep-blue",
+      "blue",
+      "brown",
+      "orange"
     ];
 
     //this.formiqueEndpoint = "http://localhost:3000/api/send-email";
     this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
 
+// ENABLE EVENT LISTENER
     document.addEventListener('DOMContentLoaded', () => {
 
       /*
@@ -120,13 +126,15 @@ class Formique extends FormBuilder {
  
       if (this.formSettings.submitMode === 'email') {
       event.preventDefault(); // Prevent the default form submission
+      document.getElementById("formiqueSpinner").style.display = "block";
+      //return;
       this.handleEmailSubmission(this.formId);
       }
 
 
     if (this.formSettings.submitOnPage) {
     event.preventDefault(); // Prevent the default form submission
-
+    document.getElementById("formiqueSpinner").style.display = "block";
     this.handleOnPageFormSubmission(this.formId);
     //console.warn("listener fired at least>>", this.formParams.id, this.method);
     }
@@ -134,7 +142,8 @@ class Formique extends FormBuilder {
 
    //
 
-    });
+// enable wrapper for DOM ready event listener
+ });
 
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
@@ -470,7 +479,7 @@ renderField(type, name, label, validate, attributes, options) {
 showSuccessMessage(message) {
   const container = document.getElementById(this.formContainerId);
   container.innerHTML = `
-    <div class="formique-success">✓ ${message}</div>
+    <div class="formique-success"> ${message}</div>
     ${this.formSettings.redirectURL 
       ? `<meta http-equiv="refresh" content="2;url=${this.formSettings.redirectURL}">` 
       : ""}
@@ -481,7 +490,7 @@ showErrorMessage(message) {
   const container = document.getElementById(this.formContainerId);
   const errorDiv = document.createElement("div");
   errorDiv.className = "formique-error";
-  errorDiv.textContent = `✗ ${message}`;
+  errorDiv.textContent = `${message}`;
   container.prepend(errorDiv);
 }
 
@@ -495,41 +504,40 @@ hasFileInputs(form) {
 
 
 async handleEmailSubmission(formId) {
-  console.log(`Starting email submission for form ID: ${formId}`); // Debug log
+  console.log(`Starting email submission for form ID: ${formId}`);
   
   const form = document.getElementById(formId);
   if (!form) {
-    console.error(`Form with ID ${formId} not found`); // Error log
+    console.error(`Form with ID ${formId} not found`);
     throw new Error(`Form with ID ${formId} not found`);
   }
 
-  // Validate required settings
-  if (!this.formSettings?.sendTo) {
-    console.error('formSettings.sendTo recipient email is required'); // Error log
-    throw new Error('formSettings.sendTo recipient email is required');
+  // Validate required settings - now checks if sendTo is array with at least one item
+  if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
+    console.error('formSettings.sendTo must be an array with at least one recipient email');
+    throw new Error('formSettings.sendTo must be an array with at least one recipient email');
   }
 
   // Serialize form data
   const payload = {
     formData: {},
     metadata: {
-      recipient: this.formSettings.sendTo,
+      recipients: this.formSettings.sendTo, // Now sending array
       timestamp: new Date().toISOString()
     }
   };
 
-  let senderName = ''; // Track sender's name for reply-to
-  let senderEmail = ''; // Track sender's email
-  let formSubject = ''; // Track subject from form field
+  let senderName = '';
+  let senderEmail = '';
+  let formSubject = '';
 
-  console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload))); // Debug log
+  console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
 
-  // Process form fields
+  // Process form fields (unchanged)
   new FormData(form).forEach((value, key) => {
-    console.log(`Processing form field - Key: ${key}, Value: ${value}`); // Debug log
+    console.log(`Processing form field - Key: ${key}, Value: ${value}`);
     payload.formData[key] = value;
     
-    // Auto-detect user email and name fields
     const lowerKey = key.toLowerCase();
     if ((lowerKey === 'email' || lowerKey.includes('email'))) {
       senderEmail = value;
@@ -537,7 +545,6 @@ async handleEmailSubmission(formId) {
     if ((lowerKey === 'name' || lowerKey.includes('name'))) {
       senderName = value;
     }
-    // Check for subject field
     if ((lowerKey === 'subject' || lowerKey.includes('subject'))) {
       formSubject = value;
     }
@@ -548,9 +555,9 @@ async handleEmailSubmission(formId) {
                            this.formSettings.subject || 
                            'Message From Contact Form';
   
-  console.log('Determined email subject:', payload.metadata.subject); // Debug log
+  console.log('Determined email subject:', payload.metadata.subject);
 
-  // Add sender information to metadata (server will handle validation)
+  // Add sender information to metadata
   if (senderEmail) {
     payload.metadata.sender = senderEmail;
     payload.metadata.replyTo = senderName 
@@ -558,15 +565,15 @@ async handleEmailSubmission(formId) {
       : senderEmail;
   }
 
-  console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload))); // Debug log
+  console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
 
   try {
     const endpoint = this.formiqueEndpoint || this.formAction;
     const method = this.method || 'POST';
     
-    console.log(`Preparing to send request to: ${endpoint}`); // Debug log
-    console.log(`Request method: ${method}`); // Debug log
-    console.log('Final payload being sent:', payload); // Debug log
+    console.log(`Preparing to send request to: ${endpoint}`);
+    console.log(`Request method: ${method}`);
+    console.log('Final payload being sent:', payload);
 
     const response = await fetch(endpoint, {
       method: method,
@@ -577,32 +584,38 @@ async handleEmailSubmission(formId) {
       body: JSON.stringify(payload)
     });
 
-    console.log(`Received response with status: ${response.status}`); // Debug log
+    console.log(`Received response with status: ${response.status}`);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('API Error Response:', errorData); // Error log
+      console.error('API Error Response:', errorData);
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      document.getElementById("formiqueSpinner").style.display = "none";
+
     }
 
     const data = await response.json();
-    console.log('API Success Response:', data); // Debug log
+    console.log('API Success Response:', data);
     
     const successMessage = this.formSettings.successMessage || 
                          data.message || 
                          'Your message has been sent successfully!';
-    console.log(`Showing success message: ${successMessage}`); // Debug log
+    console.log(`Showing success message: ${successMessage}`);
+
     this.showSuccessMessage(successMessage);
 
   } catch (error) {
-    console.error('Email submission failed:', error); // Error log
+    console.error('Email submission failed:', error);
     const errorMessage = this.formSettings.errorMessage || 
                        error.message || 
                        'Failed to send message. Please try again later.';
-    console.log(`Showing error message: ${errorMessage}`); // Debug log
+    console.log(`Showing error message: ${errorMessage}`);
     this.showErrorMessage(errorMessage);
+    document.getElementById("formiqueSpinner").style.display = "none";
+
   }
 }
+
 
 
 // Email validation helper
@@ -3743,8 +3756,16 @@ renderSubmitButton(type, name, label, validate, attributes) {
     submitButtonClass=this.submitButtonClass; 
   }
 
+
+const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
+  <div class="formique-spinner"></div>
+  <p class="message">Hang in tight, we are submitting your details…</p>
+</div>
+`;
   // Construct the final HTML string
+
   const formHTML = `
+    ${spinner}
     <input type="${type}"
       id="${id + '-block'}"
       class="${submitButtonClass}"
@@ -3770,7 +3791,7 @@ this.formMarkUp+= '</form>';
 const formContainer = document.getElementById(this.formContainerId);
 //alert(this.formContainerId);
 if (!formContainer) {
-  console.error(`Error: formContainer not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
+  console.error(`Error: form container with ID ${this.formContainerId} not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
 } else {
   formContainer.innerHTML = this.formMarkUp;
 }

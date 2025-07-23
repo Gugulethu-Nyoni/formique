@@ -5,7 +5,7 @@ import babel from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
 
 export default {
-  input: 'src/js/formique-semantq.js',
+  input: 'src/js/formique.js',
   output: [
     {
       file: 'dist/js/formique.cjs.js',
