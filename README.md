@@ -100,8 +100,6 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 - Submit: ```html <input type="submit"> ```
 
 
-
-
 # How to Write Form Schema
 
 The form schema is an array of field definitions. Each field is defined by an array containing:
@@ -236,7 +234,7 @@ There are two primary ways to install and use Formique in your project:
             requiredFieldIndicator: true,
             framework: 'semantq',
             placeholders: true,
-            containerid: 'form-div'
+            formContainerId: 'form-div'
         };
 
         // Initialize the form
@@ -337,12 +335,8 @@ There are two primary ways to install and use Formique in your project:
 
 Formique is also available in additional formats like **ESM (ES Modules)** and **IIFE (Immediately Invoked Function Expression)** for specific use cases. For most projects, we recommend using **UMD** for browser contexts and **ESM** for Node.js environments. Refer to the Formique CDN for all available formats.
 
+Include the CSS and import Formique in the head section of your HTML file as shown above. 
 
-2. Include the CSS and import Formique in the head section of your HTML file:
-
-    ```html
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/formique-css@1.0.6/formique.min.css" formique-style>
-    ```
 3. Define form container somewhere in the html body: 
 
 ```html
@@ -501,7 +495,7 @@ const formParams = {
   action: 'submit.js', // Form submission URL
   id: 'myForm', // Unique identifier for the form
   class: 'form', // CSS class for styling
-  semantq: true, // Whether to use semantic HTML elements
+  semantq: true, // Whether to use semantq HTML elements
   style: 'width: 100%; font-size: 14px;' // Inline CSS styling
 };
 
@@ -516,7 +510,7 @@ const formParams = {
   action: 'submit.js', // Form submission URL
   id: 'myForm', // Unique identifier for the form
   class: 'form', // CSS class for styling
-  semantq: true, // if true it enables Semantq syntax sugar: i.e. attribute: onchange: 'handlerFunction' will be transformed to: @change={handlerFunction} if false or not defined completely the output would be regular html e.g.: onchange="handlerFunction()"
+  framework: 'semantq', // this enables Semantq syntax sugar: i.e. attribute: onchange: 'handlerFunction' will be transformed to: @change={handlerFunction} if false or not defined completely the output would be regular html e.g.: onchange="handlerFunction()"
   style: 'width: 100%; font-size: 14px;', // Inline CSS styling
   enctype: 'multipart/form-data', // Encoding type for file uploads
   target: '_blank', // Where to open the form result (e.g., '_self', '_blank')
@@ -554,9 +548,9 @@ const formSettings = {
   successMessage: "Your registration details have been captured successfully!", // Success message
   errorMessage: "There was an error in submitting your details. Please try again!", // Error message
   requiredFieldIndicator: true, // Display asterisk for required fields
-  framework: 'semantic', // Specify framework (optional)
+  framework: 'semantq', // Specify framework (optional)
   placeholders: true, // Use labels as placeholders
-  containerId: 'form-div', // Target container by ID (optional)
+  formContainerId: 'form-div', // Target container by ID (optional)
 };
 ```
 
@@ -576,7 +570,7 @@ const formSettings = {
 
 - **placeholders**: Enables labels to be shown as placeholders inside input fields, providing a cleaner look and saving space.
 
-- **containerId**: Allows targeting a specific container by its ID where the form will be rendered. If the container ID is `'formique'`, this parameter can be omitted.
+- **formContainerId**: Allows targeting a specific container by its ID where the form will be rendered. If the container ID is `'formique'`, this parameter can be omitted.
 
 **All settings are optional:** You can use only the settings that are relevant to your needs.
 
