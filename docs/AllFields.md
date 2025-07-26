@@ -9,7 +9,7 @@
   <title>Core - Formique</title>
 
   <!-- Formique CSS for styling -->
-  <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.12/formique-css.css" />
+  <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.13/formique-css.css" />
 
   <script src="https://cdn.jsdelivr.net/npm/formique@1.0.11/formique.umd.min.js"></script>
 
