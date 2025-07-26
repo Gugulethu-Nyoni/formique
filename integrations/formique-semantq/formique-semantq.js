@@ -50,126 +50,122 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
-  constructor(formSchema, formSettings = {}, formParams = {}, ) {
-    super();
-    this.formSchema = formSchema;
-    this.formParams = formParams;
-    this.formSettings = {
-      requiredFieldIndicator: true,
-      placeholders: true,
-      asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
-      ...formSettings
-    };
-    this.divClass = 'input-block';
-    this.inputClass = 'form-input';
-    this.radioGroupClass = 'radio-group';
-    this.checkboxGroupClass = 'checkbox-group';
-    this.selectGroupClass = 'form-select';
-    this.submitButtonClass = 'form-submit-btn';
-    this.formContainerId = formSettings?.formContainerId || 'formique';
-    this.formContainerStyle = formSettings?.formContainerStyle || null;
-    this.formId = this.formParams?.id || this.generateFormId();
-    //console.log(this.formId);
-    this.formAction = formParams?.action || 'https://httpbin.org/post';
-    this.method = 'POST';    
-    this.formMarkUp = '';
-    this.dependencyGraph = {};
-    this.redirect = formSettings?.redirect ||'';
-    this.redirectURL = formSettings?.redirectURL ||'';
-    this.activeTheme = formSettings.theme || null;
-    this.themeColor = formSettings.themeColor || null;
-     this.themeColorMap = {
-      'primary': {
-        '--formique-base-bg': '#ffffff',
-        '--formique-base-text': '#333333',
-        '--formique-base-shadow': '0 10px 30px rgba(0, 0, 0, 0.1)',
-        '--formique-base-label': '#555555',
-        '--formique-input-border': '#dddddd',
-        '--formique-focus-color': null, // Will be set to themeColor
-        '--formique-btn-bg': null,      // Will be set to themeColor
-        '--formique-btn-text': '#ffffff',
-        '--formique-btn-shadow': null    // Will be calculated from themeColor
-      }
-    };
+    constructor(formSchema, formSettings = {}, formParams = {}) {
+        super();
+        this.formSchema = formSchema;
+        this.formParams = formParams;
+        this.formSettings = {
+            requiredFieldIndicator: true,
+            placeholders: true,
+            asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
+            ...formSettings
+        };
+        this.divClass = 'input-block';
+        this.inputClass = 'form-input';
+        this.radioGroupClass = 'radio-group';
+        this.checkboxGroupClass = 'checkbox-group';
+        this.selectGroupClass = 'form-select';
+        this.submitButtonClass = 'form-submit-btn';
+        this.formContainerId = formSettings?.formContainerId || 'formique';
+        // Ensure formParams.id is used if provided, otherwise generate a new ID
+        this.formId = this.formParams?.id || this.generateFormId(); 
+        this.formAction = formParams?.action || 'https://httpbin.org/post';
+        this.method = 'POST';
+        this.formMarkUp = '';
+        this.dependencyGraph = {};
+        this.redirect = formSettings?.redirect || '';
+        this.redirectURL = formSettings?.redirectURL || '';
+        this.themes = [
+            "dark", "light", "pink", "indigo", "dark-blue", "light-blue",
+            "dark-orange", "bright-yellow", "green", "purple", "midnight-blush",
+            "deep-blue", "blue", "brown", "orange"
+        ];
+        this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
 
 
-    this.themes = [
-      "dark",
-      "light",
-      "pink",
-      "light",
-      "indigo",
-      "dark-blue",
-      "light-blue",
-      "dark-orange",
-      "bright-yellow",
-      "green",
-      "purple",
-      "midnight-blush",
-      "deep-blue",
-      "blue",
-      "brown",
-      "orange"
-    ];
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Build the form's HTML in memory
+            this.formMarkUp += this.renderFormElement(); // Adds opening <form> tag and any hidden inputs
 
-    //this.formiqueEndpoint = "http://localhost:3000/api/send-email";
-    this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
+            // Filter out 'submit' field for rendering, and render all other fields
+            const nonSubmitFieldsHtml = this.formSchema
+                .filter(field => field[0] !== 'submit')
+                .map(field => {
+                    const [type, name, label, validate, attributes = {}, options] = field;
+                    return this.renderField(type, name, label, validate, attributes, options);
+                }).join('');
+            this.formMarkUp += nonSubmitFieldsHtml;
 
-// DISABLE EVENT LISTENER
-    // document.addEventListener('DOMContentLoaded', () => {
-
-      /*
-      if (this.formParams && Object.keys(this.formParams).length > 0) {
-      this.formMarkUp += this.renderFormElement();
-      } */
-
-      this.formMarkUp += this.renderFormElement();
-
-
-      this.renderForm();
-      this.renderFormHTML();
-      this.initDependencyGraph();
-      this.registerObservers();
-
-      
-      if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
-        let theme = this.formSettings.theme;
-        this.applyTheme(theme, this.formContainerId);
-      } else {
-        // Fallback to dark theme if no theme is set or invalid theme
-        this.applyTheme('dark', this.formContainerId);
-      }
-
-     document.getElementById(`${this.formId}`).addEventListener('submit', function(event) {
- 
-      if (this.formSettings.submitMode === 'email') {
-      event.preventDefault(); // Prevent the default form submission
-      document.getElementById("formiqueSpinner").style.display = "block";
-      //return;
-      this.handleEmailSubmission(this.formId);
-      }
+            // Find and render the submit button separately, at the very end of the form content
+            const submitField = this.formSchema.find(field => field[0] === 'submit');
+            if (submitField) {
+                const [type, name, label, validate, attributes = {}] = submitField;
+                const id = attributes.id || name;
+                let buttonClass = this.submitButtonClass;
+                if ('class' in attributes) {
+                    buttonClass = attributes.class;
+                }
+                let additionalAttrs = '';
+                for (const [key, value] of Object.entries(attributes)) {
+                    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+                        if (key.startsWith('on')) {
+                            const eventValue = value.endsWith('()') ? value : `${value}()`;
+                            additionalAttrs += ` ${key}="${eventValue}"`;
+                        } else {
+                            if (value === true) {
+                                additionalAttrs += ` ${key.replace(/_/g, '-')}`;
+                            } else if (value !== false) {
+                                additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"`;
+                            }
+                        }
+                    }
+                }
+                this.formMarkUp += `
+                    <div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
+                        <div class="formique-spinner"></div>
+                        <p class="message">Hang in tight, we are submitting your details…</p>
+                    </div>
+                    <input type="submit" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>
+                `;
+            }
 
 
-    if (this.formSettings.submitOnPage) {
-    event.preventDefault(); // Prevent the default form submission
-    document.getElementById("formiqueSpinner").style.display = "block";
-    this.handleOnPageFormSubmission(this.formId);
-    //console.warn("listener fired at least>>", this.formParams.id, this.method);
-    }
-    }.bind(this)); // Bind `this` to ensure it's correct inside the event listener
+            // 2. Inject the complete form HTML into the DOM
+            this.renderFormHTML(); // This puts the form element into the document!
 
+            // 3. Now that the form is in the DOM, attach event listeners
+            const formElement = document.getElementById(`${this.formId}`);
+            if (formElement) { // Add a check here just in case, although it should now exist
+                formElement.addEventListener('submit', function(event) {
+                    if (this.formSettings.submitMode === 'email') {
+                        event.preventDefault();
+                        document.getElementById("formiqueSpinner").style.display = "block";
+                        this.handleEmailSubmission(this.formId);
+                    }
 
+                    if (this.formSettings.submitOnPage) {
+                        event.preventDefault();
+                        document.getElementById("formiqueSpinner").style.display = "block";
+                        this.handleOnPageFormSubmission(this.formId);
+                    }
+                }.bind(this));
+            } else {
+                console.error(`Form with ID ${this.formId} not found after rendering. Event listener could not be attached.`);
+            }
 
-  if (this.formContainerStyle) {
-  const formContainer = document.getElementById(this.formContainerId);
-  formContainer.setAttribute("style", this.formContainerStyle);
-  }
+            // Initialize dependency graph and observers after the form is rendered
+            this.initDependencyGraph();
+            this.registerObservers();
 
-
-
-// disable wrapper for DOM event listener
- //   });
-
+            // Apply theme
+            if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
+                let theme = this.formSettings.theme;
+                this.applyTheme(theme, this.formContainerId);
+            } else {
+                this.applyTheme('dark', this.formContainerId);
+            }
+        }); // DOM LISTENER WRAPPER
+    
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
 
@@ -346,107 +342,56 @@ registerObservers() {
 
 
 applyTheme(theme, formContainerId) {
-    const formContainer = document.getElementById(formContainerId);
-    const spinnerContainer = document.getElementById('formiqueSpinner');
+  //const stylesheet = document.querySelector('link[formique-style]');
 
-    if (!formContainer) {
+  const stylesheet = document.querySelector('link[href*="formique-css"]');
+  
+  if (!stylesheet) {
+    console.error("Stylesheet with 'formique-css' in the name not found!");
+    return;
+  }
+
+  fetch(stylesheet.href)
+    .then(response => response.text())
+    .then(cssText => {
+      // Extract theme-specific CSS rules
+      const themeRules = cssText.match(new RegExp(`\\.${theme}-theme\\s*{([^}]*)}`, 'i'));
+
+      if (!themeRules) {
+        console.error(`Theme rules for ${theme} not found in the stylesheet.`);
+        return;
+      }
+
+      // Extract CSS rules for the theme
+      const themeCSS = themeRules[1].trim();
+
+      // Find the form container element
+      const formContainer = document.getElementById(formContainerId);
+
+      if (formContainer) {
+        // Append the theme class to the form container
+        formContainer.classList.add(`${theme}-theme`, 'formique');
+
+
+        // Create a <style> tag with the extracted theme styles
+        const clonedStyle = document.createElement('style');
+        clonedStyle.textContent = `
+          #${formContainerId} {
+            ${themeCSS}
+          }
+        `;
+
+        // Insert the <style> tag above the form container
+        formContainer.parentNode.insertBefore(clonedStyle, formContainer);
+
+       // console.log(`Applied ${theme} theme to form container: ${formContainerId}`);
+      } else {
         console.error(`Form container with ID ${formContainerId} not found.`);
-        return;
-    }
-
-    // Clear any existing theme classes
-    this.themes.forEach(t => formContainer.classList.remove(`${t}-theme`));
-    formContainer.classList.remove('custom-theme');
-    spinnerContainer.classList.remove('custom-theme');
-
-    // If themeColor is provided, use it to create a custom theme
-    if (this.themeColor) {
-        this.applyCustomTheme(formContainerId);
-        return;
-    }
-
-    // Fall back to predefined theme if no themeColor
-    const stylesheet = document.querySelector('link[href*="formique-css"]');
-    if (!stylesheet) {
-        console.error("Stylesheet with 'formique-css' in the name not found!");
-        return;
-    }
-
-    fetch(stylesheet.href)
-        .then(response => response.text())
-        .then(cssText => {
-            const themeRules = cssText.match(new RegExp(`\\.${theme}-theme\\s*{([^}]*)}`, 'i'));
-            if (!themeRules) {
-                console.error(`Theme rules for ${theme} not found in the stylesheet.`);
-                return;
-            }
-
-            const themeCSS = themeRules[1].trim();
-            formContainer.classList.add(`${theme}-theme`, 'formique');
-            spinnerContainer.classList.add(`${theme}-theme`);
-
-            const clonedStyle = document.createElement('style');
-            clonedStyle.textContent = `#${formContainerId} { ${themeCSS} }`;
-            formContainer.parentNode.insertBefore(clonedStyle, formContainer);
-        })
-        .catch(error => {
-            console.error('Error loading the stylesheet:', error);
-        });
-}
-
-applyCustomTheme(formContainerId) {
-    const formContainer = document.getElementById(formContainerId);
-    const spinnerContainer = document.getElementById('formiqueSpinner');
-
-    if (!formContainer) return;
-
-    formContainer.classList.add('custom-theme', 'formique');
-    spinnerContainer.classList.add('custom-theme');
-
-    this.activeTheme = 'custom-theme';
-
-    // Calculate shadow color (semi-transparent themeColor)
-    const shadowColor = this.hexToRgbA(this.themeColor, 0.3);
-    
-    // Create custom theme CSS variables
-    const customTheme = {
-        ...this.themeColorMap.primary,
-        '--formique-focus-color': this.themeColor,
-        '--formique-btn-bg': this.themeColor,
-        '--formique-btn-shadow': `0 2px 10px ${shadowColor}`
-    };
-
-    // Apply the styles
-    const styleElement = document.createElement('style');
-    styleElement.textContent = `
-        #${formContainerId} {
-            ${Object.entries(customTheme)
-                .map(([varName, value]) => 
-                    value ? `${varName}: ${value};` : ''
-                )
-                .join('\n')}
-        }
-    `;
-
-    // Remove any existing custom style
-    const existingStyle = document.querySelector(`style[data-custom-theme="${formContainerId}"]`);
-    if (existingStyle) existingStyle.remove();
-    
-    styleElement.setAttribute('data-custom-theme', formContainerId);
-    formContainer.parentNode.insertBefore(styleElement, formContainer);
-}
-
-hexToRgbA(hex, alpha) {
-    let c;
-    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-        c = hex.substring(1).split('');
-        if (c.length === 3) {
-            c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-        }
-        c = '0x' + c.join('');
-        return `rgba(${[(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',')},${alpha})`;
-    }
-    return `rgba(0, 0, 0, ${alpha})`;
+      }
+    })
+    .catch(error => {
+      console.error('Error loading the stylesheet:', error);
+    });
 }
 
 
@@ -500,6 +445,7 @@ Object.keys(paramsToUse).forEach(key => {
 
 
   // Main renderForm method
+/*
 renderForm() {
     // Process each field synchronously
     const formHTML = this.formSchema.map(field => {
@@ -508,8 +454,61 @@ renderForm() {
     }).join('');   
     this.formMarkUp += formHTML; 
 }
+*/
+
+renderForm() {
+        // Filter out the 'submit' type before mapping
+        const formHTML = this.formSchema
+            .filter(field => field[0] !== 'submit') // Exclude submit button from this loop
+            .map(field => {
+                const [type, name, label, validate, attributes = {}, options] = field;
+                return this.renderField(type, name, label, validate, attributes, options);
+            }).join('');
+        this.formMarkUp += formHTML;
+  }
 
 
+
+// New method to render the submit button specifically
+    renderSubmitButtonElement() {
+        const submitField = this.formSchema.find(field => field[0] === 'submit');
+        if (submitField) {
+            const [type, name, label, validate, attributes = {}] = submitField;
+            const id = attributes.id || name;
+            let buttonClass = this.submitButtonClass;
+            if ('class' in attributes) {
+                buttonClass = attributes.class;
+            }
+            let additionalAttrs = '';
+            for (const [key, value] of Object.entries(attributes)) {
+                if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+                    if (key.startsWith('on')) {
+                        const eventValue = value.endsWith('()') ? value : `${value}()`;
+                        additionalAttrs += ` ${key}="${eventValue}"`;
+                    } else {
+                        if (value === true) {
+                            additionalAttrs += ` ${key.replace(/_/g, '-')}`;
+                        } else if (value !== false) {
+                            additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"`;
+                        }
+                    }
+                }
+            }
+
+            // Include the spinner div before the submit button
+            return `
+<div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
+    <div class="formique-spinner"></div>
+    <p class="message">Hang in tight, we are submitting your details…</p>
+</div>
+<input type="submit" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>
+            `.trim();
+        }
+        return ''; // Return empty string if no submit button is found in schema
+    }
+
+
+/*
 renderField(type, name, label, validate, attributes, options) {
     const fieldRenderMap = {
         'text': this.renderTextField,
@@ -549,13 +548,93 @@ renderField(type, name, label, validate, attributes, options) {
     }
 }
 
+*/
+
+
+ // renderField method - No change needed here for this issue, but ensure it handles 'submit' type correctly if called directly
+    renderField(type, name, label, validate, attributes, options) {
+        const fieldRenderMap = {
+            'text': this.renderTextField,
+            'email': this.renderEmailField,
+            'number': this.renderNumberField,
+            'password': this.renderPasswordField,
+            'textarea': this.renderTextAreaField,
+            'tel': this.renderTelField,
+            'date': this.renderDateField,
+            'time': this.renderTimeField,
+            'datetime-local': this.renderDateTimeField,
+            'month': this.renderMonthField,
+            'week': this.renderWeekField,
+            'url': this.renderUrlField,
+            'search': this.renderSearchField,
+            'color': this.renderColorField,
+            'checkbox': this.renderCheckboxField,
+            'radio': this.renderRadioField,
+            'file': this.renderFileField,
+            'hidden': this.renderHiddenField,
+            'image': this.renderImageField,
+            'singleSelect': this.renderSingleSelectField,
+            'multipleSelect': this.renderMultipleSelectField,
+            'dynamicSingleSelect': this.renderDynamicSingleSelectField,
+            'range': this.renderRangeField,
+            'submit': this.renderSubmitButton, // Keep this for completeness, but renderSubmitButtonElement will now handle it
+        };
+
+        const renderMethod = fieldRenderMap[type];
+
+        if (renderMethod) {
+            // If the type is 'submit', ensure we use the specific renderSubmitButtonElement
+            // Although, with the filter in renderForm(), this branch for 'submit' type
+            // might not be hit in the primary rendering flow, it's good practice.
+            return renderMethod.call(this, type, name, label, validate, attributes, options);
+
+            if (type === 'submit') {
+                return this.renderSubmitButton(type, name, label, validate, attributes, options);
+            }
+            //return renderMethod.call(this, type, name, label, validate, attributes, options);
+        } else {
+            console.warn(`Unsupported field type '${type}' encountered.`);
+            return '';
+        }
+    }
+
+
+
+renderSubmitButton(type, name, label, validate, attributes) {
+        // This method can simply call the dedicated submit button renderer if it's kept separate.
+        // Or, if renderField is only used for non-submit fields, this method might not be strictly necessary
+        // to be called from renderField's map, but it needs to exist if mapped.
+        // For simplicity, I'll make it consistent with the new separation.
+        const id = attributes.id || name;
+        let buttonClass = this.submitButtonClass;
+        if ('class' in attributes) {
+            buttonClass = attributes.class;
+        }
+        let additionalAttrs = '';
+        for (const [key, value] of Object.entries(attributes)) {
+            if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+                if (key.startsWith('on')) {
+                    const eventValue = value.endsWith('()') ? value : `${value}()`;
+                    additionalAttrs += ` ${key}="${eventValue}"`;
+                } else {
+                    if (value === true) {
+                        additionalAttrs += ` ${key.replace(/_/g, '-')}`;
+                    } else if (value !== false) {
+                        additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"`;
+                    }
+                }
+            }
+        }
+        // No spinner div here, as that's added once by renderSubmitButtonElement
+        return `<input type="${type}" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>`;
+    }
 
 
 // Show success/error messages (externalizable)
 showSuccessMessage(message) {
   const container = document.getElementById(this.formContainerId);
   container.innerHTML = `
-    <div class="formique-success ${this.activeTheme}">${message}</div>
+    <div class="formique-success"> ${message}</div>
     ${this.formSettings.redirectURL 
       ? `<meta http-equiv="refresh" content="2;url=${this.formSettings.redirectURL}">` 
       : ""}
@@ -565,7 +644,7 @@ showSuccessMessage(message) {
 showErrorMessage(message) {
   const container = document.getElementById(this.formContainerId);
   const errorDiv = document.createElement("div");
-  errorDiv.className = `formique-error ${this.activeTheme}`;
+  errorDiv.className = "formique-error";
   errorDiv.textContent = `${message}`;
   container.prepend(errorDiv);
 }
@@ -579,92 +658,120 @@ hasFileInputs(form) {
 
 
 
-// A complete function to replace your old one
-// Use this function wherever you are currently using the fetch().then()... structure
-// This is the complete, final version of the class method.
-// It is an async arrow function, so 'this' is automatically correct.
-handleEmailSubmission = async (formId) => {
-  try {
-    const form = document.getElementById(formId);
-    if (!form) throw new Error(`Form with ID ${formId} not found`);
+async handleEmailSubmission(formId) {
+  console.log(`Starting email submission for form ID: ${formId}`);
+  
+  const form = document.getElementById(formId);
+  if (!form) {
+    console.error(`Form with ID ${formId} not found`);
+    throw new Error(`Form with ID ${formId} not found`);
+  }
 
-    // --- Start of Payload and Method Logic (as provided previously) ---
-    const payload = {
-      formData: {},
-      metadata: {
-        recipients: this.formSettings.sendTo,
-        timestamp: new Date().toISOString()
-      }
-    };
-    
-    let senderEmail = '';
-    let formSubject = '';
+  // Validate required settings - now checks if sendTo is array with at least one item
+  if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
+    console.error('formSettings.sendTo must be an array with at least one recipient email');
+    throw new Error('formSettings.sendTo must be an array with at least one recipient email');
+  }
 
-    new FormData(form).forEach((value, key) => {
-        payload.formData[key] = value;
-        const lowerKey = key.toLowerCase();
-        if ((lowerKey === 'email' || lowerKey.includes('email'))) {
-          senderEmail = value;
-        }
-        if ((lowerKey === 'subject' || lowerKey.includes('subject'))) {
-          formSubject = value;
-        }
-    });
-
-    payload.metadata.subject = formSubject || this.formSettings.subject || 'Message From Contact Form';
-    if (senderEmail) {
-      payload.metadata.sender = senderEmail;
-      payload.metadata.replyTo = senderEmail;
+  // Serialize form data
+  const payload = {
+    formData: {},
+    metadata: {
+      recipients: this.formSettings.sendTo, // Now sending array
+      timestamp: new Date().toISOString()
     }
-    // --- End of Payload and Method Logic ---
+  };
 
+  let senderName = '';
+  let senderEmail = '';
+  let formSubject = '';
+
+  console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
+
+  // Process form fields (unchanged)
+  new FormData(form).forEach((value, key) => {
+    console.log(`Processing form field - Key: ${key}, Value: ${value}`);
+    payload.formData[key] = value;
+    
+    const lowerKey = key.toLowerCase();
+    if ((lowerKey === 'email' || lowerKey.includes('email'))) {
+      senderEmail = value;
+    }
+    if ((lowerKey === 'name' || lowerKey.includes('name'))) {
+      senderName = value;
+    }
+    if ((lowerKey === 'subject' || lowerKey.includes('subject'))) {
+      formSubject = value;
+    }
+  });
+
+  // Determine the email subject with fallback logic
+  payload.metadata.subject = formSubject || 
+                           this.formSettings.subject || 
+                           'Message From Contact Form';
+  
+  console.log('Determined email subject:', payload.metadata.subject);
+
+  // Add sender information to metadata
+  if (senderEmail) {
+    payload.metadata.sender = senderEmail;
+    payload.metadata.replyTo = senderName 
+      ? `${senderName} <${senderEmail}>` 
+      : senderEmail;
+  }
+
+  console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
+
+  try {
     const endpoint = this.formiqueEndpoint || this.formAction;
     const method = this.method || 'POST';
-
-    // Show spinner when request starts
-    document.getElementById("formiqueSpinner").style.display = "flex";
+    
+    console.log(`Preparing to send request to: ${endpoint}`);
+    console.log(`Request method: ${method}`);
+    console.log('Final payload being sent:', payload);
 
     const response = await fetch(endpoint, {
       method: method,
-      headers: {
+      headers: { 
         'Content-Type': 'application/json',
-        'X-Formique-Version': '1.0'
+        'X-Formique-Version': '1.0' 
       },
       body: JSON.stringify(payload)
     });
 
-    // The core fix: Read the response body as text first.
-    // This will not fail on an empty response.
-    const responseBodyText = await response.text();
-    let data = {};
-
-    // Only try to parse if the body isn't empty.
-    if (responseBodyText.length > 0) {
-      try {
-        data = JSON.parse(responseBodyText);
-      } catch (err) {
-        // This handles cases where the server returns non-JSON data.
-        console.warn("Response was not valid JSON or unexpected format:", err);
-      }
-    }
+    console.log(`Received response with status: ${response.status}`);
 
     if (!response.ok) {
-      const errorMsg = data.error || `HTTP error! status: ${response.status}`;
-      throw new Error(errorMsg);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API Error Response:', errorData);
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      document.getElementById("formiqueSpinner").style.display = "none";
+
     }
 
-    const successMessage = this.formSettings.successMessage || data.message || "Your message has been sent successfully!";
+    const data = await response.json();
+    console.log('API Success Response:', data);
+    
+    const successMessage = this.formSettings.successMessage || 
+                         data.message || 
+                         'Your message has been sent successfully!';
+    console.log(`Showing success message: ${successMessage}`);
+
     this.showSuccessMessage(successMessage);
 
   } catch (error) {
-    console.error("Email submission failed:", error);
-    const errorMessage = this.formSettings.errorMessage || error.message || "Failed to send message. Please try again later.";
+    console.error('Email submission failed:', error);
+    const errorMessage = this.formSettings.errorMessage || 
+                       error.message || 
+                       'Failed to send message. Please try again later.';
+    console.log(`Showing error message: ${errorMessage}`);
     this.showErrorMessage(errorMessage);
-  } finally {
-    // Ensure spinner is hidden on success or failure
     document.getElementById("formiqueSpinner").style.display = "none";
+
   }
-};
+}
+
+
 
 // Email validation helper
 validateEmail(email) {
@@ -742,7 +849,7 @@ if (formContainer) {
     errorMessageDiv.innerHTML = err; 
 
     // Append the new error message div to the form container
-    //formContainer.appendChild(errorMessageDiv);
+    formContainer.appendChild(errorMessageDiv);
   }
 });
 
@@ -1422,17 +1529,18 @@ const telInputValidationAttributes = [
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  }
-  if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  }
-  if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+  // Handle the binding syntax
+    let bindingDirective = '';
+    if (attributes?.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding?.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -1543,13 +1651,13 @@ renderDateField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding?.startsWith('::') && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1664,14 +1772,15 @@ renderTimeField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
+  // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding?.startsWith('::') && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1915,15 +2024,18 @@ renderMonthField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+    let bindingDirective = '';
+    if (attributes?.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding?.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
+
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2037,15 +2149,17 @@ renderWeekField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding  && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+    let bindingDirective = '';
+    if (attributes?.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding?.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2155,15 +2269,18 @@ renderUrlField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+  // Handle the binding syntax
+let bindingDirective = '';
+if (attributes?.binding === 'bind:value' && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding?.startsWith('::') && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding && !name) {
+  console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+  return;
+}
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2272,15 +2389,17 @@ renderSearchField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+let bindingDirective = '';
+if (attributes?.binding === 'bind:value' && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding?.startsWith('::') && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding && !name) {
+  console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+  return;
+}
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2382,13 +2501,15 @@ renderColorField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
+  // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value') {
-    bindingDirective = `bind:value="${name}"\n`;
-  } else if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding?.startsWith('::') && name) {
+    bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -2419,8 +2540,13 @@ renderColorField(type, name, label, validate, attributes) {
   if ('class' in attributes) {
     inputClass = attributes.class; 
   } else {
-        inputClass = this.inputClass; 
+       // inputClass = this.inputClass; 
   }
+
+ if (type === 'color') {
+  inputClass += ' form-color-input'; // Add the new specific class for color inputs
+}
+
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
@@ -2493,16 +2619,17 @@ renderFileField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value') {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  }
-  if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+    let bindingDirective = '';
+    if (attributes?.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding?.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2606,12 +2733,13 @@ renderHiddenField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value') {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding?.startsWith('::') && name) {
+    bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -2648,9 +2776,9 @@ renderHiddenField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-    <label for="${id}">${label}
+    <!--<label for="${id}">${label} 
   ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-</label>
+</label> -->
       <input 
         type="${type}"
         name="${name}"
@@ -2683,7 +2811,7 @@ renderHiddenField(type, name, label, validate, attributes) {
 }
 
 
-
+/*
 renderImageField(type, name, label, validate, attributes) {
   // Define valid validation attributes for image upload
   const imageUploadValidationAttributes = [
@@ -2714,12 +2842,18 @@ renderImageField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value') {
-    bindingDirective = ` bind:value="${name}"`;
-  } else if (attributes.binding.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}"`;
-  }
+  // Handle the binding syntax
+let bindingDirective = '';
+if (attributes?.binding === 'bind:value' && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding?.startsWith('::') && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding && !name) {
+  console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+  return;
+}
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2786,26 +2920,33 @@ renderImageField(type, name, label, validate, attributes) {
   this.formMarkUp +=formattedHtml;
 }
 
-
-
+*/
 
 renderImageField(type, name, label, validate, attributes) {
-  // Define valid validation attributes for image upload
-  const imageUploadValidationAttributes = [
+  // Define valid validation attributes for image input
+  const imageValidationAttributes = [
     'accept',
     'required',
     'minwidth',
     'maxwidth',
     'minheight',
     'maxheight',
+    'src',
+    'alt',
+    'width',
+    'height'
   ];
 
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (imageUploadValidationAttributes.includes(key)) {
-        validationAttrs += `${key}="${value}"\n`;
+      if (imageValidationAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          validationAttrs += `  ${key}="${value}"\n`;
+        }
       } else {
         console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
       }
@@ -2814,8 +2955,16 @@ renderImageField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' || bindingSyntax.startsWith('::')) {
+  const bindingValue = attributes?.binding;
+  if (bindingValue === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (typeof bindingValue === 'string' && bindingValue.startsWith('::') && name) {
+    bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (bindingValue && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+    return;
   }
 
   // Get the id from attributes or fall back to name
@@ -2824,7 +2973,8 @@ renderImageField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
+    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2840,49 +2990,59 @@ renderImageField(type, name, label, validate, attributes) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
+  // Special handling for image submit button
+  let inputElement;
+  if (type === 'image' && name === 'submit') {
+    inputElement = `
+      <input 
+        type="image"
+        name="${name}"
+        ${bindingDirective}
+        id="${id}"
+        class="${attributes.class || this.inputClass}"
+        src="${attributes.src || 'img_submit.gif'}"
+        alt="${attributes.alt || 'Submit'}"
+        width="${attributes.width || '48'}"
+        height="${attributes.height || '48'}"
+        ${additionalAttrs}
+        ${validationAttrs}
+      />`;
   } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
-  let formHTML = `
-    <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}
-  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-</label>
+    // Regular image input field
+    inputElement = `
       <input 
         type="${type}"
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
+        class="${attributes.class || this.inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
-      />
+      />`;
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}" id="${id + '-block'}">
+      ${type === 'image' && name === 'submit' ? '' : `<label for="${id}">${label}
+        ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+      </label>`}
+      ${inputElement}
     </div>
   `.replace(/^\s*\n/gm, '').trim();
 
-  let formattedHtml = formHTML; 
-
-  // Apply vertical layout to the <input> element only
-  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
-    // Reformat attributes into a vertical layout
+  // Format the HTML
+  let formattedHtml = formHTML.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
     const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
     return `<input\n${attributes}\n/>`;
   });
 
-  // Ensure the <div> block starts on a new line and remove extra blank lines
   formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
-    // Ensure <div> starts on a new line
     return `\n${match}\n`;
-  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+  }).replace(/\n\s*\n/g, '\n');
 
   return formattedHtml;
 }
-
-
 
 
 
@@ -3239,6 +3399,7 @@ this.renderSingleSelectField(type, name, label, validate, attributes, mainCatego
 
 renderSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions, mode) {
 
+console.log("Within");
     // Define valid validation attributes for select fields
     const selectValidationAttributes = ['required'];
 
@@ -3805,10 +3966,11 @@ renderSubmitButton(type, name, label, validate, attributes) {
   }
 
 
-const spinner = `<div class="" id="formiqueSpinner">
+const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
   <div class="formique-spinner"></div>
   <p class="message">Hang in tight, we are submitting your details…</p>
-</div>`;
+</div>
+`;
   // Construct the final HTML string
 
   const formHTML = `
@@ -3831,17 +3993,15 @@ const spinner = `<div class="" id="formiqueSpinner">
 
 
 
- renderFormHTML () {
-
-this.formMarkUp+= '</form>'; 
-//console.log(this.formMarkUp);
-const formContainer = document.getElementById(this.formContainerId);
-//alert(this.formContainerId);
-if (!formContainer) {
-  console.error(`Error: formContainer not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
-} else {
-  formContainer.innerHTML = this.formMarkUp;
-}
+ renderFormHTML() {
+        this.formMarkUp += '</form>';
+        const formContainer = document.getElementById(this.formContainerId);
+        if (!formContainer) {
+            console.error(`Error: form container with ID ${this.formContainerId} not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
+        } else {
+            formContainer.innerHTML = this.formMarkUp;
+        }
+    
 
 //return this.formMarkUp;
 
