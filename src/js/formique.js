@@ -1495,13 +1495,13 @@ renderDateField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding?.startsWith('::') && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
