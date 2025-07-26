@@ -1,4 +1,4 @@
-# Formique All Fiels Complete CDN Implementation
+# Formique All Fields Complete CDN Implementation
 
 ```html
 <!DOCTYPE html>
