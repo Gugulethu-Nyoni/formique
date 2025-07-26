@@ -82,8 +82,8 @@ class Formique extends FormBuilder {
         ];
         this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
 
-
-        document.addEventListener('DOMContentLoaded', () => {
+        // DISABLE DOM LISTENER
+        //document.addEventListener('DOMContentLoaded', () => {
             // 1. Build the form's HTML in memory
             this.formMarkUp += this.renderFormElement(); // Adds opening <form> tag and any hidden inputs
 
@@ -164,7 +164,10 @@ class Formique extends FormBuilder {
             } else {
                 this.applyTheme('dark', this.formContainerId);
             }
-        }); // DOM LISTENER WRAPPER
+       
+
+        //DISABLE DOM LISTNER
+        //}); // DOM LISTENER WRAPPER
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
@@ -4017,14 +4020,5 @@ const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: ce
 
 
 export default Formique;
-
-
-
-
-
-
-
-
-
 
 
