@@ -1075,6 +1075,7 @@ Formique is licensed under the MIT License.
 ## Keywords
 
 Javascript forms, declarative form syntax, js form library, formique
+[ View Formique Complete CDN Implementation - All Fields](docs/AllFields.md)
 
 [![Get Started with Formique](https://img.shields.io/badge/Get_Started-FormiqueJS-blue)](https://www.formiquejs.com)
 
