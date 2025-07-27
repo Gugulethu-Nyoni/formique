@@ -188,13 +188,13 @@ There are two primary ways to install and use Formique in your project:
 1. **Include the CSS** in the head section of your HTML file:
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.12/formique-css.css" />
+<link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.13/formique-css.css" />
 ```
 
 2. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
     ```html
-      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.9/formique.umd.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.12/formique.umd.min.js"></script>
     ```
 
 ### Usage Example:
@@ -247,45 +247,214 @@ There are two primary ways to install and use Formique in your project:
 # Full Vanilla JS Implementation
 
 ```html
+
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Core - Formique</title>
-
-  <!-- Formique UMD JavaScript (core functionality) -->
-  <script src="https://cdn.jsdelivr.net/npm/formique@1.0.9/formique.umd.min.js"></script>
+  <title> Formique Core - Full CDN Implementation </title>
 
   <!-- Formique CSS for styling -->
-  <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.12/formique-css.css" />
+  <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.13/formique-css.css" />
+
+
+ <script src="https://cdn.jsdelivr.net/npm/formique@1.0.12/formique.umd.min.js"></script>
+
 
   <!-- Initialize Formique via ES Module script -->
   <script type="module">
-    // Define form structure
+
+    /**
+     * Form schema definition containing all form fields and their configurations
+     * @type {Array<Array>}
+     */
     const formSchema = [
-      ['text', 'name', 'Name', { required: true }],
-      ['text', 'subject', 'Subject', { required: true }],
-      ['textarea', 'message', 'message', { required: true }],
-      ['submit', 'submit', 'submit']
+      // Dynamic Single Select Field - Programming Languages
+      [
+        'dynamicSingleSelect',       // Input type (required)
+        'languages',                 // Field name (required)
+        'Programming Scope(Dynamic Select)-Programming Languages', // Labels
+        { required: true },          // Validation rules
+        {},                          // Field attributes
+        
+        // Dropdown Options
+        [
+          {
+            id: 'frontend',          // Option group ID
+            label: 'Front End',     // Option group label
+            options: [               // Frontend language options
+              { value: 'javascript', label: 'JavaScript' },
+              { value: 'html', label: 'HTML' },
+              { value: 'css', label: 'CSS' },
+              { value: 'typescript', label: 'TypeScript' },
+              { value: 'semantq', label: 'Semantq' },
+              { value: 'svelte', label: 'Svelte' },
+              { value: 'vue', label: 'Vue' },
+              { value: 'react', label: 'React' },
+              { value: 'angular', label: 'Angular' },
+            ]
+          },
+          {
+            id: 'backend',          // Option group ID
+            label: 'Back End',       // Option group label
+            options: [               // Backend language options
+              { value: 'nodejs', label: 'Node.js' },
+              { value: 'python', label: 'Python' },
+              { value: 'java', label: 'Java' },
+              { value: 'php', label: 'PHP' },
+              { value: 'ruby', label: 'Ruby' },
+              { value: 'csharp', label: 'C#' },
+              { value: 'golang', label: 'Go' }
+            ]
+          },
+          {
+            id: 'server',            // Option group ID
+            label: 'Server',        // Option group label
+            options: [              // Server/database options
+              { value: 'mysql', label: 'MySql' },
+              { value: 'supabase', label: 'Supabase' },
+              { value: 'MongoDB', label: 'Mongodb' },
+              { value: 'sqlite', label: 'SQlite' },
+            ]
+          }
+        ]
+      ],
+
+      // Conditionality Fields - disppaly fields based on input of a specific field
+      [
+        'singleSelect', 
+        'role', 
+        'Role (Select Conference Presenter to see conditionality)', 
+        { required: true }, 
+        { dependents: ['topic', 'mode'] },  // Fields that depend on this one
+        [
+          { value: 'conference attendee', label: 'Conference Attendee' },
+          { value: 'conference presenter', label: 'Conference Presenter' }
+        ]
+      ],
+
+      // Topic field - Text input (dependent on 'role' being 'conference presenter')
+      [
+        'text', 
+        'topic', 
+        'Topic', 
+        {}, 
+        { 
+          dependsOn: 'role', 
+          condition: 'conference presenter'  // (value) Simple string condition
+        }
+      ],
+
+      // Mode field - Single Select (required, dependent on 'role')
+      [
+        'singleSelect', 
+        'mode', 
+        'Mode', 
+        { required: true }, 
+        { 
+          dependsOn: 'role', 
+          condition: (value) => value === 'conference presenter'  // Function condition
+        },
+        [
+          { value: 'physical', label: 'Physical' },
+          { value: 'virtual', label: 'Virtual' }
+        ]
+      ],
+
+      // Standard input fields
+      ['text', 'text_input', 'Text',{required: true},{'data-id': 'some-id'}],
+      ['email', 'email_input', 'Email', {},{disabled: ''}], // boolean attributes
+      ['number', 'number_input', 'Number',{required: true},{style: 'width: 100%;'}],
+      ['password', 'password_input', 'Password'],
+      ['tel', 'telephone_input', 'Telephone',{},{placeholder: '123-45-678', pattern: '[0-9]{3}-[0-9]{2}-[0-9]{3}'}],
+      ['date', 'date_input', 'Date'],
+      ['time', 'time_input', 'Time'],
+      ['datetime-local', 'datetime_input', 'Datetime-local'],
+      ['month', 'month_input', 'Month'],
+      ['week', 'week_input', 'Week'],
+      ['url', 'url_input', 'URL'],
+      ['search', 'search_input', 'Search'],
+      ['color', 'color_input', 'Color',{},{value: '#ff0056'}],
+      ['file', 'file_input', 'File'],
+      ['hidden', 'user_id', 'Hidden', {}, { value: '156' }],  // Hidden field with preset value
+      ['image', 'image_input', 'Image', {}, { src: 'some_image.png' }],
+      ['textarea', 'textarea_input', 'Textarea', {}, { rows: '4', cols: '6' }],
+      
+      // Radio button group
+      ['radio', 'radio_input', 'Radio', {}, {}, [
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' },
+        { value: 'other', label: 'Other' }
+      ]],
+      
+      // Checkbox group
+      ['checkbox', 'checkbox_input', 'Checkbox', {}, {}, [
+        { value: 'newsletter', label: 'Newsletter', selected: true },
+        { value: 'updates', label: 'Updates' },
+        { value: 'events', label: 'Events' }
+      ]],
+      
+      // Single select dropdown
+      ['singleSelect', 'location', 'Select (Single Option with East selected)', {}, {}, [
+        { value: 'east', label: 'East', selected: true },
+        { value: 'south', label: 'South' },
+        { value: 'north', label: 'North' }
+      ]],
+      
+      // Multiple select dropdown
+      ['multipleSelect', 'diet', 'Diet (Multiple Select)', {}, {}, [
+        { value: 'vegan', label: 'Vegan' },
+        { value: 'vegetarian', label: 'Vegetarian' },
+        { value: 'lacto-ovo', label: 'Lacto-ovo' }
+      ]],
+      
+      // Additional fields
+      ['submit', 'submit_input', 'Submit'],
     ];
 
-    // Define form behavior and styling
-    const formSettings = {
-      theme: 'blue',                 // Predefined theme
-      formContainerId: 'myForm',     // ID of div where form is injected (optional if you used the id formique in your form container element)
-      submitOnPage: true,            // Enable client-side submission
-      errorMessage: 'Something went wrong'
-    };
+    /**
+     * Form settings configuration
+     * @type {Object}
+     */
+const formSettings = {
+  theme: 'dark-blue',               // [Optional] Name of visual theme
+  themeColor: '#da42f5',             // [Optional] Overrides theme with a specific color
+  submitOnPage: true,               // [Optional] If true, form submits without navigating away
+  //submitMode: 'email',              // [Required if submitOnPage is true] 
+  /*  sendTo: [
+    'contacts@website.com',
+    'admin@someentity.com'
+  ],                                // [Required if submitMode is 'email'] List of recipient emails
+  */
+  //successMessage: 'Your registration details have been captured successfully!',
+                                    // [Optional] Custom message to show on successful submission
+  //errorMessage: 'There was an error in submitting your details. Please try again!',
+                                    // [Optional] Custom error message
+  //requiredFieldIndicator: true,     // [Optional] Show an asterisk (*) for required fields
+  //framework: 'semantq',             // [Optional] Enables syntax transformations for Semantq and CSRF handling for Laravel
+  //placeholders: true,               // [Optional] If true, use labels as placeholders
+  formContainerId: 'myForm',      // ID of the form wrapper (default is 'formique' - no need to define formContainerId here if the container element is 'formique')
+  //formContainerStyle: 'width: 100%; max-width: 700px; padding: 2rem;'
+                                    // [Optional] Inline style for the form container
+};
 
-    // Define actual form HTML attributes
+    /**
+     * Form parameters and attributes
+     * @type {Object}
+     */
     const formParams = {
-      method: 'POST',
-
-      // Developers: You can also include any standard form attributes here
-      // e.g., id, class, enctype, autocomplete, etc.
-      // See official docs for more: https://github.com/Gugulethu-Nyoni/formique
-    };
+    method: 'POST',                    // [Required] HTTP method: 'GET' or 'POST'
+    //action: 'submit.php',             // [Required] Form submission URL
+    //id: 'myForm',                     // [Optional] Unique form ID
+    //class: 'form',                    // [Optional] CSS class for styling
+    //framework: 'semantq',             // [Optional] Enables Semantq syntax sugar (e.g., @change={handler})
+    //style: 'width: 100%; font-size: 14px;', // [Optional] Inline CSS styling for the <form> element
+    //enctype: 'multipart/form-data',   // [Optional] Required for file uploads
+    //target: '_blank',                 // [Optional] Specifies where to display the response
+    //novalidate: true,                 // [Optional] Disable HTML5 validation
+    //accept_charset: 'UTF-8'           // [Optional] Character set (will render as accept-charset)
+  };
 
     // Instantiate and render the form
     const form = new Formique(formSchema, formSettings, formParams);
@@ -293,13 +462,14 @@ There are two primary ways to install and use Formique in your project:
 </head>
 
 <body>
-
-  <!-- Target container where Formique will inject the form -->
+  <!-- Form container where Formique will inject the form -->
   <div id="myForm" class="width-half"></div>
-
 </body>
 </html>
 ```
+
+When submit the filled form it will be submitted to the test `POST` api end point: `https://httpbin.org/post` - you can check the captured form data in your browser logs.
+
 
 ### Option B: Use Formique in a Node.js (Bundler) Environment
 
@@ -336,6 +506,12 @@ There are two primary ways to install and use Formique in your project:
 Formique is also available in additional formats like **ESM (ES Modules)** and **IIFE (Immediately Invoked Function Expression)** for specific use cases. For most projects, we recommend using **UMD** for browser contexts and **ESM** for Node.js environments. Refer to the Formique CDN for all available formats.
 
 Include the CSS and import Formique in the head section of your HTML file as shown above. 
+
+
+If you want use the provided `CSS` please include this CDN link in your page head section: 
+
+`<!-- Formique CSS for styling -->
+  <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.13/formique-css.css" />`
 
 3. Define form container somewhere in the html body: 
 

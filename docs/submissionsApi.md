@@ -84,7 +84,7 @@ const features = {
 ### **Suggested Defaults**
 ```javascript
 this.formSettings = {
-  submitMode: "post", // Default: traditional form POST
+  submitMode: "POST", // Default: traditional form POST
   formAction: "",
   method: "POST",
   submitOnPage: true,
