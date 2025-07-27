@@ -60,6 +60,23 @@ class Formique extends FormBuilder {
             asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
             ...formSettings
         };
+
+         this.themeColor = formSettings.themeColor || null;
+        
+         this.themeColorMap = {
+          'primary': {
+            '--formique-base-bg': '#ffffff',
+            '--formique-base-text': '#333333',
+            '--formique-base-shadow': '0 10px 30px rgba(0, 0, 0, 0.1)',
+            '--formique-base-label': '#555555',
+            '--formique-input-border': '#dddddd',
+            '--formique-focus-color': null, // Will be set to themeColor
+            '--formique-btn-bg': null,      // Will be set to themeColor
+            '--formique-btn-text': '#ffffff',
+            '--formique-btn-shadow': null    // Will be calculated from themeColor
+          }
+        };
+
         this.divClass = 'input-block';
         this.inputClass = 'form-input';
         this.radioGroupClass = 'radio-group';
@@ -83,7 +100,8 @@ class Formique extends FormBuilder {
         this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
 
         // DISABLE DOM LISTENER
-        //document.addEventListener('DOMContentLoaded', () => {
+
+       // document.addEventListener('DOMContentLoaded', () => {
             // 1. Build the form's HTML in memory
             this.formMarkUp += this.renderFormElement(); // Adds opening <form> tag and any hidden inputs
 
@@ -156,17 +174,20 @@ class Formique extends FormBuilder {
             // Initialize dependency graph and observers after the form is rendered
             this.initDependencyGraph();
             this.registerObservers();
+            this.attachDynamicSelectListeners(); 
 
             // Apply theme
-            if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
+            if (this.themeColor) {
+                this.applyCustomTheme(this.themeColor, this.formContainerId); // <--- NEW: Apply custom theme
+            } else if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
                 let theme = this.formSettings.theme;
                 this.applyTheme(theme, this.formContainerId);
             } else {
-                this.applyTheme('dark', this.formContainerId);
+                // Fallback if no themeColor and no valid theme specified
+                this.applyTheme('dark', this.formContainerId); // Default to 'dark'
             }
-       
-
-        //DISABLE DOM LISTNER
+        
+        // DISABLE DOM LISTENER
         //}); // DOM LISTENER WRAPPER
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
@@ -180,68 +201,68 @@ generateFormId() {
 
 
 initDependencyGraph() {
-  this.dependencyGraph = {};
+    this.dependencyGraph = {};
 
-  this.formSchema.forEach((field) => {
-    const [type, name, label, validate, attributes = {}] = field;
-    const fieldId = attributes.id || name;
+    this.formSchema.forEach((field) => {
+        const [type, name, label, validate, attributes = {}] = field;
+        const fieldId = attributes.id || name;
 
-    if (attributes.dependents) {
-      // Initialize dependency array for the parent field
-      this.dependencyGraph[fieldId] = attributes.dependents.map((dependentName) => {
-        const dependentField = this.formSchema.find(
-          ([, depName]) => depName === dependentName
-        );
+        if (attributes.dependents) {
+            // Initialize dependency array for the parent field
+            this.dependencyGraph[fieldId] = attributes.dependents.map((dependentName) => {
+                const dependentField = this.formSchema.find(
+                    ([, depName]) => depName === dependentName
+                );
 
-        if (dependentField) {
-          const dependentAttributes = dependentField[4] || {};
-          const dependentFieldId = dependentAttributes.id || dependentName; // Get dependent field ID
+                if (dependentField) {
+                    const dependentAttributes = dependentField[4] || {};
+                    const dependentFieldId = dependentAttributes.id || dependentName; // Get dependent field ID
 
-          return {
-            dependent: dependentFieldId,
-            condition: dependentAttributes.condition || null,
-          };
-        } else {
-          console.warn(`Dependent field "${dependentName}" not found in schema.`);
+                    return {
+                        dependent: dependentFieldId,
+                        condition: dependentAttributes.condition || null,
+                    };
+                } else {
+                    console.warn(`Dependent field "${dependentName}" not found in schema.`);
+                }
+            });
+
+            // Add state tracking for the parent field
+            this.dependencyGraph[fieldId].push({ state: null });
+
+            // Attach the input change event listener to the parent field
+            this.attachInputChangeListener(fieldId);
         }
-      });
 
-      // Add state tracking for the parent field
-      this.dependencyGraph[fieldId].push({ state: null });
+        // Hide dependent fields initially and set their required state
+        if (attributes.dependents) {
+            attributes.dependents.forEach((dependentName) => {
+                const dependentField = this.formSchema.find(
+                    ([, depName]) => depName === dependentName
+                );
+                const dependentAttributes = dependentField ? dependentField[4] || {} : {};
+                const dependentFieldId = dependentAttributes.id || dependentName;
 
-      // console.log("Graph", this.dependencyGraph[fieldId]);
+                const inputBlock = document.querySelector(`#${dependentFieldId}-block`);
 
-      // Attach the input change event listener to the parent field
-      this.attachInputChangeListener(fieldId);
-    }
-
-    // Hide dependent fields initially
-    if (attributes.dependents) {
-
-      attributes.dependents.forEach((dependentName) => {
-        const dependentField = this.formSchema.find(
-          ([, depName]) => depName === dependentName
-        );
-        const dependentAttributes = dependentField ? dependentField[4] || {} : {};
-        const dependentFieldId = dependentAttributes.id || dependentName;
-
-        //alert(dependentFieldId);
-
-        const inputBlock = document.querySelector(`#${dependentFieldId}-block`);
-        //alert(inputBlock);
-        
-
-        if (inputBlock) {
-         // alert(dependentName);
-          inputBlock.style.display = 'none'; // Hide dependent field by default
+                if (inputBlock) {
+                   inputBlock.style.display = 'none'; // Hide dependent field by default
+                   // Save original required state and set to false
+                   const inputs = inputBlock.querySelectorAll('input, select, textarea');
+                   inputs.forEach((input) => {
+                     // Check if the input was originally required in the schema
+                     if (input.hasAttribute('required') && input.required === true) {
+                       input.setAttribute('data-original-required', 'true'); // Save original required state
+                       input.required = false; // Remove required attribute when hiding
+                     } else {
+                       input.setAttribute('data-original-required', 'false'); // Explicitly mark as not originally required
+                     }
+                   });
+                }
+            });
         }
-      });
-    }
-  });
-
- // console.log("Dependency Graph:", this.dependencyGraph);
+    });
 }
-
 
 // Attach Event Listeners
 attachInputChangeListener(parentField) {
@@ -344,6 +365,60 @@ registerObservers() {
 }
 
 
+// --- NEW METHOD FOR DYNAMIC SELECT LISTENERS ---
+attachDynamicSelectListeners() {
+    this.formSchema.forEach(field => {
+        const [type, name, label, validate, attributes = {}] = field;
+
+        if (type === 'dynamicSingleSelect') {
+            const mainSelectId = attributes.id || name;
+            const mainSelectElement = document.getElementById(mainSelectId);
+
+            if (mainSelectElement) {
+                mainSelectElement.addEventListener('change', (event) => {
+                    const selectedCategory = event.target.value; // e.g., 'frontend', 'backend', 'server'
+
+                    // Find all sub-category fieldsets related to this main select
+                    const subCategoryFieldsets = document.querySelectorAll(`.${mainSelectId}-subcategory-group`);
+
+                    subCategoryFieldsets.forEach(fieldset => {
+                        const subSelect = fieldset.querySelector('select'); // Get the actual select element
+                        if (subSelect) {
+                            // Save original required state (if it was true) then set to false if hidden
+                            subSelect.setAttribute('data-original-required', subSelect.required.toString());
+                            subSelect.required = false; // Always set to false when hiding
+                        }
+                        fieldset.style.display = 'none'; // Hide all sub-category fieldsets initially
+                    });
+
+                    // Show the selected sub-category fieldset and manage its required state
+                    const selectedFieldsetId = selectedCategory + '-options'; // Matches the ID format in renderSingleSelectField
+                    const selectedFieldset = document.getElementById(selectedFieldsetId);
+
+                    if (selectedFieldset) {
+                        selectedFieldset.style.display = 'block'; // Show the selected one
+                        const selectedSubSelect = selectedFieldset.querySelector('select');
+                        if (selectedSubSelect) {
+                            // Restore original required state for the visible select
+                            selectedSubSelect.required = selectedSubSelect.getAttribute('data-original-required') === 'true';
+                        }
+                    }
+                });
+
+                // IMPORTANT: Trigger the change listener once on load if a default option is selected
+                // This ensures correct initial visibility and required states if there's a pre-selected main category.
+                // We do this by dispatching a 'change' event programmatically if the select has a value.
+                if (mainSelectElement.value) {
+                    const event = new Event('change');
+                    mainSelectElement.dispatchEvent(event);
+                }
+            } else {
+                console.warn(`Main dynamic select element with ID ${mainSelectId} not found.`);
+            }
+        }
+    });
+}
+
 applyTheme(theme, formContainerId) {
   //const stylesheet = document.querySelector('link[formique-style]');
 
@@ -396,6 +471,67 @@ applyTheme(theme, formContainerId) {
       console.error('Error loading the stylesheet:', error);
     });
 }
+
+
+
+// New method to apply a custom theme based on a color
+applyCustomTheme(color, formContainerId) {
+    const formContainer = document.getElementById(formContainerId);
+
+    if (!formContainer) {
+        console.error(`Form container with ID "${formContainerId}" not found. Cannot apply custom theme.`);
+        return;
+    }
+
+    // You can add 'formique' class here as well if not already added
+    formContainer.classList.add('formique');
+
+    // Generate a slightly darker shade for the button shadow if needed
+    // This is a simplified example; for robust color manipulation, consider a library
+    const darkenColor = (hex, percent) => {
+        const f = parseInt(hex.slice(1), 16);
+        const t = percent < 0 ? 0 : 255;
+        const p = percent < 0 ? percent * -1 : percent;
+        const R = f >> 16;
+        const G = (f >> 8) & 0x00FF;
+        const B = f & 0x0000FF;
+        return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
+    };
+
+    const shadowColor = darkenColor(color, 0.2); // Darken the theme color by 20% for shadow
+
+    // Define the custom CSS variables, prioritizing the provided color
+    const customCssVars = {
+        '--formique-base-bg': '#ffffff', // Light theme base background
+        '--formique-base-text': '#333333', // Light theme base text
+        '--formique-base-shadow': '0 10px 30px rgba(0, 0, 0, 0.1)', // Light theme shadow
+        '--formique-base-label': '#555555', // Light theme label
+        '--formique-input-border': '#dddddd', // Light theme input border
+        '--formique-focus-color': color, // Set to the provided custom color
+        '--formique-btn-bg': color, // Set to the provided custom color
+        '--formique-btn-text': '#ffffff', // White text for buttons
+        '--formique-btn-shadow': `0 2px 10px ${shadowColor || 'rgba(0, 0, 0, 0.1)'}` // Dynamic button shadow
+    };
+
+    let styleContent = '';
+    for (const [prop, val] of Object.entries(customCssVars)) {
+        styleContent += `  ${prop}: ${val};\n`;
+    }
+
+    // Create a <style> tag for the custom theme
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        #${formContainerId}.formique {
+            ${styleContent}
+        }
+    `;
+
+    // Insert the style element into the head or before the form container
+    formContainer.parentNode.insertBefore(styleElement, formContainer);
+
+    console.log(`Applied custom theme with color: ${color} to form container: ${formContainerId}`);
+}
+
 
 
 // renderFormElement method
@@ -3402,17 +3538,20 @@ this.renderSingleSelectField(type, name, label, validate, attributes, mainCatego
 
 renderSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions, mode) {
 
-console.log("Within");
+    console.log("Within renderSingleSelectField");
     // Define valid validation attributes for select fields
     const selectValidationAttributes = ['required'];
 
     // Construct validation attributes
     let validationAttrs = '';
+    // Store original required state for the main select
+    let originalRequired = false; // <--- This variable tracks if the main select was originally required
     if (validate) {
         Object.entries(validate).forEach(([key, value]) => {
             if (selectValidationAttributes.includes(key)) {
                 if (key === 'required') {
                     validationAttrs += `${key} `;
+                    originalRequired = true; // Mark that it was originally required
                 }
             } else {
                 console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
@@ -3423,10 +3562,10 @@ console.log("Within");
     // Handle the binding syntax
     let bindingDirective = '';
     if (attributes.binding) {
-    if (typeof attributes.binding === 'string' && attributes.binding.startsWith('::')) {
-        bindingDirective = ` bind:value="${name}" `;
+        if (typeof attributes.binding === 'string' && attributes.binding.startsWith('::')) {
+            bindingDirective = ` bind:value="${name}" `;
+        }
     }
-  }
 
     // Define attributes for the select field
     let id = attributes.id || name;
@@ -3435,7 +3574,8 @@ console.log("Within");
     // Handle additional attributes
     let additionalAttrs = '';
     for (const [key, value] of Object.entries(attributes)) {
-      if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {            if (key.startsWith('on')) {
+        if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+            if (key.startsWith('on')) {
                 // Handle event attributes
                 const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
                 additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -3470,32 +3610,33 @@ console.log("Within");
 
     let inputClass = attributes.class || this.inputClass;
 
-    const onchangeAttr = (mode === 'dynamicSingleSelect' && subCategoriesOptions) ? ' onchange="handleDynamicSingleSelect(this.value,id)"' : '';
-    
+    // Remove `onchange` from HTML; it will be handled by JavaScript event listeners
+    const onchangeAttr = ''; // <--- Ensure this is an empty string
+
     let labelDisplay;
-    let rawLabel; 
+    let rawLabel;
 
     if (mode === 'dynamicSingleSelect' && subCategoriesOptions) {
-      if (label.includes('-')) {
-        const [mainCategoryLabel] = label.split('-');
-        labelDisplay = mainCategoryLabel; 
-        rawLabel = label;
-      } else {
-        labelDisplay = label;
-        rawLabel = label;
-      }
+        if (label.includes('-')) {
+            const [mainCategoryLabel] = label.split('-');
+            labelDisplay = mainCategoryLabel;
+            rawLabel = label;
+        } else {
+            labelDisplay = label;
+            rawLabel = label;
+        }
     } else {
-      labelDisplay = label;
+        labelDisplay = label;
     }
 
 
-    // Construct the final HTML string
+    // Construct the final HTML string for the main select
     let formHTML = `
     <fieldset class="${this.selectGroupClass}" id="${id + '-block'}">
-        <legend>${labelDisplay} 
+        <legend>${labelDisplay}
             ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
         </legend>
-        <label for="${id}"> Select ${labelDisplay} 
+        <label for="${id}"> Select ${labelDisplay}
         <select name="${name}"
             ${bindingDirective}
             ${dimensionAttrs}
@@ -3503,8 +3644,7 @@ console.log("Within");
             class="${inputClass}"
             ${additionalAttrs}
             ${validationAttrs}
-            ${onchangeAttr} 
-        >
+            data-original-required="${originalRequired}" >
             ${selectHTML}
         </select>
     </fieldset>
@@ -3524,122 +3664,89 @@ console.log("Within");
         return `\n${match}\n`;
     }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-    //console.log(formattedHtml);
     this.formMarkUp+=formattedHtml;
-    //return formattedHtml;
 
 
-    /* dynamicSingleSelect */
+    /* dynamicSingleSelect - Sub-Category Generation Block */
 
-if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
+    if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
+
+        const categoryId = attributes.id || name; // This is the ID of the main dynamic select ('languages')
+
+        subCategoriesOptions.forEach(subCategory => {
+            const { id, label, options: subOptions } = subCategory; // Renamed 'options' to 'subOptions' to avoid conflict
+
+            // IMPORTANT: Sub-category selects are *initially hidden*
+            // Therefore, by default, they are NOT required until they are revealed.
+            // If your schema later allows specific sub-categories to be inherently required
+            // when shown, you'd need to extract that validation from your schema here.
+            // For now, they are considered non-required until JavaScript makes them required.
+            let isSubCategoryRequired = false; // Default to false as they are hidden
+            const subCategoryValidationAttrs = ''; // No direct 'required' in HTML initially
+
+            // Build the select options HTML for sub-category
+            const subSelectHTML = subOptions.map(option => {
+                const isSelected = option.selected ? ' selected' : '';
+                return `
+                    <option value="${option.value}"${isSelected}>${option.label}</option>
+                `;
+            }).join('');
 
 
-// Find the target div with id this.formContainerId
-const targetDiv = document.getElementById(this.formContainerId);
+            let subCategoryLabel;
+            console.log('Label (rawLabel for sub-category):', rawLabel); // Debug log
 
-let categoryId = attributes.id || name;
+            if (rawLabel.includes('-')) {
+                subCategoryLabel = rawLabel.split('-')?.[1] + ' Options';
+            } else {
+                subCategoryLabel = 'options';
+            }
+
+            let optionsLabel;
+            if (subCategoryLabel !== 'options') {
+                optionsLabel = rawLabel.split('-')?.[1] + ' Option';
+            } else {
+                optionsLabel  = subCategoryLabel;
+            }
 
 
-if (targetDiv) {
-  // Create a script element
-  const scriptElement = document.createElement('script');
-  scriptElement.textContent = `
-  window.handleDynamicSingleSelect = function(category, fieldsetid) {
-    //console.log("HERE", fieldsetid);
+            // Create the HTML for the sub-category fieldset and select elements
+            // Added a class based on the main select's ID for easy grouping/selection
+            let subFormHTML = `
+                <fieldset class="${this.selectGroupClass} ${categoryId}-subcategory-group" id="${id}-options" style="display: none;"> <legend>${label} ${subCategoryLabel} ${isSubCategoryRequired && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+                    </legend>
+                    <label for="${id}"> Select ${label} ${optionsLabel}
+                    </label>
+                    <select name="${id}"
+                        ${bindingDirective}
+                        ${dimensionAttrs}
+                        id="${id}"
+                        class="${inputClass}"
+                        ${additionalAttrs}
+                        ${subCategoryValidationAttrs}
+                        data-original-required="${isSubCategoryRequired}" >
+                        <option value="">Choose an option</option>
+                        ${subSelectHTML}
+                    </select>
+                </fieldset>
+            `.replace(/^\s*\n/gm, '').trim();
 
-    // Hide all subcategory fields
-    document.querySelectorAll(\`[class*="\${fieldsetid}"]\`).forEach(div => {
-      div.style.display = "none";
-    });
+            // Apply vertical layout to the <select> element and its children
+            subFormHTML = subFormHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+                const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
+                return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
+            });
 
-    // Show the selected category
-    const selectedCategoryFieldset = document.getElementById(category + '-options');
-    if (selectedCategoryFieldset) {
-      selectedCategoryFieldset.style.display = "block";
+            // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+            subFormHTML = subFormHTML.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+                return `\n${match}\n`;
+            }).replace(/\n\s*\n/g, '\n');
+
+            // Append the generated HTML to formMarkUp
+            this.formMarkUp += subFormHTML;
+        });
     }
-  }
-`;
-
-  // Append the script element to the target div
-  targetDiv.appendChild(scriptElement);
-} else {
-  console.error(`Target div with id "${this.formContainerId}" not found.`);
 }
-
-subCategoriesOptions.forEach(subCategory => {
-  const { id, label, options } = subCategory;
-
-  // Build the select options HTML
-  const selectHTML = options.map(option => {
-    const isSelected = option.selected ? ' selected' : '';
-    return `
-      <option value="${option.value}"${isSelected}>${option.label}</option>
-    `;
-  }).join('');
-
-
-    let subCategoryLabel; 
-    console.log('Label:', rawLabel); // Debug log
-
-    if (rawLabel.includes('-')) {
-      subCategoryLabel = rawLabel.split('-')?.[1] + ' Options'; 
-    } else {
-      subCategoryLabel = 'options';
-    }
-
-    let optionsLabel;
-    if (subCategoryLabel !== 'options') {
-      optionsLabel = rawLabel.split('-')?.[1] + ' Option'; 
-    } else {
-    optionsLabel  = subCategoryLabel; 
-    }
-
-
-  // Create the HTML for the fieldset and select elements
-  let formHTML = `
-    <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}-options" style="display: none;">
-        <legend> ${label} ${subCategoryLabel} ${this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-        </legend>
-        <label for="${id}"> Select ${label} ${optionsLabel}           
-        </label>
-        <select name="${id}"
-            ${bindingDirective}
-            ${dimensionAttrs}
-            id="${id + '-block'}"
-            class="${inputClass}"
-            ${additionalAttrs}
-            ${validationAttrs}
-        >
-            <option value="">Choose an option</option>
-            ${selectHTML}
-        </select>
-    </fieldset>
-  `.replace(/^\s*\n/gm, '').trim();
-
-  // Apply vertical layout to the <select> element and its children
-  formHTML = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
-    // Reformat attributes into a vertical layout
-    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
-    return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
-  });
-
-  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
-  formHTML = formHTML.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
-    // Ensure <fieldset> starts on a new line
-    return `\n${match}\n`;
-  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
-
-  // Append the generated HTML to formMarkUp
-  this.formMarkUp += formHTML;
-
-  //return formHTML;
-});
-
-
-}
-}
-
-
 
 renderMultipleSelectField(type, name, label, validate, attributes, options) {
   // Define valid validation attributes for multiple select fields
