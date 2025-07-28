@@ -380,6 +380,115 @@ theme: dark
 - **Real-world examples** – Registration forms, surveys, file uploads  
 
 
+# **Formique Conditional & Dynamic Fields Guide**
+
+## **10. Conditional Fields (Show/Hide Based on Selections)**
+
+Conditional fields allow you to show or hide fields based on user selections in other fields. This creates dynamic, context-sensitive forms.
+
+### **10.1 Basic Conditional Syntax**
+
+#### **Parent Field (Trigger)**
+```ffdl
+- field_name
+  options: Value1, Value2
+  dependents: field_to_show
+```
+
+#### **Dependent Field**
+```ffdl
+- dependent_field
+  dependsOn: parent_field,required_value
+```
+
+### **10.2 Example: Pregnancy Field for Females Only**
+```ffdl
+- *gender
+  options: Male, Female
+  dependents: pregnancy
+
+- pregnancy:text*!
+  dependsOn: gender,Female // gender is parent field and Female is the condition
+  label: "Pregnancy details"
+```
+
+**How This Works:**
+1. When user selects "Female" in gender field...
+2. The "pregnancy" text field appears
+3. The pregnancy field is required (`*!`) when visible
+
+### **10.3 Multiple Dependencies**
+```ffdl
+- *account_type
+  options: Personal, Business
+  dependents: business_fields,tax_id
+
+- business_fields
+  dependsOn: account_type,Business
+  fields:
+    - company_name
+    - registration_number
+
+- tax_id
+  dependsOn: account_type,Business
+```
+
+## **11. Dynamic Select Fields (Cascading Dropdowns)**
+
+Create dropdowns where options change based on previous selections.
+
+### **11.1 Basic Dynamic Select Syntax**
+```ffdl
+- parent-child
+options: Parent1, Parent2
+Parent1: Child1, Child2
+Parent2: Child3, Child4
+```
+
+### **11.2 Example: Country → State Dropdown**
+```ffdl
+- Country-State:
+  options: South Africa, Zimbabwe
+  South Africa: Gauteng, Limpopo, Mpumalanga
+  Zimbabwe: Midlands, Matabeleland, Mashonaland
+```
+
+**Behavior:**
+1. User first selects a country
+2. The second dropdown updates with regions for that country
+
+### **11.3 Multi-Level Dynamic Selects**
+```ffdl
+- Continent-Country:
+  options: Africa, Europe
+  Africa: South Africa, Nigeria
+    South Africa: Johannesburg, Cape Town
+    Nigeria: Lagos, Abuja
+  Europe: France, Germany
+    France: Paris, Lyon
+    Germany: Berlin, Munich
+```
+
+## **12. Key Benefits of Conditional/Dynamic Fields**
+
+1. **Smart Forms** - Only show relevant questions
+2. **Cleaner UX** - Avoid overwhelming users
+3. **Data Quality** - Ensure proper context for required fields
+4. **Easy Maintenance** - All logic defined in one place
+
+## **13. Syntax Summary Table**
+
+| Feature | Syntax Example | Notes |
+|---------|---------------|-------|
+| **Conditional Trigger** | `dependents: field1,field2` | In parent field |
+| **Conditional Target** | `dependsOn: parent,value` | In child field |
+| **Dynamic Options** | `Parent: Child1, Child2` | Under options |
+| **Multi-Level** | `L1-L2-L3:` with indented options | Supports N levels |
+
+## **14. Best Practices**
+
+1. **Always make conditional required fields (`*!`)** - Ensures data when shown
+2. **Use clear labels** - Helps users understand why fields appear
 
 ### **Next Steps**  
 - Try the [Formique Playground] to experiment  
