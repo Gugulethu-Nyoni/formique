@@ -59,7 +59,7 @@ autocomplete: off        # Browser autocomplete
 
 **Common Standard Attributes:**
 | Attribute | Examples | Description |
-|-----------|----------|-------------|
+|--|-|-|
 | `id` | `user-registration` | Unique form identifier |
 | `class` | `compact-form dark-theme` | CSS classes |
 | `action` | `/api/submit` | Submission URL |
@@ -83,7 +83,7 @@ framework: semantq              # JS framework or Laravel
 
 **Key Special Settings:**
 | Setting | Example Values | Description |
-|---------|----------------|-------------|
+||-|-|
 | `theme` | `light`, `dark-blue` | Predefined color schemes |
 | `submitMode` | `email`, `ajax`, `page` | How form submits |
 | `successMessage` | Custom text | Post-submission message |
@@ -139,7 +139,7 @@ FFDL will infer that this will be text field type with "name" as id and name att
   placeholder: Enter your email
 ```  
 
----
+
 
 ## **4. Field Markers (Required & Validated Fields)**  
 
@@ -171,7 +171,7 @@ This flexibility ensures a **user-friendly low-code approach**, making form crea
 - age*             # Required (right side)  
 ```  
 
----
+
 
 ## **5. Field Types**  
 
@@ -199,7 +199,7 @@ Add `:type` after the field name.
 #### **Supported Types**  
 
 | **Type** | **Example** | **Description** |
-|----------|------------|----------------|
+|-||-|
 | `text` | `- full_name:text` | Standard text input |
 | `email` | `- user_email:email` | Email input with validation |
 | `number` | `- age:number` | Numeric input (integers & decimals) |
@@ -307,13 +307,13 @@ For single or multiple selections in a dropdown.
   default: South Africa
 ```  
 
----
+
 
 ## **7. Advanced Field Attributes**  
 
 ### **7.1 Common Attributes**  
 | **Attribute** | **Example** | **Description** |
-|--------------|------------|----------------|
+|--||-|
 | `required` | `- email (required)` | Makes field mandatory |
 | `default` | `default: "USA"` | Pre-selects a value |
 | `min` / `max` | `min: 2` (for checkboxes) | Minimum/maximum selections |
@@ -326,7 +326,7 @@ For single or multiple selections in a dropdown.
   max-size: 2MB  
 ```  
 
----
+
 
 ## **8. Complete Examples**  
 
@@ -370,16 +370,16 @@ theme: dark
   label: "Can we follow up?"  
 ```  
 
----
+
 
 ## **9. Summary**  
-✅ **Simple syntax** – No HTML/JS required  
-✅ **Flexible markers** – `*` (required) and `!` (validation)  
-✅ **Multiple field types** – Text, email, date, file, dropdowns  
-✅ **Selection fields** – Radio (`oneof`), Checkbox (`manyof`), Dropdown (`selectOne`/`selectMany`)  
-✅ **Real-world examples** – Registration forms, surveys, file uploads  
+- **Simple syntax** – No HTML/JS required  
+- **Flexible markers** – `*` (required) and `!` (validation)  
+- **Multiple field types** – Text, email, date, file, dropdowns  
+- **Selection fields** – Radio (`oneof`), Checkbox (`manyof`), Dropdown (`selectOne`/`selectMany`)  
+- **Real-world examples** – Registration forms, surveys, file uploads  
 
----
+
 
 ### **Next Steps**  
 - Try the [Formique Playground] to experiment  
