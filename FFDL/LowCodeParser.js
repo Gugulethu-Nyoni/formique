@@ -1098,7 +1098,7 @@ const dependency = getDependsOn(attributesAST);
 /// 
 
 if (dependency) {
-const dependsOnCondition= dependency.dependsOnCondition.toLowerCase(); 
+const dependsOnCondition = dependency.dependsOnCondition.toLowerCase(); 
 
 attributes['dependsOn']= dependency.dependsOnValue;
 attributes['condition'] = `${dependsOnCondition}`;

@@ -23,7 +23,7 @@ theme: dark
 submitMode: email
 subject: Formique Test 1-2
 method: post
-successMessage: Message has been sent to admin. You will here from us promptly.
+successMessage: Message has been sent to admin. You will hear from us promptly.
 sendTo: tmnyemba@gmail.com, info@webrave.co.za
 
 -name*
@@ -44,15 +44,26 @@ South Africa: Gauteng, Limpopo, Mpumalanga
 Zimbabwe: Midlands, Mat, Mash
 
 
+-comfirm:radio
+options: Yes, No 
+dependents: diet
+
+
+-diet
+manyof
+options: Vegan, Ovo, Meat
+dependsOn: confirm, yes
+
+
 
 `; 
 
 
 const lowCodeToAst = parser.parse(lowCode);
-//console.log("HERE",JSON.stringify(lowCodeToAst,null,2));
+console.log("HERE",JSON.stringify(lowCodeToAst,null,2));
 const formObjects = new FormiqueLowCodeParser(lowCodeToAst);
 
-//console.log("THIS", formObjects);
+console.log("THIS", formObjects);
 
 //
 const formSchema = formObjects.formSchema;
