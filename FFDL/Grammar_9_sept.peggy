@@ -12,7 +12,7 @@ mode: email
 
 - *! password
   disabled
-  min-length: 8 
+  min-length: 8
 
 - *phone_number
   pattern: "\d{3}-\d{3}-\d{4}"
@@ -38,7 +38,7 @@ Single Select
 -!*country
   selectOne
   options: USA, Canada, Mexico
-  selected: USA
+  default: USA
 
 
 MultiSelect
@@ -134,12 +134,12 @@ Single Select
 }
 
 // Main form structure 
-start = formDefinition 
+start = _ formDefinition 
 
 formDefinition
-  = formDirective formFields?
+  = formDirective _ formFields?
 
-formDirective "form directiive must be in this format: @form: form-name"
+formDirective "form directive must be in this format: @form: form-name"
   = "@form:" _ name:Identifier _ properties:formProperties {
     return createNode('FormDirective', location().start, location().end, {
       name: name,

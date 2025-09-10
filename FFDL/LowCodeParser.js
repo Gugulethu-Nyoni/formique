@@ -1,5 +1,30 @@
 'use strict';
 
+/**
+ * FormiqueParser - A comprehensive form definition parser that converts an Abstract Syntax Tree (AST)
+ * representation into a structured form schema with validation rules, input types, and conditional logic.
+ * 
+ * Handles complex form structures including:
+ * - Dynamic single-select fields with scenario-based options
+ * - Input type inference from field names and attributes
+ * - Validation rules extraction and categorization
+ * - Conditional field dependencies (dependsOn/dependents)
+ * - Multiple input types (text, email, select, radio, checkbox, file, etc.)
+ * - Form-level settings and parameters
+ * - Option lists for selectable inputs
+ * - Required field detection via asterisk notation
+ * 
+ * The parser processes AST nodes to build a complete form configuration including:
+ * - Form schema with field definitions, validations, and attributes
+ * - Form settings for behavioral configuration
+ * - Form parameters for HTML form attributes
+ * - Support for complex field relationships and dynamic content
+ * 
+ * @class
+ * @param {Object} ast - The Abstract Syntax Tree representing the form structure
+ * @returns {Object} Configuration object containing formSchema, formSettings, and formParams
+ */
+
 export default class  FormiqueParser{
 constructor (ast) {
 this.ast = ast;

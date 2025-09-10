@@ -78,7 +78,6 @@ submitMode: email               # Submission type
 sendTo: events@example.com      # Recipient email
 successMessage: "Thank you!"    # Success confirmation
 requiredFieldIndicator: true    # Show * for required fields
-framework: semantq              # JS framework or Laravel
 ```
 
 **Key Special Settings:**
@@ -184,7 +183,8 @@ If no type is specified, Formique defaults to `text`.
 ```  
 
 ### **5.2 Explicit Type Declaration**  
-Add `:type` after the field name.  
+Add `:type` after the field name. 
+
 
 #### **Syntax**  
 ```ffdl
@@ -242,7 +242,7 @@ For single-choice selections.
 #### **Example**  
 ```ffdl
 - payment_method  
-  oneof  
+  radio  
   options: Credit Card, PayPal, Bank Transfer  
 ```  
 
@@ -298,6 +298,42 @@ For single or multiple selections in a dropdown.
   default: html,css
 ```  
 
+#### Accepted Declarators (all equivalent to selectMany):
+
+- skills  
+  multi-select  
+  options: HTML, CSS, JavaScript  
+
+- skills  
+  multiselect  
+  options: HTML, CSS, JavaScript  
+
+- skills  
+  multipleselect  
+  options: HTML, CSS, JavaScript  
+
+- skills  
+  multiple-select  
+  options: HTML, CSS, JavaScript  
+
+- skills  
+  multiple  
+  options: HTML, CSS, JavaScript  
+
+- skills  
+  selectMany  
+  options: HTML, CSS, JavaScript  
+
+- skills  
+  manyselect  
+  options: HTML, CSS, JavaScript  
+
+- skills  
+  selectmany  
+  options: HTML, CSS, JavaScript  
+
+
+All the different versions and formats above will yield the desired mutliple select fields.
 
 #### **Single Select**  
 ```ffdl
@@ -307,6 +343,28 @@ For single or multiple selections in a dropdown.
   default: South Africa
 ```  
 
+
+#### Accepted Declarators (all equivalent to selectOne):
+
+- country  
+  select  
+  options: South Africa, Zambia, Algeria  
+
+- country  
+  singleSelect  
+  options: South Africa, Zambia, Algeria  
+
+- country  
+  selectOne  
+  options: South Africa, Zambia, Algeria  
+
+- country  
+  oneselect  
+  options: South Africa, Zambia, Algeria  
+
+- country  
+  selectone  
+  options: South Africa, Zambia, Algeria  
 
 
 ## **7. Advanced Field Attributes**  
@@ -334,12 +392,14 @@ For single or multiple selections in a dropdown.
 ```ffdl
 @form: user-signup  
 theme: light  
-submitMode: ajax  
+submitMode: rsvp
+sendTo: bookings@example.com, admins@example.com
+
 
 - *full_name  
   placeholder: "First & Last Name"  
 
-- *!email:email  
+- *!email  
   required  
   pattern: ".+@.+\..+"  
 
