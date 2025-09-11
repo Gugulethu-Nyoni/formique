@@ -437,7 +437,7 @@ theme: dark
 - **Flexible markers** – `*` (required) and `!` (validation)  
 - **Multiple field types** – Text, email, date, file, dropdowns  
 - **Selection fields** – Radio (`oneof`), Checkbox (`manyof`), Dropdown (`selectOne`/`selectMany`)  
-- **Real-world examples** – Registration forms, surveys, file uploads  
+- **Real-world examples** – contact forms, rsvp forms, registration forms, surveys, file uploads and many other common user cases.   
 
 
 # **Formique Conditional & Dynamic Fields Guide**
