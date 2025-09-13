@@ -74,9 +74,9 @@ These control Formique-specific behavior and appearance:
 ```ffdl
 @form: event-registration
 theme: dark-blue                # Color scheme
-themeColor: #ff6754             # This will override the set theme
+themeColor: #ff6754             # This will override the theme property
 submitMode: email               # Submission type
-sendTo: events@example.com      # Recipient email
+sendTo: events@example.com      # Recipient email - if more than 1 use commas to seperate
 successMessage: "Thank you!"    # Success confirmation
 requiredFieldIndicator: true    # Show * for required fields
 ```
