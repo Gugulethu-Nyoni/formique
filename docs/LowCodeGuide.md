@@ -97,7 +97,7 @@ Mix both types in any order:
 ```ffdl
 @form: job-application
 id: app-form
-theme: corporate-blue
+theme: blue
 method: post
 action: /careers/submit
 successMessage: "Application received!"
