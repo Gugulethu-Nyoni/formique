@@ -98,7 +98,7 @@ Mix both types in any order:
 @form: job-application
 id: app-form
 theme: blue
-method: post
+method: POST
 action: /careers/submit
 successMessage: "Application received!"
 requiredFieldIndicator: true
@@ -112,6 +112,11 @@ enctype: multipart/form-data
 
 > 💡 **Tip**: Don't worry about categorization - Formique automatically sorts them into the right place during processing.
 
+### Available submitModes
+
+```ffdl
+submitMode: email or rsvp 
+```
 
 ## **3. Field Definitions**  
 
