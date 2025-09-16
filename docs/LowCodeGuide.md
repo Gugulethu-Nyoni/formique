@@ -145,7 +145,6 @@ FFDL will infer that this will be text field type with "name" as id and name att
 ```  
 
 
-
 ## **4. Field Markers (Required & Validated Fields)**  
 
 ### **4.1 Markers Overview**  
@@ -175,7 +174,6 @@ This flexibility ensures a **user-friendly low-code approach**, making form crea
 - *!phone          # Required + validated  
 - age*             # Required (right side)  
 ```  
-
 
 
 ## **5. Field Types**  
