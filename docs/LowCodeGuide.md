@@ -9,7 +9,7 @@ Formique is a lightweight, declarative JavaScript library for building accessibl
 At the heart of Formique is the **Formique Form Definition Language (FFDL)**—a simple yet powerful **low-code syntax** that allows users to define forms without writing HTML or JavaScript.  
 
 FFDL is designed for:  
-**Non-technical users** – Easily create forms with minimal syntax  
+**Non-technical users** – Easily create forms with minimal syntax (low code) 
 **Developers** – Define forms using a structured, human-readable format  
 **Accessibility & Compliance** – Automatically ensures usability and best practices  
 
