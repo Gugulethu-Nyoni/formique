@@ -24,7 +24,7 @@ This guide will walk you through **FFDL**, making form creation effortless and i
 ## **2. Form Definition Basics**  
 
 ### **2.1 The `@form` Directive**  
-Every form starts with the `@form` directive, followed by a name and optional properties.  
+Every form starts with the `@form` directive, followed by a name and optional properties. The form directive is required. 
 
 #### **Basic Syntax**  
 ```ffdl
