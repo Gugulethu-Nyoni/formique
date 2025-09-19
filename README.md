@@ -72,6 +72,7 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 - **Mobile Responsive:** Formique forms are mobile responsive out of the box.
 - **Dynamic Features:** Implement nested conditional logic, dynamic dropdowns, and JavaScript-driven themes to enhance user experience.
 - **Progressive Enhancement:** Forms are designed to function with or without JavaScript, ensuring broad compatibility.
+- **Low Code Syntax:** Cut out the coding and technical jargon and write forms using easy and flexible low code syntax.
 
 
 
