@@ -49,6 +49,7 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 ## Key Features
 
 - **Declarative Syntax:** Define forms using a simple and intuitive schema.
+- **Low Code Syntax:** Cut out the coding and technical jargon and write forms using easy and flexible low code syntax.
 - **Wide Range of Inputs:** Supports text, email, number, password, date, time, file uploads, and more.
 - **Validation and Attributes:** Easily specify validation rules and attributes for each form field.
 - **Dynamic Form Generation:** Generate forms dynamically based on your schema.
