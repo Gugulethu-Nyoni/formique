@@ -1040,32 +1040,51 @@ handleOnPageFormSubmission(formId) {
         // Show the spinner as submission is now beginning.
         document.getElementById("formiqueSpinner").style.display = "block";
 
-        // Gather form data, including the reCAPTCHA token if it exists.
-        const formData = new FormData(formElement);
+        // Gather form data.
+        const formData = {};
+        new FormData(formElement).forEach((value, key) => {
+            formData[key] = value;
+        });
 
-        if (recaptchaField) {
-            formData.append('g-recaptcha-response', grecaptcha.getResponse());
-        }
+        // 
+        // Create the full payload with formData and metadata, including the secret key.
+        //
+        const payload = {
+            formData: formData,
+            metadata: {
+                ...this.formSettings, // Include all formSettings
+                recaptchaSecretKey: this.formSettings.recaptchaSecretKey, // Explicitly pass the secret key
+                // Other metadata like recipients and sender will be included from this.formSettings
+            }
+        };
 
         // Submit form data using fetch to a test endpoint.
         fetch(this.formAction, {
             method: this.method,
-            body: formData
+            headers: {
+                'Content-Type': 'application/json' // Important: set the content type
+            },
+            body: JSON.stringify(payload) // Send the combined payload as JSON
         })
-        .then(response => response.json())
+        .then(response => {
+            // Check if the response status is OK (200-299).
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             console.log('Success:', data);
             
             // Hide the spinner on success.
             document.getElementById("formiqueSpinner").style.display = "none";
 
-            // Get the form container element
             const formContainer = document.getElementById(this.formContainerId);
-
             if (this.redirect && this.redirectURL) {
                 window.location.href = this.redirectURL;
             }
-
             if (formContainer) {
                 const successMessageDiv = document.createElement('div');
                 successMessageDiv.classList.add('success-message', 'message-container');
@@ -1086,7 +1105,6 @@ handleOnPageFormSubmission(formId) {
                 if (existingErrorDiv) {
                     existingErrorDiv.remove();
                 }
-
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.classList.add('error-message', 'message-container');
                 let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
