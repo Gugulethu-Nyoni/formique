@@ -83,6 +83,8 @@ class Formique extends FormBuilder {
             ...finalSettings
         };
 
+        //console.log("constructor",this.formSettings);
+
          this.themeColor = this.formSettings.themeColor || null;
 
          //console.log("color set?", this.themeColor); 
@@ -844,167 +846,172 @@ hasFileInputs(form) {
 
 
 async handleEmailSubmission(formId) {
-  console.log(`Starting email submission for form ID: ${formId}`);
+    console.log(`Starting email submission for form ID: ${formId}`);
 
-  const form = document.getElementById(formId);
-  if (!form) {
-    console.error(`Form with ID ${formId} not found`);
-    throw new Error(`Form with ID ${formId} not found`);
-  }
-
-  // Validate required settings for 'sendTo'
-  if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
-    console.error('formSettings.sendTo must be an array with at least one recipient email');
-    throw new Error('formSettings.sendTo must be an array with at least one recipient email');
-  }
-
-  // Serialize form data
-  const payload = {
-    formData: {},
-    metadata: {
-      recipients: this.formSettings.sendTo,
-      timestamp: new Date().toISOString(),
-    },
-  };
-
-  let senderName = '';
-  let senderEmail = '';
-  let formSubject = '';
-  let registrantEmail = ''; // Variable to store the registrant's email
-
-  console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
-
-  // Process form fields and find registrant's email
-  const formData = new FormData(form);
-  formData.forEach((value, key) => {
-    console.log(`Processing form field - Key: ${key}, Value: ${value}`);
-    payload.formData[key] = value;
-
-    const lowerKey = key.toLowerCase();
-    if (lowerKey.includes('email')) {
-      senderEmail = value;
+    const form = document.getElementById(formId);
+    if (!form) {
+        console.error(`Form with ID ${formId} not found`);
+        throw new Error(`Form with ID ${formId} not found`);
     }
-    if (lowerKey.includes('name')) {
-      senderName = value;
+
+    // Validate required settings for 'sendTo'
+    if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
+        console.error('formSettings.sendTo must be an array with at least one recipient email');
+        throw new Error('formSettings.sendTo must be an array with at least one recipient email');
     }
-    if (lowerKey.includes('subject')) {
-      formSubject = value;
-    }
-    
-    // NEW: Check if the current field is the registrant's email
-    if (this.formSettings.emailField && key === this.formSettings.emailField) {
-      registrantEmail = value;
-    }
-  });
 
-  // Determine the email subject with fallback logic
-  payload.metadata.subject = formSubject ||
-                            this.formSettings.subject ||
-                            'Message From Contact Form';
+    // Serialize form data
+    const payload = {
+        formData: {},
+        metadata: {
+            recipients: this.formSettings.sendTo,
+            timestamp: new Date().toISOString(),
+        },
+    };
 
-  console.log('Determined email subject:', payload.metadata.subject);
+    let senderName = '';
+    let senderEmail = '';
+    let formSubject = '';
+    let registrantEmail = '';
 
-  // Add sender information to metadata
-  if (senderEmail) {
-    payload.metadata.sender = senderEmail;
-    payload.metadata.replyTo = senderName
-      ? `${senderName} <${senderEmail}>`
-      : senderEmail;
-  }
+    console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
 
-  console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
+    // Process form fields and find registrant's email
+    const formData = new FormData(form);
+    formData.forEach((value, key) => {
+        console.log(`Processing form field - Key: ${key}, Value: ${value}`);
+        payload.formData[key] = value;
 
-  try {
-    const endpoint = this.formiqueEndpoint || this.formAction;
-    const method = this.method || 'POST';
+        const lowerKey = key.toLowerCase();
+        if (lowerKey.includes('email')) {
+            senderEmail = value;
+        }
+        if (lowerKey.includes('name')) {
+            senderName = value;
+        }
+        if (lowerKey.includes('subject')) {
+            formSubject = value;
+        }
 
-    console.log(`Preparing to send primary request to: ${endpoint}`);
-    console.log(`Request method: ${method}`);
-    console.log('Final payload being sent to recipients:', payload);
-
-    // Send the first email to the 'sendTo' recipients
-    const response = await fetch(endpoint, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Formique-Version': '1.0',
-      },
-      body: JSON.stringify(payload),
+        // Check if the current field is the registrant's email
+        if (this.formSettings.emailField && key === this.formSettings.emailField) {
+            registrantEmail = value;
+        }
     });
 
-    console.log(`Received response for primary email with status: ${response.status}`);
+    // Determine the email subject with fallback logic
+    payload.metadata.subject = formSubject ||
+                                this.formSettings.subject ||
+                                'Message From Contact Form';
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('API Error Response:', errorData);
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    console.log('Determined email subject:', payload.metadata.subject);
+
+    // Add sender information to metadata
+    if (senderEmail) {
+        payload.metadata.sender = senderEmail;
+        payload.metadata.replyTo = senderName
+            ? `${senderName} <${senderEmail}>`
+            : senderEmail;
     }
 
-    const data = await response.json();
-    console.log('Primary API Success Response:', data);
+    // **NEW:** Add reCAPTCHA secret key to the metadata object
+    if (this.formSettings.recaptchaSecretKey) {
+        payload.metadata.recaptchaSecretKey = this.formSettings.recaptchaSecretKey;
+    }
 
-    // ------------------- NEW RSVP LOGIC -------------------
-    if (this.formSettings.submitMode === 'rsvp' && registrantEmail && this.formSettings.registrantMessage) {
-      console.log('RSVP mode detected. Sending confirmation email to registrant.');
+    console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
 
-      // Create a new payload for the registrant
-      const rsvpPayload = {
-        formData: payload.formData,
-        metadata: {
-          recipients: [registrantEmail], // Send only to the registrant
-          timestamp: new Date().toISOString(),
-          subject: this.formSettings.registrantSubject || 'RSVP Confirmation',
-          body: this.processDynamicMessage(this.formSettings.registrantMessage, payload.formData),
-          sender: this.formSettings.sendFrom || 'noreply@yourdomain.com', 
-          replyTo: this.formSettings.sendFrom || 'noreply@yourdomain.com',
+    // ... (The rest of your code remains the same)
+    try {
+      const endpoint = this.formiqueEndpoint || this.formAction;
+      const method = this.method || 'POST';
+
+      console.log(`Preparing to send primary request to: ${endpoint}`);
+      console.log(`Request method: ${method}`);
+      console.log('Final payload being sent to recipients:', payload);
+
+      // Send the first email to the 'sendTo' recipients
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Formique-Version': '1.0',
         },
-      };
+        body: JSON.stringify(payload),
+      });
 
-      try {
-        console.log('Preparing to send RSVP email. Final payload:', rsvpPayload);
-        const rsvpResponse = await fetch(endpoint, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Formique-Version': '1.0',
-          },
-          body: JSON.stringify(rsvpPayload),
-        });
+      console.log(`Received response for primary email with status: ${response.status}`);
 
-        if (!rsvpResponse.ok) {
-          const rsvpErrorData = await rsvpResponse.json().catch(() => ({}));
-          console.error('RSVP API Error Response:', rsvpErrorData);
-          // Log the error but don't fail the entire submission since the primary email was sent
-          console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
-        } else {
-          console.log('RSVP email sent successfully to registrant.');
-        }
-      } catch (rsvpError) {
-        console.error('RSVP email submission failed:', rsvpError);
-        console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', errorData);
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log('Primary API Success Response:', data);
+
+      // ------------------- NEW RSVP LOGIC -------------------
+      if (this.formSettings.submitMode === 'rsvp' && registrantEmail && this.formSettings.registrantMessage) {
+        console.log('RSVP mode detected. Sending confirmation email to registrant.');
+
+        // Create a new payload for the registrant
+        const rsvpPayload = {
+          formData: payload.formData,
+          metadata: {
+            recipients: [registrantEmail], // Send only to the registrant
+            timestamp: new Date().toISOString(),
+            subject: this.formSettings.registrantSubject || 'RSVP Confirmation',
+            body: this.processDynamicMessage(this.formSettings.registrantMessage, payload.formData),
+            sender: this.formSettings.sendFrom || 'noreply@yourdomain.com',
+            replyTo: this.formSettings.sendFrom || 'noreply@yourdomain.com',
+          },
+        };
+
+        try {
+          console.log('Preparing to send RSVP email. Final payload:', rsvpPayload);
+          const rsvpResponse = await fetch(endpoint, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Formique-Version': '1.0',
+            },
+            body: JSON.stringify(rsvpPayload),
+          });
+
+          if (!rsvpResponse.ok) {
+            const rsvpErrorData = await rsvpResponse.json().catch(() => ({}));
+            console.error('RSVP API Error Response:', rsvpErrorData);
+            // Log the error but don't fail the entire submission since the primary email was sent
+            console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
+          } else {
+            console.log('RSVP email sent successfully to registrant.');
+          }
+        } catch (rsvpError) {
+          console.error('RSVP email submission failed:', rsvpError);
+          console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
+        }
+      }
+      // ------------------- END NEW RSVP LOGIC -------------------
+
+      const successMessage = this.formSettings.successMessage ||
+                              data.message ||
+                              'Your message has been sent successfully!';
+      console.log(`Showing success message: ${successMessage}`);
+
+      this.showSuccessMessage(successMessage);
+
+    } catch (error) {
+      console.error('Email submission failed:', error);
+      const errorMessage = this.formSettings.errorMessage ||
+                            error.message ||
+                            'Failed to send message. Please try again later.';
+      console.log(`Showing error message: ${errorMessage}`);
+      this.showErrorMessage(errorMessage);
+    } finally {
+      document.getElementById("formiqueSpinner").style.display = "none";
     }
-    // ------------------- END NEW RSVP LOGIC -------------------
-
-    const successMessage = this.formSettings.successMessage ||
-                          data.message ||
-                          'Your message has been sent successfully!';
-    console.log(`Showing success message: ${successMessage}`);
-
-    this.showSuccessMessage(successMessage);
-
-  } catch (error) {
-    console.error('Email submission failed:', error);
-    const errorMessage = this.formSettings.errorMessage ||
-                         error.message ||
-                         'Failed to send message. Please try again later.';
-    console.log(`Showing error message: ${errorMessage}`);
-    this.showErrorMessage(errorMessage);
-  } finally {
-    document.getElementById("formiqueSpinner").style.display = "none";
-  }
 }
-
 
 // Add this method to your Formique class
 processDynamicMessage(message, formData) {
@@ -1097,6 +1104,8 @@ handleOnPageFormSubmission(formId) {
             new FormData(formElement).forEach((value, key) => {
                 formData[key] = value;
             });
+
+            console.log("Setting Object",this.formSettings);
 
             // Create the full payload with formData and metadata, including the secret key.
             const payload = {
