@@ -1012,82 +1012,91 @@ validateEmail(email) {
 }
 
 
-
 // Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
-  const formElement = document.getElementById(formId);
-  //console.warn("handler fired also",formId,this.method,this.formAction);
+    const formElement = document.getElementById(formId);
 
-  if (formElement) {
-    // Gather form data
-    const formData = new FormData(formElement);
+    if (formElement) {
+        // Find the reCAPTCHA field in the form schema.
+        const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
 
-    // Submit form data using fetch to a test endpoint
-    fetch(this.formAction, {
-      method: this.method,
-      body: formData
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Success:', data);
-        // Handle the response data here, e.g., show a success message
+        // If a reCAPTCHA field exists, perform client-side validation.
+        if (recaptchaField) {
+            const recaptchaToken = grecaptcha.getResponse();
 
-        // Get the form container element
-const formContainer = document.getElementById(this.formContainerId);
+            // If the token is empty, the reCAPTCHA challenge has not been completed.
+            if (!recaptchaToken) {
+                // Hide the spinner to indicate the submission was halted.
+                document.getElementById("formiqueSpinner").style.display = "none";
+                
+                // Display a user-friendly error message.
+                alert('Please verify that you are not a robot.');
+                
+                // Stop the function's execution to prevent form submission.
+                return;
+            }
+        }
 
-if (this.redirect && this.redirectURL) {
-  window.location.href = this.redirectURL;
-}
+        // Show the spinner as submission is now beginning.
+        document.getElementById("formiqueSpinner").style.display = "block";
 
+        // Gather form data, including the reCAPTCHA token if it exists.
+        const formData = new FormData(formElement);
 
-if (formContainer) {
-  // Create a new div element for the success message
-  const successMessageDiv = document.createElement('div');
+        if (recaptchaField) {
+            formData.append('g-recaptcha-response', grecaptcha.getResponse());
+        }
 
-  // Add custom classes for styling the success message
-  successMessageDiv.classList.add('success-message', 'message-container');
+        // Submit form data using fetch to a test endpoint.
+        fetch(this.formAction, {
+            method: this.method,
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            
+            // Hide the spinner on success.
+            document.getElementById("formiqueSpinner").style.display = "none";
 
-  // Set the success message text
-  successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
+            // Get the form container element
+            const formContainer = document.getElementById(this.formContainerId);
 
-  // Replace the content of the form container with the success message div
-  formContainer.innerHTML = ''; // Clear existing content
-  formContainer.appendChild(successMessageDiv); // Append the new success message div
-}
+            if (this.redirect && this.redirectURL) {
+                window.location.href = this.redirectURL;
+            }
 
+            if (formContainer) {
+                const successMessageDiv = document.createElement('div');
+                successMessageDiv.classList.add('success-message', 'message-container');
+                successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
+                formContainer.innerHTML = '';
+                formContainer.appendChild(successMessageDiv);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
 
-      })
-      .catch(error => {
-  console.error('Error:', error);
+            // Hide the spinner on error.
+            document.getElementById("formiqueSpinner").style.display = "none";
 
-  const formContainer = document.getElementById(this.formContainerId);
-  if (formContainer) {
-    // Check if an error message div already exists and remove it
-    let existingErrorDiv = formContainer.querySelector('.error-message');
-    if (existingErrorDiv) {
-      existingErrorDiv.remove();
+            const formContainer = document.getElementById(this.formContainerId);
+            if (formContainer) {
+                let existingErrorDiv = formContainer.querySelector('.error-message');
+                if (existingErrorDiv) {
+                    existingErrorDiv.remove();
+                }
+
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.classList.add('error-message', 'message-container');
+                let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+                err = `${err}<br/>Details: ${error.message}`;
+                errorMessageDiv.innerHTML = err;
+                formContainer.appendChild(errorMessageDiv);
+            }
+        });
     }
-
-    // Create a new div element for the error message
-    const errorMessageDiv = document.createElement('div');
-
-    // Add custom classes for styling the error message
-    errorMessageDiv.classList.add('error-message', 'message-container');
-
-    // Set the error message text
-    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
-    err = `${err}<br/>Details: ${error.message}`;
-    errorMessageDiv.innerHTML = err; 
-
-    // Append the new error message div to the form container
-    formContainer.appendChild(errorMessageDiv);
-  }
-});
-
-  }
 }
-
-
 
 
 // text field rendering
