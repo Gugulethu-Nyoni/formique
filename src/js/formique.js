@@ -1,4 +1,6 @@
 'use strict';
+import LowCodeParser from './LowCodeParser.js';
+import astToFormique from './astToFormique.js'; 
 /**
  * Formique Semantq Class Library
  * 
@@ -50,18 +52,40 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
-    constructor(formSchema, formSettings = {}, formParams = {}) {
+    constructor(formDefinition, formSettings = {}, formParams = {}) {
         super();
+        let formSchema;
+        let finalSettings = formSettings;
+        let finalParams = formParams;
+
+        if (typeof formDefinition === 'string') {
+            const ast = LowCodeParser.parse(formDefinition.trim());
+           // console.log("AST", JSON.stringify(ast, null,2));
+
+            const formObjects = new astToFormique(ast);
+
+            console.log("formSchema", JSON.stringify(formObjects.formSchema,null,2));
+            // Assign from formObjects if a string is passed
+            formSchema = formObjects.formSchema;
+            finalSettings = { ...formSettings, ...formObjects.formSettings };
+            finalParams = { ...formParams, ...formObjects.formParams };
+        } else {
+            // Assign from the parameters if formDefinition is not a string
+            formSchema = formDefinition;
+        }
+
         this.formSchema = formSchema;
-        this.formParams = formParams;
+        this.formParams = finalParams;
         this.formSettings = {
             requiredFieldIndicator: true,
             placeholders: true,
             asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
-            ...formSettings
+            ...finalSettings
         };
 
-         this.themeColor = formSettings.themeColor || null;
+         this.themeColor = this.formSettings.themeColor || null;
+
+         //console.log("color set?", this.themeColor); 
         
          this.themeColorMap = {
           'primary': {
@@ -99,8 +123,8 @@ class Formique extends FormBuilder {
         ];
         this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
 
-
-        document.addEventListener('DOMContentLoaded', () => {
+        // DISABLE DOM LISTENER 
+        //document.addEventListener('DOMContentLoaded', () => {
             // 1. Build the form's HTML in memory
             this.formMarkUp += this.renderFormElement(); // Adds opening <form> tag and any hidden inputs
 
@@ -177,6 +201,7 @@ class Formique extends FormBuilder {
 
             // Apply theme
             if (this.themeColor) {
+                console.log("IKHONA");
                 this.applyCustomTheme(this.themeColor, this.formContainerId); // <--- NEW: Apply custom theme
             } else if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
                 let theme = this.formSettings.theme;
@@ -186,8 +211,8 @@ class Formique extends FormBuilder {
                 this.applyTheme('dark', this.formContainerId); // Default to 'dark'
             }
         
-
-        }); // DOM LISTENER WRAPPER
+       // DISABLE DOM LISTENER
+        //}); // DOM LISTENER WRAPPER
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
@@ -326,6 +351,7 @@ handleParentFieldChange(parentFieldId, value) {
     });
   }
 }
+
 
 // Register observers for each dependent field
 registerObservers() {
@@ -715,6 +741,7 @@ renderField(type, name, label, validate, attributes, options) {
             'multipleSelect': this.renderMultipleSelectField,
             'dynamicSingleSelect': this.renderDynamicSingleSelectField,
             'range': this.renderRangeField,
+            'recaptcha': this.renderRecaptchaField,
             'submit': this.renderSubmitButton, // Keep this for completeness, but renderSubmitButtonElement will now handle it
         };
 
@@ -3345,6 +3372,8 @@ renderTextAreaField(type, name, label, validate, attributes) {
 
 renderRadioField(type, name, label, validate, attributes, options) {
     // Define valid validation attributes for radio fields
+    console.log("RADIO DEBUG - options:", JSON.stringify(options, null, 2));
+
     const radioValidationAttributes = ['required'];
     
     // Construct validation attributes
@@ -3376,15 +3405,15 @@ renderRadioField(type, name, label, validate, attributes, options) {
     // Handle the binding syntax
     let bindingDirective = '';
     if (attributes.binding) {
-    if (attributes.binding === 'bind:value' && name) {
-        bindingDirective = ` bind:value="${name}"\n`;
-    } else if (attributes.binding.startsWith('::') && name) {
-        bindingDirective = ` bind:value="${name}"\n`;
-    } else if (attributes.binding && !name) {
-        console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-        return;
+        if (attributes.binding === 'bind:value' && name) {
+            bindingDirective = ` bind:value="${name}"\n`;
+        } else if (attributes.binding.startsWith('::') && name) {
+            bindingDirective = ` bind:value="${name}"\n`;
+        } else if (attributes.binding && !name) {
+            console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+            return;
+        }
     }
-  }
 
     // Define attributes for the radio inputs
     let id = attributes.id || name;
@@ -3392,7 +3421,8 @@ renderRadioField(type, name, label, validate, attributes, options) {
     // Construct additional attributes dynamically
     let additionalAttrs = '';
     for (const [key, value] of Object.entries(attributes)) {
-      if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {            if (key.startsWith('on')) {
+        if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+            if (key.startsWith('on')) {
                 // Handle event attributes
                 const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
                 additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -3410,10 +3440,28 @@ renderRadioField(type, name, label, validate, attributes, options) {
 
     let inputClass = attributes.class || this.inputClass;
 
+    // Determine which option should be selected
+    let selectedValue = null;
+    
+    // Check options array for selected: true
+    if (options && options.length) {
+        const selectedOption = options.find(opt => opt.selected === true);
+        console.log("RADIO DEBUG - selectedOption:", selectedOption);
+        if (selectedOption) {
+            selectedValue = selectedOption.value;
+            console.log("RADIO DEBUG - selectedValue:", selectedValue);
+        }
+    }
+
     // Construct radio button HTML based on options
     let optionsHTML = '';
     if (options && options.length) {
         optionsHTML = options.map((option) => {
+            // Check if this option should be selected
+            const isSelected = (option.value === selectedValue);
+            console.log("RADIO DEBUG - option:", option.value, "isSelected:", isSelected);
+            const checkedAttr = isSelected ? ' checked' : '';
+            
             return `
             <div>
                 <input 
@@ -3425,6 +3473,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
                     ${attributes.id ? `id="${id}-${option.value}"` : `id="${id}-${option.value}"`}
                     class="${inputClass}"
                     ${validationAttrs}
+                    ${checkedAttr}
                 />
                 <label 
                     for="${attributes.id ? `${id}-${option.value}` : `${id}-${option.value}`}">
@@ -3459,13 +3508,13 @@ renderRadioField(type, name, label, validate, attributes, options) {
         return `\n${match}\n`;
     }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-    //return formattedHtml;
-    this.formMarkUp +=formattedHtml;
+    this.formMarkUp += formattedHtml;
 }
-
 
 renderCheckboxField(type, name, label, validate, attributes, options) {
   // Define valid validation attributes for checkbox fields
+  console.log("CHECKBOX DEBUG - options:", JSON.stringify(options, null, 2));
+
   const checkboxValidationAttributes = ['required'];
 
   // Construct validation attributes
@@ -3485,12 +3534,12 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
-  if (attributes.binding === 'bind:checked') {
-    bindingDirective = ` bind:checked="${name}"\n`;
-  } else if (attributes.binding.startsWith('::')) {
-    bindingDirective = ` bind:checked="${name}"\n`;
+    if (attributes.binding === 'bind:checked') {
+      bindingDirective = ` bind:checked="${name}"\n`;
+    } else if (attributes.binding.startsWith('::')) {
+      bindingDirective = ` bind:checked="${name}"\n`;
+    }
   }
- }
 
   // Define attributes for the checkbox inputs
   let id = attributes.id || name;
@@ -3498,7 +3547,8 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
+    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -3514,30 +3564,45 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
     }
   }
 
-
   let inputClass; 
   if ('class' in attributes) {
     inputClass = attributes.class; 
   } else {
-        inputClass = this.inputClass; 
+    inputClass = this.inputClass; 
   }
+
+  // Determine which options should be checked
+  const checkedValues = [];
+  if (options && options.length) {
+    options.forEach(option => {
+      if (option.checked === true || option.selected === true) {
+        checkedValues.push(option.value);
+      }
+    });
+  }
+  console.log("CHECKBOX DEBUG - checkedValues:", checkedValues);
 
   // Construct checkbox HTML based on options
   let optionsHTML = '';
   if (Array.isArray(options)) {
     optionsHTML = options.map((option) => {
       const optionId = `${id}-${option.value}`;
+      const isChecked = checkedValues.includes(option.value);
+      console.log("CHECKBOX DEBUG - option:", option.value, "isChecked:", isChecked);
+      const checkedAttr = isChecked ? ' checked' : '';
+      
       return `
         <div>
           <input 
-          type="checkbox" 
-          name="${name}" 
-          value="${option.value}"${bindingDirective} ${additionalAttrs}
+            type="checkbox" 
+            name="${name}" 
+            value="${option.value}"${bindingDirective} ${additionalAttrs}
             ${attributes.id ? `id="${optionId}"` : `id="${optionId}"`}
             class="${inputClass}"
+            ${checkedAttr}
           />
           <label 
-          for="${optionId}">
+            for="${optionId}">
             ${option.label}
           </label>
         </div>
@@ -3570,8 +3635,7 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  //return formattedHtml;
-  this.formMarkUp +=formattedHtml;
+  this.formMarkUp += formattedHtml;
 }
 
 
@@ -4010,6 +4074,23 @@ renderRangeField(type, name, label, validate, attributes) {
   this.formMarkUp += formHTML;
 }
 
+
+renderRecaptchaField(type, name, label, validate, attributes = {}) {
+    const fieldId = attributes.id || name;
+    const siteKey = attributes.siteKey;
+    // Check for the presence of a siteKey
+    if (!siteKey) {
+        console.error('reCAPTCHA siteKey is missing from the field attributes.');
+        return ''; // Do not render if the key is missing
+    }
+
+    return `
+        <div class="${this.divClass}" id="${fieldId}-block">
+            <label for="${fieldId}">${label}</label>
+            <div class="g-recaptcha" id="${fieldId}" data-sitekey="${siteKey}"></div>
+        </div>
+    `;
+}
 
 
 /*
