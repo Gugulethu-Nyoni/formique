@@ -25,7 +25,7 @@ If you want a quick guide for `@formique/semantq`, please visit:
 - [Dynamic Drop-Down Schema](#dynamic-drop-down-schema)
 - [Nested Conditionality Logic - Schema Definition](#nested-conditionality-logic---schema-definition)
 - [Styling the Form](#styling-the-form)
-- [Testing Form Submission with submitOnPage](#testing-form-submission-with-submitonpage)
+- [Testing Form Submission with submitOnPage](#form-submission-api)
 - [Contribute](#contribute)
 
 
@@ -1231,6 +1231,74 @@ const formParams = {
 };
 ```
 This approach helps you smoothly transition from testing to production, giving you control over where and how your form data is processed.
+
+# Form Submission API
+
+With **Formique**, you can use the Formique **cloud-based API** to handle form submissions.
+
+This means:
+
+* No backend server logic is required
+* Formique takes care of sending emails
+* You simply deploy the form and configure the right parameters
+
+## `formSchema`
+
+Define your form fields using `formSchema` as shown earlier in the docs. 
+
+
+```js
+const formSchema = [
+  ['text', 'name', 'Name', { required: true }],
+  ['text', 'surname', 'Surname', { required: true }],
+  ['email', 'email', 'Email', { required: true }],
+  ['text', 'message', 'Message', { required: true }],
+  ['recaptcha', 'recaptcha', 'Please verify you are human', { required: true }, {
+    siteKey: 'site_key_here',
+    version: 'v2'
+  }],
+  ['submit', 'submit', 'Submit'],
+];
+```
+
+## `formSettings`
+
+Customize how the form behaves using `formSettings`.
+
+```js
+const formSettings = {
+  recaptchaSecretKey: 'recaptcha_secret_key', // Optional if you're using reCAPTCHA
+  submitOnPage: true,                         // Submits directly from the page
+  submitMode: 'email',                        // Other available mode: 'rsvp'
+  sendTo: ['info@yourwebsite.com']            // Supports multiple recipients
+};
+```
+
+### Available `submitMode` Options:
+
+* `email`: Sends form submission to specified email(s)
+* `rsvp`: Sends confirmation email to the registrant as well
+
+## `formParams`
+
+Basic request parameters used during form submission.
+
+```js
+const formParams = {
+  method: 'POST',
+};
+```
+
+## Google reCAPTCHA Integration
+
+If you want to implement **Google reCAPTCHA**, remember to include the following script in the `<head>` section of your HTML page:
+
+```html
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+```
+
+This script is required to load and render the reCAPTCHA widget on your form.
+
 
 ### Inline Styling
 

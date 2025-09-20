@@ -1,5 +1,6 @@
 **Syntax Naming Suggestions** for Formique form SDL (Schema Definition Language)
 
+<!--
 
 ### **Submit Mode Naming Conventions**
 | Use Case               | Suggested `submitMode` Name | Notes                                                                 |
@@ -91,4 +92,4 @@ this.formSettings = {
   redirectURL: null
 };
 ```
-
+-->
