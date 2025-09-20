@@ -124,7 +124,7 @@ class Formique extends FormBuilder {
         this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
 
         // DISABLE DOM LISTENER 
-        //document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {
             // 1. Build the form's HTML in memory
             this.formMarkUp += this.renderFormElement(); // Adds opening <form> tag and any hidden inputs
 
@@ -172,47 +172,67 @@ class Formique extends FormBuilder {
 
 
             // 2. Inject the complete form HTML into the DOM
-            this.renderFormHTML(); // This puts the form element into the document!
+            // A conceptual snippet from your form initialization method
+this.renderFormHTML(); // This puts the form element into the document!
 
-            // 3. Now that the form is in the DOM, attach event listeners
-            const formElement = document.getElementById(`${this.formId}`);
-            if (formElement) { // Add a check here just in case, although it should now exist
-                formElement.addEventListener('submit', function(event) {
-                    if (this.formSettings.submitMode === 'email' || this.formSettings.submitMode === 'rsvp') {
-                        event.preventDefault();
-                        document.getElementById("formiqueSpinner").style.display = "block";
-                        this.handleEmailSubmission(this.formId);
-                    }
+// 3. Now that the form is in the DOM, get the element and attach a single event listener
+const formElement = document.getElementById(`${this.formId}`);
+if (formElement) {
+    // Attach a single, unified submit event listener
+    formElement.addEventListener('submit', (event) => {
+        // Prevent default submission behavior immediately
+        event.preventDefault();
 
-                    if (this.formSettings.submitOnPage) {
-                        event.preventDefault();
-                        document.getElementById("formiqueSpinner").style.display = "block";
-                        this.handleOnPageFormSubmission(this.formId);
-                    }
-                }.bind(this));
-            } else {
-                console.error(`Form with ID ${this.formId} not found after rendering. Event listener could not be attached.`);
+        // Check if reCAPTCHA is present in the form schema
+        const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
+        
+        // If reCAPTCHA is required, validate it first
+        if (recaptchaField) {
+            const recaptchaToken = grecaptcha.getResponse();
+
+            if (!recaptchaToken) {
+                // If reCAPTCHA is not checked, display an error and stop
+                document.getElementById("formiqueSpinner").style.display = "none";
+                alert('Please verify that you are not a robot.');
+                return; // Stop execution of the handler
             }
+        }
 
-            // Initialize dependency graph and observers after the form is rendered
-            this.initDependencyGraph();
-            this.registerObservers();
-            this.attachDynamicSelectListeners(); 
+        // If reCAPTCHA is not required or is validated, proceed with submission logic
+        document.getElementById("formiqueSpinner").style.display = "block";
 
-            // Apply theme
-            if (this.themeColor) {
-                console.log("IKHONA");
-                this.applyCustomTheme(this.themeColor, this.formContainerId); // <--- NEW: Apply custom theme
-            } else if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
-                let theme = this.formSettings.theme;
-                this.applyTheme(theme, this.formContainerId);
-            } else {
-                // Fallback if no themeColor and no valid theme specified
-                this.applyTheme('dark', this.formContainerId); // Default to 'dark'
-            }
+        if (this.formSettings.submitMode === 'email' || this.formSettings.submitMode === 'rsvp') {
+            this.handleEmailSubmission(this.formId);
+        }
+
+        if (this.formSettings.submitOnPage) {
+            this.handleOnPageFormSubmission(this.formId);
+        }
+    });
+
+} else {
+    console.error(`Form with ID ${this.formId} not found after rendering. Event listener could not be attached.`);
+}
+
+// Initialize dependency graph and observers after the form is rendered
+this.initDependencyGraph();
+this.registerObservers();
+this.attachDynamicSelectListeners(); 
+
+// Apply theme
+if (this.themeColor) {
+    this.applyCustomTheme(this.themeColor, this.formContainerId); 
+} else if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
+    let theme = this.formSettings.theme;
+    this.applyTheme(theme, this.formContainerId);
+} else {
+    this.applyTheme('dark', this.formContainerId); // Default to 'dark'
+}
+
+
         
        // DISABLE DOM LISTENER
-        //}); // DOM LISTENER WRAPPER
+        }); // DOM LISTENER WRAPPER
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
@@ -1012,110 +1032,142 @@ validateEmail(email) {
 }
 
 
+attachSubmitListener() {
+    this.formElement.addEventListener('submit', (e) => {
+      // Find the reCAPTCHA field in the form schema.
+      const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
+      
+      // If a reCAPTCHA field is present, check its state.
+      if (recaptchaField) {
+        const recaptchaToken = grecaptcha.getResponse();
+
+        if (!recaptchaToken) {
+          // Prevent the default form submission.
+          e.preventDefault(); 
+          
+          // Display the alert and handle UI.
+          alert('Please verify that you are not a robot.');
+          document.getElementById("formiqueSpinner").style.display = "none";
+          return;
+        }
+      }
+
+      // If reCAPTCHA is valid or not present, proceed with submission logic.
+      this.handleOnPageFormSubmission(e); 
+    });
+  }
+
+
+
 // Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
     const formElement = document.getElementById(formId);
 
     if (formElement) {
-        // Find the reCAPTCHA field in the form schema.
-        const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
+        // Intercept the form's native submit event
+        formElement.addEventListener('submit', (e) => {
+            // Find the reCAPTCHA field in the form schema.
+            const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
 
-        // If a reCAPTCHA field exists, perform client-side validation.
-        if (recaptchaField) {
-            const recaptchaToken = grecaptcha.getResponse();
+            // If a reCAPTCHA field exists, perform client-side validation.
+            if (recaptchaField) {
+                const recaptchaToken = grecaptcha.getResponse();
 
-            // If the token is empty, the reCAPTCHA challenge has not been completed.
-            if (!recaptchaToken) {
-                // Hide the spinner to indicate the submission was halted.
-                document.getElementById("formiqueSpinner").style.display = "none";
-                
-                // Display a user-friendly error message.
-                alert('Please verify that you are not a robot.');
-                
-                // Stop the function's execution to prevent form submission.
-                return;
-            }
-        }
-
-        // Show the spinner as submission is now beginning.
-        document.getElementById("formiqueSpinner").style.display = "block";
-
-        // Gather form data.
-        const formData = {};
-        new FormData(formElement).forEach((value, key) => {
-            formData[key] = value;
-        });
-
-        // 
-        // Create the full payload with formData and metadata, including the secret key.
-        //
-        const payload = {
-            formData: formData,
-            metadata: {
-                ...this.formSettings, // Include all formSettings
-                recaptchaSecretKey: this.formSettings.recaptchaSecretKey, // Explicitly pass the secret key
-                // Other metadata like recipients and sender will be included from this.formSettings
-            }
-        };
-
-        // Submit form data using fetch to a test endpoint.
-        fetch(this.formAction, {
-            method: this.method,
-            headers: {
-                'Content-Type': 'application/json' // Important: set the content type
-            },
-            body: JSON.stringify(payload) // Send the combined payload as JSON
-        })
-        .then(response => {
-            // Check if the response status is OK (200-299).
-            if (!response.ok) {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Success:', data);
-            
-            // Hide the spinner on success.
-            document.getElementById("formiqueSpinner").style.display = "none";
-
-            const formContainer = document.getElementById(this.formContainerId);
-            if (this.redirect && this.redirectURL) {
-                window.location.href = this.redirectURL;
-            }
-            if (formContainer) {
-                const successMessageDiv = document.createElement('div');
-                successMessageDiv.classList.add('success-message', 'message-container');
-                successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
-                formContainer.innerHTML = '';
-                formContainer.appendChild(successMessageDiv);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-
-            // Hide the spinner on error.
-            document.getElementById("formiqueSpinner").style.display = "none";
-
-            const formContainer = document.getElementById(this.formContainerId);
-            if (formContainer) {
-                let existingErrorDiv = formContainer.querySelector('.error-message');
-                if (existingErrorDiv) {
-                    existingErrorDiv.remove();
+                // If the token is empty, the reCAPTCHA challenge has not been completed.
+                if (!recaptchaToken) {
+                    e.preventDefault(); // <-- The crucial line to stop default form submission
+                    
+                    // Hide the spinner to indicate the submission was halted.
+                    document.getElementById("formiqueSpinner").style.display = "none";
+                    
+                    // Display a user-friendly error message.
+                    alert('Please verify that you are not a robot.');
+                    
+                    // Stop the function's execution to prevent form submission.
+                    return;
                 }
-                const errorMessageDiv = document.createElement('div');
-                errorMessageDiv.classList.add('error-message', 'message-container');
-                let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
-                err = `${err}<br/>Details: ${error.message}`;
-                errorMessageDiv.innerHTML = err;
-                formContainer.appendChild(errorMessageDiv);
             }
+
+            // At this point, reCAPTCHA is validated (or not present), so we can proceed with the fetch request.
+            // Show the spinner as submission is now beginning.
+            document.getElementById("formiqueSpinner").style.display = "block";
+
+            // Gather form data.
+            const formData = {};
+            new FormData(formElement).forEach((value, key) => {
+                formData[key] = value;
+            });
+
+            // Create the full payload with formData and metadata, including the secret key.
+            const payload = {
+                formData: formData,
+                metadata: {
+                    ...this.formSettings, // Include all formSettings
+                    // Other metadata like recipients and sender will be included from this.formSettings
+                }
+            };
+
+            // Submit form data using fetch to the endpoint.
+            fetch(this.formAction, {
+                method: this.method,
+                headers: {
+                    'Content-Type': 'application/json' // Important: set the content type
+                },
+                body: JSON.stringify(payload) // Send the combined payload as JSON
+            })
+            .then(response => {
+                // Check if the response status is OK (200-299).
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                
+                // Hide the spinner on success.
+                document.getElementById("formiqueSpinner").style.display = "none";
+
+                const formContainer = document.getElementById(this.formContainerId);
+                if (this.redirect && this.redirectURL) {
+                    window.location.href = this.redirectURL;
+                }
+                if (formContainer) {
+                    const successMessageDiv = document.createElement('div');
+                    successMessageDiv.classList.add('success-message', 'message-container');
+                    successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
+                    formContainer.innerHTML = '';
+                    formContainer.appendChild(successMessageDiv);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                // Hide the spinner on error.
+                document.getElementById("formiqueSpinner").style.display = "none";
+
+                const formContainer = document.getElementById(this.formContainerId);
+                if (formContainer) {
+                    let existingErrorDiv = formContainer.querySelector('.error-message');
+                    if (existingErrorDiv) {
+                        existingErrorDiv.remove();
+                    }
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.classList.add('error-message', 'message-container');
+                    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+                    err = `${err}<br/>Details: ${error.message}`;
+                    errorMessageDiv.innerHTML = err;
+                    formContainer.appendChild(errorMessageDiv);
+                }
+            });
+
+            // Return false to ensure no other default action is taken, especially for legacy browsers.
+            return false;
         });
     }
 }
-
 
 // text field rendering
 renderTextField(type, name, label, validate, attributes) {
