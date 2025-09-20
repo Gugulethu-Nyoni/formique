@@ -25,7 +25,7 @@ If you want a quick guide for `@formique/semantq`, please visit:
 - [Dynamic Drop-Down Schema](#dynamic-drop-down-schema)
 - [Nested Conditionality Logic - Schema Definition](#nested-conditionality-logic---schema-definition)
 - [Styling the Form](#styling-the-form)
-- [Testing Form Submission with submitOnPage](#form-submission-api)
+- [Form Submission API](#form-submission-api)
 - [Contribute](#contribute)
 
 
