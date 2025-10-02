@@ -1,0 +1,74 @@
+1. Simple Input Fields (No options, basic HTML inputs)
+text - Single line text input
+
+email - Email address input
+
+password - Password input (masked)
+
+number - Numeric input
+
+tel - Telephone number input
+
+url - URL/website input
+
+search - Search field input
+
+color - Color picker input
+
+file - File upload input
+
+image - Image upload input
+
+hidden - Hidden field (no UI)
+
+textarea - Multi-line text area
+
+2. Date/Time Inputs (Calendar/Time pickers)
+date - Date picker
+
+time - Time picker
+
+datetime-local - Combined date and time
+
+month - Month/year picker
+
+week - Week picker
+
+3. Option-Based Selection Fields (Require options array)
+radio - Radio button group (single selection)
+
+checkbox - Checkbox group (multiple selection)
+
+singleSelect - Dropdown select (single selection)
+
+multipleSelect - Multi-select dropdown (multiple selection)
+
+4. Dynamic/Conditional Fields (Special behavior)
+dynamicSingleSelect - Dynamic options with scenario blocks
+
+Conditional fields (any type with dependsOn/condition attributes)
+
+5. Action/Button Fields
+submit - Form submission button
+
+reset - Form reset button
+
+button - Generic button (custom actions)
+
+image - Can also function as submit button
+
+6. Specialized Input Types
+range - Slider input (not in example but supported)
+
+color - Color picker (already listed but specialized)
+
+Testing Priority Groups:
+Group 1: Simple inputs (text, email, password, number)
+Group 2: Option-based fields (radio, checkbox, singleSelect, multipleSelect)
+Group 3: Date/time inputs (date, time, datetime-local)
+Group 4: Special types (file, textarea, hidden)
+Group 5: Complex types (dynamicSingleSelect, conditional fields)
+Group 6: Action fields (submit, reset)
+
+This covers all field types shown in your Formique schema with logical grouping for systematic testing.
+

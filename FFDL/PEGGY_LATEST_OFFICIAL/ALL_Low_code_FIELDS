@@ -1,0 +1,162 @@
+The "low-code" version you've provided is a simplified, declarative schema format.
+
+Here is the complete translation of **all fields** from your JavaScript `formSchema` array into the equivalent low-code format, based on the patterns you established (e.g., `!label*!:type`, `oneof`, `selectMany`, `dependsOn: field, value`).
+
+-----
+
+## Formique Low-Code Schema Translation
+
+### Form Settings and Attributes
+
+```
+Simple Contact From Example :: FormiqueCloud Enabled
+
+@form: myForm 
+method: POST
+
+sendTo: gugunnn@gmail.com
+subject: Low-Code Form Submission
+submitMode: email
+
+theme: dark-blue
+themeColor: #da42f5
+submitOnPage: true
+```
+
+-----
+
+### Field Definitions (Schema)
+
+| Field Type | Low-Code Syntax | Notes |
+| :--- | :--- | :--- |
+| **Dynamic Select (languages)** | `!Programming Scope(Dynamic Select)-Programming Languages*!:selectOne` | Translates the label, field name, and `required: true`. We'll detail the options separately. |
+| **Role (singleSelect)** | `!Role (Select Conference Presenter to see conditionality)*!:selectOne` <br> `dependents: topic, mode` <br> `options: conference attendee, conference presenter` | Uses `selectOne` and includes `dependents` and `options`. |
+| **Topic (conditional text)** | `topic:text` <br> `dependsOn: role, conference presenter` | Simple text field, uses the simple string condition for dependency. |
+| **Mode (conditional singleSelect)** | `!Mode*!:oneof` <br> `dependsOn: role, conference presenter` <br> `options: physical, virtual` | Uses `oneof` (radio/single select), is required, and uses the `dependsOn` logic. (The function-based condition in the JS is simplified to the value in low-code.) |
+| **text\_input** | `name*:text` <br> `attributes: data-id: some-id` | Required text field with an additional attribute. Mapped to `name` for simplicity in the low-code list. |
+| **email\_input** | `email:email` <br> `attributes: disabled: ''` | Email field with a boolean attribute. |
+| **number\_input** | `!Number*:number` <br> `attributes: style: width: 100%` | Required number field with a style attribute. |
+| **password\_input** | `password:password` | Simple password field. |
+| **telephone\_input** | `telephone:tel` <br> `attributes: placeholder: 123-45-678, pattern: [0-9]{3}-[0-9]{2}-[0-9]{3}` | Telephone field with placeholder and pattern. |
+| **date\_input** | `date_input:date` | |
+| **time\_input** | `time_input:time` | |
+| **datetime\_input** | `datetime_input:datetime-local` | |
+| **month\_input** | `month_input:month` | |
+| **week\_input** | `week_input:week` | |
+| **url\_input** | `url_input:url` | |
+| **search\_input** | `search_input:search` | |
+| **color\_input** | `color_input:color` <br> `default: #ff0056` | Color field uses `default` for the preset value. |
+| **file\_input** | `file_input:file` | |
+| **user\_id (hidden)** | `user_id:hidden` <br> `default: 156` | Hidden field with a preset value. |
+| **image\_input** | `image_input:image` <br> `attributes: src: some_image.png` | Image field with the `src` attribute. |
+| **textarea\_input** | `!Textarea:textarea` <br> `attributes: rows: 4, cols: 6` | Textarea with attributes. |
+| **radio\_input** | `Radio:oneof` <br> `options: Male, Female, Other` | Radio buttons use `oneof` and a simple options list. |
+| **checkbox\_input** | `Checkbox:manyof` <br> `options: Newsletter(selected), Updates, Events` | Checkboxes use `manyof` and indicate a default selection. |
+| **location (singleSelect)** | `!Select (Single Option with East selected):selectOne` <br> `options: East(selected), South, North` | Single select with a default selection. |
+| **diet (multipleSelect)** | `Diet (Multiple Select):selectMany` <br> `options: Vegan, Vegetarian, Lacto-ovo` | Multiple select field. |
+| **submit\_input** | `Submit:submit` | Submission button. |
+
+-----
+
+## Complete Low-Code Schema
+
+This combines all the fields and settings into a single, comprehensive low-code representation:
+
+```
+Simple Contact From Example :: FormiqueCloud Enabled
+
+@form: myForm
+method: POST
+
+sendTo: gugunnn@gmail.com
+subject: Low-Code Form Submission
+submitMode: email
+
+theme: dark-blue
+themeColor: #da42f5
+submitOnPage: true
+
+----------------------------------------------
+
+- !Programming Scope(Dynamic Select)-Programming Languages*!:selectOne
+  options: 
+    Front End: javascript, html, css, typescript, semantq, svelte, vue, react, angular
+    Back End: nodejs, python, java, php, ruby, csharp, golang
+    Server: mysql, supabase, MongoDB, sqlite
+
+- !Role (Select Conference Presenter to see conditionality)*!:selectOne
+  dependents: topic, mode
+  options: conference attendee, conference presenter
+
+- topic:text
+  dependsOn: role, conference presenter
+
+- !Mode*!:oneof
+  options: physical, virtual
+  dependsOn: role, conference presenter
+
+- !Text*:text
+  attributes: data-id: some-id
+
+- email:email
+  attributes: disabled: ''
+
+- !Number*:number
+  attributes: style: width: 100%
+
+- password:password
+
+- telephone:tel
+  attributes: placeholder: 123-45-678, pattern: [0-9]{3}-[0-9]{2}-[0-9]{3}
+
+- date_input:date
+
+- time_input:time
+
+- datetime_input:datetime-local
+
+- month_input:month
+
+- week_input:week
+
+- url_input:url
+
+- search_input:search
+
+- color_input:color
+  default: #ff0056
+
+- file_input:file
+
+- user_id:hidden
+  default: 156
+
+- image_input:image
+  attributes: src: some_image.png
+
+- !Textarea:textarea
+  attributes: rows: 4, cols: 6
+
+- Radio:oneof
+  options: Male, Female, Other
+
+- Checkbox:manyof
+  options: Newsletter(selected), Updates, Events
+
+- !Select (Single Option with East selected):selectOne
+  options: East(selected), South, North
+
+- Diet (Multiple Select):selectMany
+  options: Vegan, Vegetarian, Lacto-ovo
+
+- Submit:submit
+```
+
+### Low-Code Syntax Interpretation
+
+  * **Field Naming & Type:** The format `!Label*:type` combines the label, a required indicator (`*` from `{required: true}`), and the input type, with the field name implicitly being the label or the first word of the label (unless specified otherwise). I've used the more explicit `field_name:type` for standard inputs.
+  * **Required Fields:** The `*` after the label indicates the `{required: true}` validation rule.
+  * **Default/Selected Options:** `Option(selected)` is used to indicate the `selected: true` property in the options array.
+  * **Grouped Options:** For `dynamicSingleSelect`, the options are nested using a colon to represent option groups (`Group Label: option1, option2`).
+  * **Attributes:** The `attributes: key: value, key2: value2` format translates the field attributes object.
+  * **Conditional Logic:** The `dependsOn: field, value` syntax is used to represent the simple string condition.

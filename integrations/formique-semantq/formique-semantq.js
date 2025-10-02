@@ -1,4 +1,6 @@
 'use strict';
+import LowCodeParser from './LowCodeParser.js';
+import astToFormique from './astToFormique.js'; 
 /**
  * Formique Semantq Class Library
  * 
@@ -50,18 +52,42 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
-    constructor(formSchema, formSettings = {}, formParams = {}) {
+    constructor(formDefinition, formSettings = {}, formParams = {}) {
         super();
+        let formSchema;
+        let finalSettings = formSettings;
+        let finalParams = formParams;
+
+        if (typeof formDefinition === 'string') {
+            const ast = LowCodeParser.parse(formDefinition.trim());
+           // console.log("AST", JSON.stringify(ast, null,2));
+
+            const formObjects = new astToFormique(ast);
+
+            console.log("formSchema", JSON.stringify(formObjects.formSchema,null,2));
+            // Assign from formObjects if a string is passed
+            formSchema = formObjects.formSchema;
+            finalSettings = { ...formSettings, ...formObjects.formSettings };
+            finalParams = { ...formParams, ...formObjects.formParams };
+        } else {
+            // Assign from the parameters if formDefinition is not a string
+            formSchema = formDefinition;
+        }
+
         this.formSchema = formSchema;
-        this.formParams = formParams;
+        this.formParams = finalParams;
         this.formSettings = {
             requiredFieldIndicator: true,
             placeholders: true,
             asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
-            ...formSettings
+            ...finalSettings
         };
 
-         this.themeColor = formSettings.themeColor || null;
+        //console.log("constructor",this.formSettings);
+
+         this.themeColor = this.formSettings.themeColor || null;
+
+         //console.log("color set?", this.themeColor); 
         
          this.themeColorMap = {
           'primary': {
@@ -100,7 +126,7 @@ class Formique extends FormBuilder {
         this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
 
         // DISABLE DOM LISTENER 
-        //document.addEventListener('DOMContentLoaded', () => {
+       // document.addEventListener('DOMContentLoaded', () => {
             // 1. Build the form's HTML in memory
             this.formMarkUp += this.renderFormElement(); // Adds opening <form> tag and any hidden inputs
 
@@ -148,46 +174,67 @@ class Formique extends FormBuilder {
 
 
             // 2. Inject the complete form HTML into the DOM
-            this.renderFormHTML(); // This puts the form element into the document!
+            // A conceptual snippet from your form initialization method
+this.renderFormHTML(); // This puts the form element into the document!
 
-            // 3. Now that the form is in the DOM, attach event listeners
-            const formElement = document.getElementById(`${this.formId}`);
-            if (formElement) { // Add a check here just in case, although it should now exist
-                formElement.addEventListener('submit', function(event) {
-                    if (this.formSettings.submitMode === 'email' || this.formSettings.submitMode === 'rsvp') {
-                        event.preventDefault();
-                        document.getElementById("formiqueSpinner").style.display = "block";
-                        this.handleEmailSubmission(this.formId);
-                    }
+// 3. Now that the form is in the DOM, get the element and attach a single event listener
+const formElement = document.getElementById(`${this.formId}`);
+if (formElement) {
+    // Attach a single, unified submit event listener
+    formElement.addEventListener('submit', (event) => {
+        // Prevent default submission behavior immediately
+        event.preventDefault();
 
-                    if (this.formSettings.submitOnPage) {
-                        event.preventDefault();
-                        document.getElementById("formiqueSpinner").style.display = "block";
-                        this.handleOnPageFormSubmission(this.formId);
-                    }
-                }.bind(this));
-            } else {
-                console.error(`Form with ID ${this.formId} not found after rendering. Event listener could not be attached.`);
+        // Check if reCAPTCHA is present in the form schema
+        const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
+        
+        // If reCAPTCHA is required, validate it first
+        if (recaptchaField) {
+            const recaptchaToken = grecaptcha.getResponse();
+
+            if (!recaptchaToken) {
+                // If reCAPTCHA is not checked, display an error and stop
+                document.getElementById("formiqueSpinner").style.display = "none";
+                alert('Please verify that you are not a robot.');
+                return; // Stop execution of the handler
             }
+        }
 
-            // Initialize dependency graph and observers after the form is rendered
-            this.initDependencyGraph();
-            this.registerObservers();
-            this.attachDynamicSelectListeners(); 
+        // If reCAPTCHA is not required or is validated, proceed with submission logic
+        document.getElementById("formiqueSpinner").style.display = "block";
 
-            // Apply theme
-            if (this.themeColor) {
-                this.applyCustomTheme(this.themeColor, this.formContainerId); // <--- NEW: Apply custom theme
-            } else if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
-                let theme = this.formSettings.theme;
-                this.applyTheme(theme, this.formContainerId);
-            } else {
-                // Fallback if no themeColor and no valid theme specified
-                this.applyTheme('dark', this.formContainerId); // Default to 'dark'
-            }
+        if (this.formSettings.submitMode === 'email' || this.formSettings.submitMode === 'rsvp') {
+            this.handleEmailSubmission(this.formId);
+        }
+
+        if (this.formSettings.submitOnPage) {
+            this.handleOnPageFormSubmission(this.formId);
+        }
+    });
+
+} else {
+    console.error(`Form with ID ${this.formId} not found after rendering. Event listener could not be attached.`);
+}
+
+// Initialize dependency graph and observers after the form is rendered
+this.initDependencyGraph();
+this.registerObservers();
+this.attachDynamicSelectListeners(); 
+
+// Apply theme
+if (this.themeColor) {
+    this.applyCustomTheme(this.themeColor, this.formContainerId); 
+} else if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
+    let theme = this.formSettings.theme;
+    this.applyTheme(theme, this.formContainerId);
+} else {
+    this.applyTheme('dark', this.formContainerId); // Default to 'dark'
+}
+
+
         
        // DISABLE DOM LISTENER
-        //}); // DOM LISTENER WRAPPER
+       // }); // DOM LISTENER WRAPPER
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
@@ -326,6 +373,7 @@ handleParentFieldChange(parentFieldId, value) {
     });
   }
 }
+
 
 // Register observers for each dependent field
 registerObservers() {
@@ -715,6 +763,7 @@ renderField(type, name, label, validate, attributes, options) {
             'multipleSelect': this.renderMultipleSelectField,
             'dynamicSingleSelect': this.renderDynamicSingleSelectField,
             'range': this.renderRangeField,
+            'recaptcha': this.renderRecaptchaField,
             'submit': this.renderSubmitButton, // Keep this for completeness, but renderSubmitButtonElement will now handle it
         };
 
@@ -797,167 +846,172 @@ hasFileInputs(form) {
 
 
 async handleEmailSubmission(formId) {
-  console.log(`Starting email submission for form ID: ${formId}`);
+    console.log(`Starting email submission for form ID: ${formId}`);
 
-  const form = document.getElementById(formId);
-  if (!form) {
-    console.error(`Form with ID ${formId} not found`);
-    throw new Error(`Form with ID ${formId} not found`);
-  }
-
-  // Validate required settings for 'sendTo'
-  if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
-    console.error('formSettings.sendTo must be an array with at least one recipient email');
-    throw new Error('formSettings.sendTo must be an array with at least one recipient email');
-  }
-
-  // Serialize form data
-  const payload = {
-    formData: {},
-    metadata: {
-      recipients: this.formSettings.sendTo,
-      timestamp: new Date().toISOString(),
-    },
-  };
-
-  let senderName = '';
-  let senderEmail = '';
-  let formSubject = '';
-  let registrantEmail = ''; // Variable to store the registrant's email
-
-  console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
-
-  // Process form fields and find registrant's email
-  const formData = new FormData(form);
-  formData.forEach((value, key) => {
-    console.log(`Processing form field - Key: ${key}, Value: ${value}`);
-    payload.formData[key] = value;
-
-    const lowerKey = key.toLowerCase();
-    if (lowerKey.includes('email')) {
-      senderEmail = value;
+    const form = document.getElementById(formId);
+    if (!form) {
+        console.error(`Form with ID ${formId} not found`);
+        throw new Error(`Form with ID ${formId} not found`);
     }
-    if (lowerKey.includes('name')) {
-      senderName = value;
+
+    // Validate required settings for 'sendTo'
+    if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
+        console.error('formSettings.sendTo must be an array with at least one recipient email');
+        throw new Error('formSettings.sendTo must be an array with at least one recipient email');
     }
-    if (lowerKey.includes('subject')) {
-      formSubject = value;
-    }
-    
-    // NEW: Check if the current field is the registrant's email
-    if (this.formSettings.emailField && key === this.formSettings.emailField) {
-      registrantEmail = value;
-    }
-  });
 
-  // Determine the email subject with fallback logic
-  payload.metadata.subject = formSubject ||
-                            this.formSettings.subject ||
-                            'Message From Contact Form';
+    // Serialize form data
+    const payload = {
+        formData: {},
+        metadata: {
+            recipients: this.formSettings.sendTo,
+            timestamp: new Date().toISOString(),
+        },
+    };
 
-  console.log('Determined email subject:', payload.metadata.subject);
+    let senderName = '';
+    let senderEmail = '';
+    let formSubject = '';
+    let registrantEmail = '';
 
-  // Add sender information to metadata
-  if (senderEmail) {
-    payload.metadata.sender = senderEmail;
-    payload.metadata.replyTo = senderName
-      ? `${senderName} <${senderEmail}>`
-      : senderEmail;
-  }
+    console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
 
-  console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
+    // Process form fields and find registrant's email
+    const formData = new FormData(form);
+    formData.forEach((value, key) => {
+        console.log(`Processing form field - Key: ${key}, Value: ${value}`);
+        payload.formData[key] = value;
 
-  try {
-    const endpoint = this.formiqueEndpoint || this.formAction;
-    const method = this.method || 'POST';
+        const lowerKey = key.toLowerCase();
+        if (lowerKey.includes('email')) {
+            senderEmail = value;
+        }
+        if (lowerKey.includes('name')) {
+            senderName = value;
+        }
+        if (lowerKey.includes('subject')) {
+            formSubject = value;
+        }
 
-    console.log(`Preparing to send primary request to: ${endpoint}`);
-    console.log(`Request method: ${method}`);
-    console.log('Final payload being sent to recipients:', payload);
-
-    // Send the first email to the 'sendTo' recipients
-    const response = await fetch(endpoint, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Formique-Version': '1.0',
-      },
-      body: JSON.stringify(payload),
+        // Check if the current field is the registrant's email
+        if (this.formSettings.emailField && key === this.formSettings.emailField) {
+            registrantEmail = value;
+        }
     });
 
-    console.log(`Received response for primary email with status: ${response.status}`);
+    // Determine the email subject with fallback logic
+    payload.metadata.subject = formSubject ||
+                                this.formSettings.subject ||
+                                'Message From Contact Form';
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('API Error Response:', errorData);
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    console.log('Determined email subject:', payload.metadata.subject);
+
+    // Add sender information to metadata
+    if (senderEmail) {
+        payload.metadata.sender = senderEmail;
+        payload.metadata.replyTo = senderName
+            ? `${senderName} <${senderEmail}>`
+            : senderEmail;
     }
 
-    const data = await response.json();
-    console.log('Primary API Success Response:', data);
+    // **NEW:** Add reCAPTCHA secret key to the metadata object
+    if (this.formSettings.recaptchaSecretKey) {
+        payload.metadata.recaptchaSecretKey = this.formSettings.recaptchaSecretKey;
+    }
 
-    // ------------------- NEW RSVP LOGIC -------------------
-    if (this.formSettings.submitMode === 'rsvp' && registrantEmail && this.formSettings.registrantMessage) {
-      console.log('RSVP mode detected. Sending confirmation email to registrant.');
+    console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
 
-      // Create a new payload for the registrant
-      const rsvpPayload = {
-        formData: payload.formData,
-        metadata: {
-          recipients: [registrantEmail], // Send only to the registrant
-          timestamp: new Date().toISOString(),
-          subject: this.formSettings.registrantSubject || 'RSVP Confirmation',
-          body: this.processDynamicMessage(this.formSettings.registrantMessage, payload.formData),
-          sender: this.formSettings.sendFrom || 'noreply@yourdomain.com', 
-          replyTo: this.formSettings.sendFrom || 'noreply@yourdomain.com',
+    // ... (The rest of your code remains the same)
+    try {
+      const endpoint = this.formiqueEndpoint || this.formAction;
+      const method = this.method || 'POST';
+
+      console.log(`Preparing to send primary request to: ${endpoint}`);
+      console.log(`Request method: ${method}`);
+      console.log('Final payload being sent to recipients:', payload);
+
+      // Send the first email to the 'sendTo' recipients
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Formique-Version': '1.0',
         },
-      };
+        body: JSON.stringify(payload),
+      });
 
-      try {
-        console.log('Preparing to send RSVP email. Final payload:', rsvpPayload);
-        const rsvpResponse = await fetch(endpoint, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Formique-Version': '1.0',
-          },
-          body: JSON.stringify(rsvpPayload),
-        });
+      console.log(`Received response for primary email with status: ${response.status}`);
 
-        if (!rsvpResponse.ok) {
-          const rsvpErrorData = await rsvpResponse.json().catch(() => ({}));
-          console.error('RSVP API Error Response:', rsvpErrorData);
-          // Log the error but don't fail the entire submission since the primary email was sent
-          console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
-        } else {
-          console.log('RSVP email sent successfully to registrant.');
-        }
-      } catch (rsvpError) {
-        console.error('RSVP email submission failed:', rsvpError);
-        console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', errorData);
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log('Primary API Success Response:', data);
+
+      // ------------------- NEW RSVP LOGIC -------------------
+      if (this.formSettings.submitMode === 'rsvp' && registrantEmail && this.formSettings.registrantMessage) {
+        console.log('RSVP mode detected. Sending confirmation email to registrant.');
+
+        // Create a new payload for the registrant
+        const rsvpPayload = {
+          formData: payload.formData,
+          metadata: {
+            recipients: [registrantEmail], // Send only to the registrant
+            timestamp: new Date().toISOString(),
+            subject: this.formSettings.registrantSubject || 'RSVP Confirmation',
+            body: this.processDynamicMessage(this.formSettings.registrantMessage, payload.formData),
+            sender: this.formSettings.sendFrom || 'noreply@yourdomain.com',
+            replyTo: this.formSettings.sendFrom || 'noreply@yourdomain.com',
+          },
+        };
+
+        try {
+          console.log('Preparing to send RSVP email. Final payload:', rsvpPayload);
+          const rsvpResponse = await fetch(endpoint, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Formique-Version': '1.0',
+            },
+            body: JSON.stringify(rsvpPayload),
+          });
+
+          if (!rsvpResponse.ok) {
+            const rsvpErrorData = await rsvpResponse.json().catch(() => ({}));
+            console.error('RSVP API Error Response:', rsvpErrorData);
+            // Log the error but don't fail the entire submission since the primary email was sent
+            console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
+          } else {
+            console.log('RSVP email sent successfully to registrant.');
+          }
+        } catch (rsvpError) {
+          console.error('RSVP email submission failed:', rsvpError);
+          console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
+        }
+      }
+      // ------------------- END NEW RSVP LOGIC -------------------
+
+      const successMessage = this.formSettings.successMessage ||
+                              data.message ||
+                              'Your message has been sent successfully!';
+      console.log(`Showing success message: ${successMessage}`);
+
+      this.showSuccessMessage(successMessage);
+
+    } catch (error) {
+      console.error('Email submission failed:', error);
+      const errorMessage = this.formSettings.errorMessage ||
+                            error.message ||
+                            'Failed to send message. Please try again later.';
+      console.log(`Showing error message: ${errorMessage}`);
+      this.showErrorMessage(errorMessage);
+    } finally {
+      document.getElementById("formiqueSpinner").style.display = "none";
     }
-    // ------------------- END NEW RSVP LOGIC -------------------
-
-    const successMessage = this.formSettings.successMessage ||
-                          data.message ||
-                          'Your message has been sent successfully!';
-    console.log(`Showing success message: ${successMessage}`);
-
-    this.showSuccessMessage(successMessage);
-
-  } catch (error) {
-    console.error('Email submission failed:', error);
-    const errorMessage = this.formSettings.errorMessage ||
-                         error.message ||
-                         'Failed to send message. Please try again later.';
-    console.log(`Showing error message: ${errorMessage}`);
-    this.showErrorMessage(errorMessage);
-  } finally {
-    document.getElementById("formiqueSpinner").style.display = "none";
-  }
 }
-
 
 // Add this method to your Formique class
 processDynamicMessage(message, formData) {
@@ -985,83 +1039,144 @@ validateEmail(email) {
 }
 
 
+attachSubmitListener() {
+    this.formElement.addEventListener('submit', (e) => {
+      // Find the reCAPTCHA field in the form schema.
+      const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
+      
+      // If a reCAPTCHA field is present, check its state.
+      if (recaptchaField) {
+        const recaptchaToken = grecaptcha.getResponse();
+
+        if (!recaptchaToken) {
+          // Prevent the default form submission.
+          e.preventDefault(); 
+          
+          // Display the alert and handle UI.
+          alert('Please verify that you are not a robot.');
+          document.getElementById("formiqueSpinner").style.display = "none";
+          return;
+        }
+      }
+
+      // If reCAPTCHA is valid or not present, proceed with submission logic.
+      this.handleOnPageFormSubmission(e); 
+    });
+  }
+
+
 
 // Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
-  const formElement = document.getElementById(formId);
-  //console.warn("handler fired also",formId,this.method,this.formAction);
+    const formElement = document.getElementById(formId);
 
-  if (formElement) {
-    // Gather form data
-    const formData = new FormData(formElement);
+    if (formElement) {
+        // Intercept the form's native submit event
+        formElement.addEventListener('submit', (e) => {
+            // Find the reCAPTCHA field in the form schema.
+            const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
 
-    // Submit form data using fetch to a test endpoint
-    fetch(this.formAction, {
-      method: this.method,
-      body: formData
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Success:', data);
-        // Handle the response data here, e.g., show a success message
+            // If a reCAPTCHA field exists, perform client-side validation.
+            if (recaptchaField) {
+                const recaptchaToken = grecaptcha.getResponse();
 
-        // Get the form container element
-const formContainer = document.getElementById(this.formContainerId);
+                // If the token is empty, the reCAPTCHA challenge has not been completed.
+                if (!recaptchaToken) {
+                    e.preventDefault(); // <-- The crucial line to stop default form submission
+                    
+                    // Hide the spinner to indicate the submission was halted.
+                    document.getElementById("formiqueSpinner").style.display = "none";
+                    
+                    // Display a user-friendly error message.
+                    alert('Please verify that you are not a robot.');
+                    
+                    // Stop the function's execution to prevent form submission.
+                    return;
+                }
+            }
 
-if (this.redirect && this.redirectURL) {
-  window.location.href = this.redirectURL;
-}
+            // At this point, reCAPTCHA is validated (or not present), so we can proceed with the fetch request.
+            // Show the spinner as submission is now beginning.
+            document.getElementById("formiqueSpinner").style.display = "block";
 
+            // Gather form data.
+            const formData = {};
+            new FormData(formElement).forEach((value, key) => {
+                formData[key] = value;
+            });
 
-if (formContainer) {
-  // Create a new div element for the success message
-  const successMessageDiv = document.createElement('div');
+            console.log("Setting Object",this.formSettings);
 
-  // Add custom classes for styling the success message
-  successMessageDiv.classList.add('success-message', 'message-container');
+            // Create the full payload with formData and metadata, including the secret key.
+            const payload = {
+                formData: formData,
+                metadata: {
+                    ...this.formSettings, // Include all formSettings
+                    // Other metadata like recipients and sender will be included from this.formSettings
+                }
+            };
 
-  // Set the success message text
-  successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
+            // Submit form data using fetch to the endpoint.
+            fetch(this.formAction, {
+                method: this.method,
+                headers: {
+                    'Content-Type': 'application/json' // Important: set the content type
+                },
+                body: JSON.stringify(payload) // Send the combined payload as JSON
+            })
+            .then(response => {
+                // Check if the response status is OK (200-299).
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                
+                // Hide the spinner on success.
+                document.getElementById("formiqueSpinner").style.display = "none";
 
-  // Replace the content of the form container with the success message div
-  formContainer.innerHTML = ''; // Clear existing content
-  formContainer.appendChild(successMessageDiv); // Append the new success message div
-}
+                const formContainer = document.getElementById(this.formContainerId);
+                if (this.redirect && this.redirectURL) {
+                    window.location.href = this.redirectURL;
+                }
+                if (formContainer) {
+                    const successMessageDiv = document.createElement('div');
+                    successMessageDiv.classList.add('success-message', 'message-container');
+                    successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
+                    formContainer.innerHTML = '';
+                    formContainer.appendChild(successMessageDiv);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
 
+                // Hide the spinner on error.
+                document.getElementById("formiqueSpinner").style.display = "none";
 
-      })
-      .catch(error => {
-  console.error('Error:', error);
+                const formContainer = document.getElementById(this.formContainerId);
+                if (formContainer) {
+                    let existingErrorDiv = formContainer.querySelector('.error-message');
+                    if (existingErrorDiv) {
+                        existingErrorDiv.remove();
+                    }
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.classList.add('error-message', 'message-container');
+                    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+                    err = `${err}<br/>Details: ${error.message}`;
+                    errorMessageDiv.innerHTML = err;
+                    formContainer.appendChild(errorMessageDiv);
+                }
+            });
 
-  const formContainer = document.getElementById(this.formContainerId);
-  if (formContainer) {
-    // Check if an error message div already exists and remove it
-    let existingErrorDiv = formContainer.querySelector('.error-message');
-    if (existingErrorDiv) {
-      existingErrorDiv.remove();
+            // Return false to ensure no other default action is taken, especially for legacy browsers.
+            return false;
+        });
     }
-
-    // Create a new div element for the error message
-    const errorMessageDiv = document.createElement('div');
-
-    // Add custom classes for styling the error message
-    errorMessageDiv.classList.add('error-message', 'message-container');
-
-    // Set the error message text
-    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
-    err = `${err}<br/>Details: ${error.message}`;
-    errorMessageDiv.innerHTML = err; 
-
-    // Append the new error message div to the form container
-    formContainer.appendChild(errorMessageDiv);
-  }
-});
-
-  }
 }
-
-
-
 
 // text field rendering
 renderTextField(type, name, label, validate, attributes) {
@@ -3345,6 +3460,8 @@ renderTextAreaField(type, name, label, validate, attributes) {
 
 renderRadioField(type, name, label, validate, attributes, options) {
     // Define valid validation attributes for radio fields
+    console.log("RADIO DEBUG - options:", JSON.stringify(options, null, 2));
+
     const radioValidationAttributes = ['required'];
     
     // Construct validation attributes
@@ -3376,15 +3493,15 @@ renderRadioField(type, name, label, validate, attributes, options) {
     // Handle the binding syntax
     let bindingDirective = '';
     if (attributes.binding) {
-    if (attributes.binding === 'bind:value' && name) {
-        bindingDirective = ` bind:value="${name}"\n`;
-    } else if (attributes.binding.startsWith('::') && name) {
-        bindingDirective = ` bind:value="${name}"\n`;
-    } else if (attributes.binding && !name) {
-        console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-        return;
+        if (attributes.binding === 'bind:value' && name) {
+            bindingDirective = ` bind:value="${name}"\n`;
+        } else if (attributes.binding.startsWith('::') && name) {
+            bindingDirective = ` bind:value="${name}"\n`;
+        } else if (attributes.binding && !name) {
+            console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+            return;
+        }
     }
-  }
 
     // Define attributes for the radio inputs
     let id = attributes.id || name;
@@ -3392,7 +3509,8 @@ renderRadioField(type, name, label, validate, attributes, options) {
     // Construct additional attributes dynamically
     let additionalAttrs = '';
     for (const [key, value] of Object.entries(attributes)) {
-      if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {            if (key.startsWith('on')) {
+        if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+            if (key.startsWith('on')) {
                 // Handle event attributes
                 const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
                 additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -3410,10 +3528,28 @@ renderRadioField(type, name, label, validate, attributes, options) {
 
     let inputClass = attributes.class || this.inputClass;
 
+    // Determine which option should be selected
+    let selectedValue = null;
+    
+    // Check options array for selected: true
+    if (options && options.length) {
+        const selectedOption = options.find(opt => opt.selected === true);
+        console.log("RADIO DEBUG - selectedOption:", selectedOption);
+        if (selectedOption) {
+            selectedValue = selectedOption.value;
+            console.log("RADIO DEBUG - selectedValue:", selectedValue);
+        }
+    }
+
     // Construct radio button HTML based on options
     let optionsHTML = '';
     if (options && options.length) {
         optionsHTML = options.map((option) => {
+            // Check if this option should be selected
+            const isSelected = (option.value === selectedValue);
+            console.log("RADIO DEBUG - option:", option.value, "isSelected:", isSelected);
+            const checkedAttr = isSelected ? ' checked' : '';
+            
             return `
             <div>
                 <input 
@@ -3425,6 +3561,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
                     ${attributes.id ? `id="${id}-${option.value}"` : `id="${id}-${option.value}"`}
                     class="${inputClass}"
                     ${validationAttrs}
+                    ${checkedAttr}
                 />
                 <label 
                     for="${attributes.id ? `${id}-${option.value}` : `${id}-${option.value}`}">
@@ -3459,13 +3596,13 @@ renderRadioField(type, name, label, validate, attributes, options) {
         return `\n${match}\n`;
     }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-    //return formattedHtml;
-    this.formMarkUp +=formattedHtml;
+    this.formMarkUp += formattedHtml;
 }
-
 
 renderCheckboxField(type, name, label, validate, attributes, options) {
   // Define valid validation attributes for checkbox fields
+  console.log("CHECKBOX DEBUG - options:", JSON.stringify(options, null, 2));
+
   const checkboxValidationAttributes = ['required'];
 
   // Construct validation attributes
@@ -3485,12 +3622,12 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
-  if (attributes.binding === 'bind:checked') {
-    bindingDirective = ` bind:checked="${name}"\n`;
-  } else if (attributes.binding.startsWith('::')) {
-    bindingDirective = ` bind:checked="${name}"\n`;
+    if (attributes.binding === 'bind:checked') {
+      bindingDirective = ` bind:checked="${name}"\n`;
+    } else if (attributes.binding.startsWith('::')) {
+      bindingDirective = ` bind:checked="${name}"\n`;
+    }
   }
- }
 
   // Define attributes for the checkbox inputs
   let id = attributes.id || name;
@@ -3498,7 +3635,8 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
+    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -3514,30 +3652,45 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
     }
   }
 
-
   let inputClass; 
   if ('class' in attributes) {
     inputClass = attributes.class; 
   } else {
-        inputClass = this.inputClass; 
+    inputClass = this.inputClass; 
   }
+
+  // Determine which options should be checked
+  const checkedValues = [];
+  if (options && options.length) {
+    options.forEach(option => {
+      if (option.checked === true || option.selected === true) {
+        checkedValues.push(option.value);
+      }
+    });
+  }
+  console.log("CHECKBOX DEBUG - checkedValues:", checkedValues);
 
   // Construct checkbox HTML based on options
   let optionsHTML = '';
   if (Array.isArray(options)) {
     optionsHTML = options.map((option) => {
       const optionId = `${id}-${option.value}`;
+      const isChecked = checkedValues.includes(option.value);
+      console.log("CHECKBOX DEBUG - option:", option.value, "isChecked:", isChecked);
+      const checkedAttr = isChecked ? ' checked' : '';
+      
       return `
         <div>
           <input 
-          type="checkbox" 
-          name="${name}" 
-          value="${option.value}"${bindingDirective} ${additionalAttrs}
+            type="checkbox" 
+            name="${name}" 
+            value="${option.value}"${bindingDirective} ${additionalAttrs}
             ${attributes.id ? `id="${optionId}"` : `id="${optionId}"`}
             class="${inputClass}"
+            ${checkedAttr}
           />
           <label 
-          for="${optionId}">
+            for="${optionId}">
             ${option.label}
           </label>
         </div>
@@ -3570,8 +3723,7 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  //return formattedHtml;
-  this.formMarkUp +=formattedHtml;
+  this.formMarkUp += formattedHtml;
 }
 
 
@@ -4011,6 +4163,23 @@ renderRangeField(type, name, label, validate, attributes) {
 }
 
 
+renderRecaptchaField(type, name, label, validate, attributes = {}) {
+    const fieldId = attributes.id || name;
+    const siteKey = attributes.siteKey;
+    // Check for the presence of a siteKey
+    if (!siteKey) {
+        console.error('reCAPTCHA siteKey is missing from the field attributes.');
+        return ''; // Do not render if the key is missing
+    }
+
+    return `
+        <div class="${this.divClass}" id="${fieldId}-block">
+            <label for="${fieldId}">${label}</label>
+            <div class="g-recaptcha" id="${fieldId}" data-sitekey="${siteKey}"></div>
+        </div>
+    `;
+}
+
 
 /*
 renderRangeField(type, name, label, validate, attributes) {
@@ -4192,14 +4361,3 @@ const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: ce
 
 
 export default Formique;
-
-
-
-
-
-
-
-
-
-
-
