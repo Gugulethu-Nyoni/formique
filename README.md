@@ -1306,6 +1306,10 @@ In addition to external stylesheets, individual form elements can be styled dire
 
 # Other Implementation Guide
 
+
+## Formique Low Code
+For non-technical users, see the [Formique Low Code Guide](docs/LowCodeGuide.md).
+
 ## Implementing Formique in Vue.js  
 For Vue-specific integration details, check out the [Vue.js Guide](docs/vue-guide.md).
 
