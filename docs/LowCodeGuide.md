@@ -50,7 +50,7 @@ These standard HTML form attributes will be added directly to your `<form>` elem
 @form: contact-form
 id: main-contact         # Form ID
 class: responsive-form   # CSS classes
-action: /submit          # Submission endpoint
+action: /submit          # Submission endpoint or page
 method: post             # HTTP method
 enctype: multipart/form-data  # For file uploads
 target: _blank           # Open response in new tab
@@ -290,7 +290,7 @@ For single or multiple selections in a dropdown.
   options: HTML, CSS, JavaScript  
 ```  
 
-**Note** Instead of selectMany you can also use multiSelect.
+**Note** Instead of selectMany you can also use multipleSelect or multiSelect.
 
 #### Pre-selected Values (defaults)
 
