@@ -178,10 +178,9 @@ function peg$parse(input, options) {
   const peg$r3 = /^[a-zA-Z0-9_\-]/;
   const peg$r4 = /^[!*]/;
   const peg$r5 = /^[a-zA-Z]/;
-  const peg$r6 = /^[a-zA-Z0-9_ \-]/;
-  const peg$r7 = /^[ \t\n\r]/;
-  const peg$r8 = /^[a-zA-Z_]/;
-  const peg$r9 = /^[a-zA-Z0-9_.\/:\-?&=()@#%+![\] ]/;
+  const peg$r6 = /^[ \t\n\r]/;
+  const peg$r7 = /^[a-zA-Z_]/;
+  const peg$r8 = /^[a-zA-Z0-9_.\/:\-?&=()@#%+![\]]/;
 
   const peg$e0 = peg$otherExpectation("form directive must be in this format: @form: form-name");
   const peg$e1 = peg$literalExpectation("@form:", false);
@@ -197,130 +196,129 @@ function peg$parse(input, options) {
   const peg$e11 = peg$classExpectation(["!", "*"], false, false, false);
   const peg$e12 = peg$literalExpectation(",", false);
   const peg$e13 = peg$classExpectation([["a", "z"], ["A", "Z"]], false, false, false);
-  const peg$e14 = peg$classExpectation([["a", "z"], ["A", "Z"], ["0", "9"], "_", " ", "-"], false, false, false);
-  const peg$e15 = peg$classExpectation([" ", "\t", "\n", "\r"], false, false, false);
-  const peg$e16 = peg$classExpectation([["a", "z"], ["A", "Z"], "_"], false, false, false);
-  const peg$e17 = peg$classExpectation([["a", "z"], ["A", "Z"], ["0", "9"], "_", ".", "/", ":", "-", "?", "&", "=", "(", ")", "@", "#", "%", "+", "!", "[", "]", " "], false, false, false);
+  const peg$e14 = peg$classExpectation([" ", "\t", "\n", "\r"], false, false, false);
+  const peg$e15 = peg$classExpectation([["a", "z"], ["A", "Z"], "_"], false, false, false);
+  const peg$e16 = peg$classExpectation([["a", "z"], ["A", "Z"], ["0", "9"], "_", ".", "/", ":", "-", "?", "&", "=", "(", ")", "@", "#", "%", "+", "!", "[", "]"], false, false, false);
 
   function peg$f0(definition) {
-    // definition is already a filtered array from the rule below.
-    return definition;
+  // definition is already a filtered array from the rule below.
+  return definition;
   }
   function peg$f1(directive, fields) {
-// 1. Start with the mandatory FormDirective node.
-const result = [directive];
+ // 1. Start with the mandatory FormDirective node.
+ const result = [directive];
 
-// 2. Conditionally add the optional FormFields node.
-if (fields) {
- result.push(fields);
-}
+ // 2. Conditionally add the optional FormFields node.
+ if (fields) {
+  result.push(fields);
+ }
 
-// 3. Return only the array of meaningful nodes, filtering out the '_' match.
-return result;
-  }
+ // 3. Return only the array of meaningful nodes, filtering out the '_' match.
+ return result;
+   }
   function peg$f2(name, properties) {
-// No change needed here, as it returns a single, well-formed object.
-return createNode('FormDirective', location().start, location().end, {
- name: name,
- properties: properties
-})
-  }
+ // No change needed here, as it returns a single, well-formed object.
+ return createNode('FormDirective', location().start, location().end, {
+  name: name,
+  properties: properties
+ })
+   }
   function peg$f3(props) {
-    const properties = [];
-    for (const prop of props) {
-     if (prop[0] && prop[0].type) properties.push(prop[0]);
-    }
-    return createNode('FormProperties', location().start, location().end, {
-     properties: properties
-    })
-  }
+   const properties = [];
+   for (const prop of props) {
+    if (prop[0] && prop[0].type) properties.push(prop[0]);
+   }
+   return createNode('FormProperties', location().start, location().end, {
+    properties: properties
+   })
+   }
   function peg$f4(key, value) {
-    return createNode('FormProperty', location().start, location().end, {
-    key: key,
-    value: value
-    })
-  }
+  return createNode('FormProperty', location().start, location().end, {
+   key: key,
+   value: value
+  })
+   }
   function peg$f5() {    // 💡 FIX: Match one or more characters until a comma or newline is found.
-    // We also trim to ensure leading/trailing spaces aren't included in the value
-    return createNode('StringLiteral', location().start, location().end, {
-     value: text().trim()
-    })
-  }
+   // We also trim to ensure leading/trailing spaces aren't included in the value
+   return createNode('StringLiteral', location().start, location().end, {
+    value: text().trim()
+   })
+   }
   function peg$f6() {
-    return createNode('StringLiteral', location().start, location().end, {
-    value: text().slice(1, -1)
-    })
-  }
+  return createNode('StringLiteral', location().start, location().end, {
+   value: text().slice(1, -1)
+  })
+   }
   function peg$f7() {
-    return createNode('BooleanLiteral', location().start, location().end, {
-    value: text() === "true"
-    })
-  }
+  return createNode('BooleanLiteral', location().start, location().end, {
+   value: text() === "true"
+  })
+   }
   function peg$f8() {
-    return createNode('NumberLiteral', location().start, location().end, {
-    value: parseInt(text(), 10)
-    })
-  }
+  return createNode('NumberLiteral', location().start, location().end, {
+   value: parseInt(text(), 10)
+  })
+   }
   function peg$f9(fields) {
-    return createNode('FormFields', location().start, location().end, {
-    fields: fields
-    })
-  }
+  return createNode('FormFields', location().start, location().end, {
+   fields: fields
+  })
+   }
   function peg$f10(name, attributes) {
-    return createNode('FormField', location().start, location().end, {
-    name: name,
-    attributes: attributes || []
-    })
-  }
+  return createNode('FormField', location().start, location().end, {
+   name: name,
+   attributes: attributes || []
+  })
+   }
   function peg$f11(markers, name, markers2) {
-    return (markers || '') + name + (markers2 || '')
-  }
+   return (markers || '') + name + (markers2 || '')
+   }
   function peg$f12(name, namePart, name2, type) {
-    return (name || '') + namePart.join('') + ':' + type.join('')
-  }
+   return (name || '') + namePart.join('') + ':' + type.join('')
+   }
   function peg$f13() {    return text()  }
   function peg$f14() {    return text()  }
   function peg$f15(attrs) {
-return attrs.map(attr => attr[1])
+ return attrs.map(attr => attr[1])
   }
   function peg$f16(key, value) {    // Consumes trailing spaces/newlines
-    return createNode('FieldAttribute', location().start, location().end, {
-    key: key, // 💡 FIX: Removed .value, since AttributeKey returns a string
-    value: value
-    })
-  }
+  return createNode('FieldAttribute', location().start, location().end, {
+   key: key, // 💡 FIX: Removed .value, since AttributeKey returns a string
+   value: value
+  })
+   }
   function peg$f17(flag) {
-    return createNode('FieldAttribute', location().start, location().end, {
-    key: flag,
-    value: createNode('BooleanLiteral', location().start, location().end, { value: true })
-    })
-  }
-  function peg$f18(key, values) {
-    return createNode('OptionsAttribute', location().start, location().end, {
-    key: key, // 💡 FIX: Removed .value, since AttributeKey returns a string
-    values: values
-    })
+  return createNode('FieldAttribute', location().start, location().end, {
+   key: flag,
+   value: createNode('BooleanLiteral', location().start, location().end, { value: true })
+  })
+   }
+  function peg$f18(key, values) { 
+  return createNode('OptionsAttribute', location().start, location().end, {
+   key: key, // 💡 FIX: Removed .value, since AttributeKey returns a string
+   values: values
+  })
   }
   function peg$f19(head, tail) {
-const options = [head];
-// The tail is an array of [whitespace, comma, whitespace, Option] tuples.
-for (const item of tail) {
- options.push(item[3]); // item[3] is the Option node
-}
-return options;
+ const options = [head];
+ // The tail is an array of [whitespace, comma, whitespace, Option] tuples.
+ for (const item of tail) {
+  options.push(item[3]); // item[3] is the Option node
+ }
+ return options;
   }
   function peg$f20(value) {
-    return createNode('Option', location().start, location().end, {
-     value: value.value, // Extract the value from the AttributeValue node
-     quoted: value.type === 'StringLiteral' // Check if it was a quoted string
-    })
+  return createNode('Option', location().start, location().end, {
+    value: value.value, // Extract the value from the AttributeValue node
+    quoted: value.type === 'StringLiteral' // Check if it was a quoted string
+  })
   }
   function peg$f21() {    return text()  }
   function peg$f22() {    return text()  }
   function peg$f23() {
-return createNode('Identifier', location().start, location().end, { value: text() })
+ return createNode('Identifier', location().start, location().end, { value: text() })
   }
-  function peg$f24(head, tail) {    // 💡 FIX: Added space ' '
+  function peg$f24(head, tail) {    
        return createNode('StringLiteral', location().start, location().end, { 
          value: text() // Returns the entire matched text
        })
@@ -1307,20 +1305,20 @@ return createNode('Identifier', location().start, location().end, { value: text(
     if (s1 !== peg$FAILED) {
       s2 = [];
       s3 = input.charAt(peg$currPos);
-      if (peg$r6.test(s3)) {
+      if (peg$r3.test(s3)) {
         peg$currPos++;
       } else {
         s3 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$e14); }
+        if (peg$silentFails === 0) { peg$fail(peg$e10); }
       }
       while (s3 !== peg$FAILED) {
         s2.push(s3);
         s3 = input.charAt(peg$currPos);
-        if (peg$r6.test(s3)) {
+        if (peg$r3.test(s3)) {
           peg$currPos++;
         } else {
           s3 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$e14); }
+          if (peg$silentFails === 0) { peg$fail(peg$e10); }
         }
       }
       peg$savedPos = s0;
@@ -1378,20 +1376,20 @@ return createNode('Identifier', location().start, location().end, { value: text(
 
     s0 = [];
     s1 = input.charAt(peg$currPos);
-    if (peg$r7.test(s1)) {
+    if (peg$r6.test(s1)) {
       peg$currPos++;
     } else {
       s1 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$e15); }
+      if (peg$silentFails === 0) { peg$fail(peg$e14); }
     }
     while (s1 !== peg$FAILED) {
       s0.push(s1);
       s1 = input.charAt(peg$currPos);
-      if (peg$r7.test(s1)) {
+      if (peg$r6.test(s1)) {
         peg$currPos++;
       } else {
         s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$e15); }
+        if (peg$silentFails === 0) { peg$fail(peg$e14); }
       }
     }
 
@@ -1403,11 +1401,11 @@ return createNode('Identifier', location().start, location().end, { value: text(
 
     s0 = peg$currPos;
     s1 = input.charAt(peg$currPos);
-    if (peg$r8.test(s1)) {
+    if (peg$r7.test(s1)) {
       peg$currPos++;
     } else {
       s1 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$e16); }
+      if (peg$silentFails === 0) { peg$fail(peg$e15); }
     }
     if (s1 !== peg$FAILED) {
       s2 = [];
@@ -1443,29 +1441,29 @@ return createNode('Identifier', location().start, location().end, { value: text(
 
     s0 = peg$currPos;
     s1 = input.charAt(peg$currPos);
-    if (peg$r8.test(s1)) {
+    if (peg$r7.test(s1)) {
       peg$currPos++;
     } else {
       s1 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$e16); }
+      if (peg$silentFails === 0) { peg$fail(peg$e15); }
     }
     if (s1 !== peg$FAILED) {
       s2 = [];
       s3 = input.charAt(peg$currPos);
-      if (peg$r9.test(s3)) {
+      if (peg$r8.test(s3)) {
         peg$currPos++;
       } else {
         s3 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$e17); }
+        if (peg$silentFails === 0) { peg$fail(peg$e16); }
       }
       while (s3 !== peg$FAILED) {
         s2.push(s3);
         s3 = input.charAt(peg$currPos);
-        if (peg$r9.test(s3)) {
+        if (peg$r8.test(s3)) {
           peg$currPos++;
         } else {
           s3 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$e17); }
+          if (peg$silentFails === 0) { peg$fail(peg$e16); }
         }
       }
       peg$savedPos = s0;
@@ -1479,30 +1477,30 @@ return createNode('Identifier', location().start, location().end, { value: text(
   }
 
 
-function createNode(type, start, end, additionalProps) {
- const node = {
- type: type,
- start: start,
- end: end,
- ...additionalProps
- };
- if (additionalProps.expression) {
- node.expression = createNode('Identifier', additionalProps.expression.start, additionalProps.expression.end, {
-  name: additionalProps.expression.value,
-  loc: {
-  start: {
-   line: 1,
-   column: additionalProps.expression.start + 1
-  },
-  end: {
-   line: 1,
-   column: additionalProps.expression.start + 2
-  }
-  }
- });
- }
- return node;
-}
+ function createNode(type, start, end, additionalProps) {
+  const node = {
+   type: type,
+   start: start,
+   end: end,
+   ...additionalProps
+  };
+  if (additionalProps.expression) {
+   node.expression = createNode('Identifier', additionalProps.expression.start, additionalProps.expression.end, {
+    name: additionalProps.expression.value,
+    loc: {
+     start: {
+      line: 1,
+      column: additionalProps.expression.start + 1
+     },
+     end: {
+      line: 1,
+      column: additionalProps.expression.start + 2
+     }
+    }
+   });
+  }
+  return node;
+ }
 
   peg$result = peg$startRuleFunction();
 
@@ -1542,10 +1540,8 @@ const peg$allowedStartRules = [
   "start"
 ];
 
-export default {
-  StartRules: ["start"],
-  SyntaxError: peg$SyntaxError,
-  parse: peg$parse
+export {
+  peg$allowedStartRules as StartRules,
+  peg$SyntaxError as SyntaxError,
+  peg$parse as parse
 };
-
-

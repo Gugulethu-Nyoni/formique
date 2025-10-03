@@ -1,4 +1,6 @@
 'use strict';
+import LowCodeParser from './LowCodeParser.js';
+import astToFormique from './astToFormique.js'; 
 /**
  * Formique Semantq Class Library
  * 
@@ -50,101 +52,194 @@ class FormBuilder
 
 // Extended class for specific form rendering methods
 class Formique extends FormBuilder {
-  constructor(formSchema, formSettings = {}, formParams = {}, ) {
-    super();
-    this.formSchema = formSchema;
-    this.formParams = formParams;
-    this.formSettings = {
-      requiredFieldIndicator: true,
-      placeholders: true,
-      asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
-      ...formSettings
-    };
-    this.divClass = 'input-block';
-    this.inputClass = 'form-input';
-    this.radioGroupClass = 'radio-group';
-    this.checkboxGroupClass = 'checkbox-group';
-    this.selectGroupClass = 'form-select';
-    this.submitButtonClass = 'form-submit-btn';
-    this.formContainerId = formSettings?.formContainerId || 'formique';
-    this.formId = this.formParams?.id || this.generateFormId();
-    //console.log(this.formId);
-    this.formAction = formParams?.action || 'https://httpbin.org/post';
-    this.method = 'POST';    
-    this.formMarkUp = '';
-    this.dependencyGraph = {};
-    this.redirect = formSettings?.redirect ||'';
-    this.redirectURL = formSettings?.redirectURL ||'';
-    this.themes = [
-      "dark",
-      "light",
-      "pink",
-      "light",
-      "indigo",
-      "dark-blue",
-      "light-blue",
-      "dark-orange",
-      "bright-yellow",
-      "green",
-      "purple",
-      "midnight-blush",
-      "deep-blue",
-      "blue",
-      "brown",
-      "orange"
-    ];
+    constructor(formDefinition, formSettings = {}, formParams = {}) {
+        super();
+        let formSchema;
+        let finalSettings = formSettings;
+        let finalParams = formParams;
 
-    //this.formiqueEndpoint = "http://localhost:3000/api/send-email";
-    this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
+        if (typeof formDefinition === 'string') {
+            const ast = LowCodeParser.parse(formDefinition.trim());
+           // console.log("AST", JSON.stringify(ast, null,2));
 
-// DISABLE EVENT LISTENER
-    // document.addEventListener('DOMContentLoaded', () => {
+            const formObjects = new astToFormique(ast);
 
-      /*
-      if (this.formParams && Object.keys(this.formParams).length > 0) {
-      this.formMarkUp += this.renderFormElement();
-      } */
+            //console.log("formSchema", JSON.stringify(formObjects.formSchema,null,2));
+            // Assign from formObjects if a string is passed
+            formSchema = formObjects.formSchema;
+            finalSettings = { ...formSettings, ...formObjects.formSettings };
+            finalParams = { ...formParams, ...formObjects.formParams };
+        } else {
+            // Assign from the parameters if formDefinition is not a string
+            formSchema = formDefinition;
+        }
 
-      this.formMarkUp += this.renderFormElement();
+        this.formSchema = formSchema;
+        this.formParams = finalParams;
+        this.formSettings = {
+            requiredFieldIndicator: true,
+            placeholders: true,
+            asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
+            ...finalSettings
+        };
+
+        //console.log("constructor",this.formSettings);
+
+         this.themeColor = this.formSettings.themeColor || null;
+
+         //console.log("color set?", this.themeColor); 
+        
+         this.themeColorMap = {
+          'primary': {
+            '--formique-base-bg': '#ffffff',
+            '--formique-base-text': '#333333',
+            '--formique-base-shadow': '0 10px 30px rgba(0, 0, 0, 0.1)',
+            '--formique-base-label': '#555555',
+            '--formique-input-border': '#dddddd',
+            '--formique-focus-color': null, // Will be set to themeColor
+            '--formique-btn-bg': null,      // Will be set to themeColor
+            '--formique-btn-text': '#ffffff',
+            '--formique-btn-shadow': null    // Will be calculated from themeColor
+          }
+        };
+
+        this.divClass = 'input-block';
+        this.inputClass = 'form-input';
+        this.radioGroupClass = 'radio-group';
+        this.checkboxGroupClass = 'checkbox-group';
+        this.selectGroupClass = 'form-select';
+        this.submitButtonClass = 'form-submit-btn';
+        this.formContainerId = formSettings?.formContainerId || 'formique';
+        // Ensure formParams.id is used if provided, otherwise generate a new ID
+        this.formId = this.formParams?.id || this.generateFormId(); 
+        this.formAction = formParams?.action || 'https://httpbin.org/post';
+        this.method = 'POST';
+        this.formMarkUp = '';
+        this.dependencyGraph = {};
+        this.redirect = formSettings?.redirect || '';
+        this.redirectURL = formSettings?.redirectURL || '';
+        this.themes = [
+            "dark", "light", "pink", "indigo", "dark-blue", "light-blue",
+            "dark-orange", "bright-yellow", "green", "purple", "midnight-blush",
+            "deep-blue", "blue", "brown", "orange"
+        ];
+        this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
+
+        // DISABLE DOM LISTENER 
+       // document.addEventListener('DOMContentLoaded', () => {
+            // 1. Build the form's HTML in memory
+            this.formMarkUp += this.renderFormElement(); // Adds opening <form> tag and any hidden inputs
+
+            // Filter out 'submit' field for rendering, and render all other fields
+            const nonSubmitFieldsHtml = this.formSchema
+                .filter(field => field[0] !== 'submit')
+                 .map(field => {
+                //  FIX 1: Add 'subOptions' to capture the 7th element (Index 6)
+                const [type, name, label, validate, attributes = {}, options, subOptions] = field;
+                
+                // FIX 2: Pass 'subOptions' through to renderField
+                return this.renderField(type, name, label, validate, attributes, options, subOptions);
+            }).join('');
+
+            this.formMarkUp += nonSubmitFieldsHtml;
+
+            // Find and render the submit button separately, at the very end of the form content
+            const submitField = this.formSchema.find(field => field[0] === 'submit');
+            if (submitField) {
+                const [type, name, label, validate, attributes = {}] = submitField;
+                const id = attributes.id || name;
+                let buttonClass = this.submitButtonClass;
+                if ('class' in attributes) {
+                    buttonClass = attributes.class;
+                }
+                let additionalAttrs = '';
+                for (const [key, value] of Object.entries(attributes)) {
+                    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+                        if (key.startsWith('on')) {
+                            const eventValue = value.endsWith('()') ? value : `${value}()`;
+                            additionalAttrs += ` ${key}="${eventValue}"`;
+                        } else {
+                            if (value === true) {
+                                additionalAttrs += ` ${key.replace(/_/g, '-')}`;
+                            } else if (value !== false) {
+                                additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"`;
+                            }
+                        }
+                    }
+                }
+                this.formMarkUp += `
+                    <div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
+                        <div class="formique-spinner"></div>
+                        <p class="message">Hang in tight, we are submitting your details…</p>
+                    </div>
+                    <input type="submit" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>
+                `;
+            }
 
 
-      this.renderForm();
-      this.renderFormHTML();
-      this.initDependencyGraph();
-      this.registerObservers();
+            // 2. Inject the complete form HTML into the DOM
+            // A conceptual snippet from your form initialization method
+this.renderFormHTML(); // This puts the form element into the document!
 
-      
-      if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
-        let theme = this.formSettings.theme;
-        this.applyTheme(theme, this.formContainerId);
-      } else {
-        // Fallback to dark theme if no theme is set or invalid theme
-        this.applyTheme('dark', this.formContainerId);
-      }
+// 3. Now that the form is in the DOM, get the element and attach a single event listener
+const formElement = document.getElementById(`${this.formId}`);
+if (formElement) {
+    // Attach a single, unified submit event listener
+    formElement.addEventListener('submit', (event) => {
+        // Prevent default submission behavior immediately
+        event.preventDefault();
 
-     document.getElementById(`${this.formId}`).addEventListener('submit', function(event) {
- 
-      if (this.formSettings.submitMode === 'email') {
-      event.preventDefault(); // Prevent the default form submission
-      document.getElementById("formiqueSpinner").style.display = "block";
-      //return;
-      this.handleEmailSubmission(this.formId);
-      }
+        // Check if reCAPTCHA is present in the form schema
+        const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
+        
+        // If reCAPTCHA is required, validate it first
+        if (recaptchaField) {
+            const recaptchaToken = grecaptcha.getResponse();
+
+            if (!recaptchaToken) {
+                // If reCAPTCHA is not checked, display an error and stop
+                document.getElementById("formiqueSpinner").style.display = "none";
+                alert('Please verify that you are not a robot.');
+                return; // Stop execution of the handler
+            }
+        }
+
+        // If reCAPTCHA is not required or is validated, proceed with submission logic
+        document.getElementById("formiqueSpinner").style.display = "block";
+
+        if (this.formSettings.submitMode === 'email' || this.formSettings.submitMode === 'rsvp') {
+            this.handleEmailSubmission(this.formId);
+        }
+
+        if (this.formSettings.submitOnPage) {
+            this.handleOnPageFormSubmission(this.formId);
+        }
+    });
+
+} else {
+    console.error(`Form with ID ${this.formId} not found after rendering. Event listener could not be attached.`);
+}
+
+// Initialize dependency graph and observers after the form is rendered
+this.initDependencyGraph();
+this.registerObservers();
+this.attachDynamicSelectListeners(); 
+
+// Apply theme
+if (this.themeColor) {
+    this.applyCustomTheme(this.themeColor, this.formContainerId); 
+} else if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
+    let theme = this.formSettings.theme;
+    this.applyTheme(theme, this.formContainerId);
+} else {
+    this.applyTheme('dark', this.formContainerId); // Default to 'dark'
+}
 
 
-    if (this.formSettings.submitOnPage) {
-    event.preventDefault(); // Prevent the default form submission
-    document.getElementById("formiqueSpinner").style.display = "block";
-    this.handleOnPageFormSubmission(this.formId);
-    //console.warn("listener fired at least>>", this.formParams.id, this.method);
-    }
-    }.bind(this)); // Bind `this` to ensure it's correct inside the event listener
-
-   //
-
-// disable wrapper for DOM event listener
- //   });
-
+        
+       // DISABLE DOM LISTENER
+       // }); // DOM LISTENER WRAPPER
+    
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
 
@@ -156,80 +251,112 @@ generateFormId() {
 
 
 initDependencyGraph() {
-  this.dependencyGraph = {};
+    this.dependencyGraph = {};
 
-  this.formSchema.forEach((field) => {
-    const [type, name, label, validate, attributes = {}] = field;
-    const fieldId = attributes.id || name;
+    this.formSchema.forEach((field) => {
+        const [type, name, label, validate, attributes = {}] = field;
+        const fieldId = attributes.id || name;
 
-    if (attributes.dependents) {
-      // Initialize dependency array for the parent field
-      this.dependencyGraph[fieldId] = attributes.dependents.map((dependentName) => {
-        const dependentField = this.formSchema.find(
-          ([, depName]) => depName === dependentName
-        );
+        if (attributes.dependents) {
+            // Initialize dependency array for the parent field
+            this.dependencyGraph[fieldId] = attributes.dependents.map((dependentName) => {
+                const dependentField = this.formSchema.find(
+                    ([, depName]) => depName === dependentName
+                );
 
-        if (dependentField) {
-          const dependentAttributes = dependentField[4] || {};
-          const dependentFieldId = dependentAttributes.id || dependentName; // Get dependent field ID
+                if (dependentField) {
+                    const dependentAttributes = dependentField[4] || {};
+                    const dependentFieldId = dependentAttributes.id || dependentName; // Get dependent field ID
 
-          return {
-            dependent: dependentFieldId,
-            condition: dependentAttributes.condition || null,
-          };
-        } else {
-          console.warn(`Dependent field "${dependentName}" not found in schema.`);
+                    return {
+                        dependent: dependentFieldId,
+                        condition: dependentAttributes.condition || null,
+                    };
+                } else {
+                    console.warn(`Dependent field "${dependentName}" not found in schema.`);
+                }
+            });
+
+            // Add state tracking for the parent field
+            this.dependencyGraph[fieldId].push({ state: null });
+
+            // Attach the input change event listener to the parent field
+            this.attachInputChangeListener(fieldId);
         }
-      });
 
-      // Add state tracking for the parent field
-      this.dependencyGraph[fieldId].push({ state: null });
+        // Hide dependent fields initially and set their required state
+        if (attributes.dependents) {
+            attributes.dependents.forEach((dependentName) => {
+                const dependentField = this.formSchema.find(
+                    ([, depName]) => depName === dependentName
+                );
+                const dependentAttributes = dependentField ? dependentField[4] || {} : {};
+                const dependentFieldId = dependentAttributes.id || dependentName;
 
-      // console.log("Graph", this.dependencyGraph[fieldId]);
+                const inputBlock = document.querySelector(`#${dependentFieldId}-block`);
 
-      // Attach the input change event listener to the parent field
-      this.attachInputChangeListener(fieldId);
-    }
-
-    // Hide dependent fields initially
-    if (attributes.dependents) {
-
-      attributes.dependents.forEach((dependentName) => {
-        const dependentField = this.formSchema.find(
-          ([, depName]) => depName === dependentName
-        );
-        const dependentAttributes = dependentField ? dependentField[4] || {} : {};
-        const dependentFieldId = dependentAttributes.id || dependentName;
-
-        //alert(dependentFieldId);
-
-        const inputBlock = document.querySelector(`#${dependentFieldId}-block`);
-        //alert(inputBlock);
-        
-
-        if (inputBlock) {
-         // alert(dependentName);
-          inputBlock.style.display = 'none'; // Hide dependent field by default
+                if (inputBlock) {
+                   inputBlock.style.display = 'none'; // Hide dependent field by default
+                   // Save original required state and set to false
+                   const inputs = inputBlock.querySelectorAll('input, select, textarea');
+                   inputs.forEach((input) => {
+                     // Check if the input was originally required in the schema
+                     if (input.hasAttribute('required') && input.required === true) {
+                       input.setAttribute('data-original-required', 'true'); // Save original required state
+                       input.required = false; // Remove required attribute when hiding
+                     } else {
+                       input.setAttribute('data-original-required', 'false'); // Explicitly mark as not originally required
+                     }
+                   });
+                }
+            });
         }
-      });
-    }
-  });
-
- // console.log("Dependency Graph:", this.dependencyGraph);
+    });
 }
 
-
 // Attach Event Listeners
+// Corrected Attach Event Listeners
 attachInputChangeListener(parentField) {
-  const fieldElement = document.getElementById(parentField);
-  //alert(parentField);
-
-  if (fieldElement) {
-    fieldElement.addEventListener('input', (event) => {
-      const value = event.target.value;
-      this.handleParentFieldChange(parentField, value);
-    });
+  // Use querySelectorAll to get all elements with the name attribute matching the fieldId.
+  // This correctly targets all radio/checkbox inputs in a group.
+  const fieldElements = document.querySelectorAll(`[name="${parentField}"]`);
+  
+  // If no elements found by name, fall back to getting the single element by ID
+  if (fieldElements.length === 0) {
+      const singleElement = document.getElementById(parentField);
+      if (singleElement) {
+          fieldElements = [singleElement]; // Treat it as a single element array
+      } else {
+          console.warn(`Parent field element(s) not found for field: ${parentField}`);
+          return;
+      }
   }
+
+  fieldElements.forEach(fieldElement => {
+      // Radio/checkbox groups should use 'change', not 'input'
+      const eventType = (fieldElement.type === 'radio' || fieldElement.type === 'checkbox') ? 'change' : 'input';
+
+      fieldElement.addEventListener(eventType, (event) => {
+          let value;
+          if (fieldElement.type === 'radio' && !event.target.checked) {
+              // Only process the change if the radio button is now checked
+              return; 
+          }
+
+          if (fieldElement.type === 'checkbox') {
+              // For checkboxes, you might need special logic to return an array of checked values
+              // For now, let's stick to the change event on a single checkbox
+              value = event.target.checked ? event.target.value : '';
+          } else {
+              value = event.target.value;
+          }
+
+          // Convert value to lowercase for consistent comparison with 'yes' condition
+          //this.handleParentFieldChange(parentField, value.toLowerCase()); 
+          
+          this.handleParentFieldChange(parentField, value.toLowerCase()); 
+      });
+  });
 }
 
 
@@ -283,6 +410,7 @@ handleParentFieldChange(parentFieldId, value) {
   }
 }
 
+
 // Register observers for each dependent field
 registerObservers() {
   this.formSchema.forEach((field) => {
@@ -319,6 +447,60 @@ registerObservers() {
   // console.log("Observers Registered:", JSON.stringify(this.dependencyGraph,null,2));
 }
 
+
+// --- NEW METHOD FOR DYNAMIC SELECT LISTENERS ---
+attachDynamicSelectListeners() {
+    this.formSchema.forEach(field => {
+        const [type, name, label, validate, attributes = {}] = field;
+
+        if (type === 'dynamicSingleSelect') {
+            const mainSelectId = attributes.id || name;
+            const mainSelectElement = document.getElementById(mainSelectId);
+
+            if (mainSelectElement) {
+                mainSelectElement.addEventListener('change', (event) => {
+                    const selectedCategory = event.target.value; // e.g., 'frontend', 'backend', 'server'
+
+                    // Find all sub-category fieldsets related to this main select
+                    const subCategoryFieldsets = document.querySelectorAll(`.${mainSelectId}`);
+
+                    subCategoryFieldsets.forEach(fieldset => {
+                        const subSelect = fieldset.querySelector('select'); // Get the actual select element
+                        if (subSelect) {
+                            // Save original required state (if it was true) then set to false if hidden
+                            subSelect.setAttribute('data-original-required', subSelect.required.toString());
+                            subSelect.required = false; // Always set to false when hiding
+                        }
+                        fieldset.style.display = 'none'; // Hide all sub-category fieldsets initially
+                    });
+
+                    // Show the selected sub-category fieldset and manage its required state
+                    const selectedFieldsetId = selectedCategory; // Matches the ID format in renderSingleSelectField
+                    const selectedFieldset = document.getElementById(selectedFieldsetId);
+
+                    if (selectedFieldset) {
+                        selectedFieldset.style.display = 'block'; // Show the selected one
+                        const selectedSubSelect = selectedFieldset.querySelector('select');
+                        if (selectedSubSelect) {
+                            // Restore original required state for the visible select
+                            selectedSubSelect.required = selectedSubSelect.getAttribute('data-original-required') === 'true';
+                        }
+                    }
+                });
+
+                // IMPORTANT: Trigger the change listener once on load if a default option is selected
+                // This ensures correct initial visibility and required states if there's a pre-selected main category.
+                // We do this by dispatching a 'change' event programmatically if the select has a value.
+                if (mainSelectElement.value) {
+                    const event = new Event('change');
+                    mainSelectElement.dispatchEvent(event);
+                }
+            } else {
+                console.warn(`Main dynamic select element with ID ${mainSelectId} not found.`);
+            }
+        }
+    });
+}
 
 applyTheme(theme, formContainerId) {
   //const stylesheet = document.querySelector('link[formique-style]');
@@ -374,6 +556,67 @@ applyTheme(theme, formContainerId) {
 }
 
 
+
+// New method to apply a custom theme based on a color
+applyCustomTheme(color, formContainerId) {
+    const formContainer = document.getElementById(formContainerId);
+
+    if (!formContainer) {
+        console.error(`Form container with ID "${formContainerId}" not found. Cannot apply custom theme.`);
+        return;
+    }
+
+    // You can add 'formique' class here as well if not already added
+    formContainer.classList.add('formique');
+
+    // Generate a slightly darker shade for the button shadow if needed
+    // This is a simplified example; for robust color manipulation, consider a library
+    const darkenColor = (hex, percent) => {
+        const f = parseInt(hex.slice(1), 16);
+        const t = percent < 0 ? 0 : 255;
+        const p = percent < 0 ? percent * -1 : percent;
+        const R = f >> 16;
+        const G = (f >> 8) & 0x00FF;
+        const B = f & 0x0000FF;
+        return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
+    };
+
+    const shadowColor = darkenColor(color, 0.2); // Darken the theme color by 20% for shadow
+
+    // Define the custom CSS variables, prioritizing the provided color
+    const customCssVars = {
+        '--formique-base-bg': '#ffffff', // Light theme base background
+        '--formique-base-text': '#333333', // Light theme base text
+        '--formique-base-shadow': '0 10px 30px rgba(0, 0, 0, 0.1)', // Light theme shadow
+        '--formique-base-label': '#555555', // Light theme label
+        '--formique-input-border': '#dddddd', // Light theme input border
+        '--formique-focus-color': color, // Set to the provided custom color
+        '--formique-btn-bg': color, // Set to the provided custom color
+        '--formique-btn-text': '#ffffff', // White text for buttons
+        '--formique-btn-shadow': `0 2px 10px ${shadowColor || 'rgba(0, 0, 0, 0.1)'}` // Dynamic button shadow
+    };
+
+    let styleContent = '';
+    for (const [prop, val] of Object.entries(customCssVars)) {
+        styleContent += `  ${prop}: ${val};\n`;
+    }
+
+    // Create a <style> tag for the custom theme
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        #${formContainerId}.formique {
+            ${styleContent}
+        }
+    `;
+
+    // Insert the style element into the head or before the form container
+    formContainer.parentNode.insertBefore(styleElement, formContainer);
+
+    console.log(`Applied custom theme with color: ${color} to form container: ${formContainerId}`);
+}
+
+
+
 // renderFormElement method
     renderFormElement() {
   let formHTML = '<form';
@@ -424,6 +667,7 @@ Object.keys(paramsToUse).forEach(key => {
 
 
   // Main renderForm method
+/*
 renderForm() {
     // Process each field synchronously
     const formHTML = this.formSchema.map(field => {
@@ -432,47 +676,140 @@ renderForm() {
     }).join('');   
     this.formMarkUp += formHTML; 
 }
+*/
+
+renderForm() {
+        // Filter out the 'submit' type before mapping
+        const formHTML = this.formSchema
+            .filter(field => field[0] !== 'submit') // Exclude submit button from this loop
+            .map(field => {
+                const [type, name, label, validate, attributes = {}, options] = field;
+                return this.renderField(type, name, label, validate, attributes, options);
+            }).join('');
+        this.formMarkUp += formHTML;
+  }
 
 
-renderField(type, name, label, validate, attributes, options) {
-    const fieldRenderMap = {
-        'text': this.renderTextField,
-        'email': this.renderEmailField,
-        'number': this.renderNumberField,
-        'password': this.renderPasswordField,
-        'textarea': this.renderTextAreaField,
-        'tel': this.renderTelField,
-        'date': this.renderDateField,
-        'time': this.renderTimeField,
-        'datetime-local': this.renderDateTimeField,
-        'month': this.renderMonthField,
-        'week': this.renderWeekField,
-        'url': this.renderUrlField,
-        'search': this.renderSearchField,
-        'color': this.renderColorField,
-        'checkbox': this.renderCheckboxField,
-        'radio': this.renderRadioField,
-        'file': this.renderFileField,
-        'hidden': this.renderHiddenField,
-        'image': this.renderImageField,
-        'textarea': this.renderTextAreaField,
-        'singleSelect': this.renderSingleSelectField,
-        'multipleSelect': this.renderMultipleSelectField,
-        'dynamicSingleSelect': this.renderDynamicSingleSelectField,
-        'range': this.renderRangeField,
-        'submit': this.renderSubmitButton,
-    };
 
-    const renderMethod = fieldRenderMap[type];
+// New method to render the submit button specifically
+    renderSubmitButtonElement() {
+        const submitField = this.formSchema.find(field => field[0] === 'submit');
+        if (submitField) {
+            const [type, name, label, validate, attributes = {}] = submitField;
+            const id = attributes.id || name;
+            let buttonClass = this.submitButtonClass;
+            if ('class' in attributes) {
+                buttonClass = attributes.class;
+            }
+            let additionalAttrs = '';
+            for (const [key, value] of Object.entries(attributes)) {
+                if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+                    if (key.startsWith('on')) {
+                        const eventValue = value.endsWith('()') ? value : `${value}()`;
+                        additionalAttrs += ` ${key}="${eventValue}"`;
+                    } else {
+                        if (value === true) {
+                            additionalAttrs += ` ${key.replace(/_/g, '-')}`;
+                        } else if (value !== false) {
+                            additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"`;
+                        }
+                    }
+                }
+            }
 
-    if (renderMethod) {
-        return renderMethod.call(this, type, name, label, validate, attributes, options);
-    } else {
-        console.warn(`Unsupported field type '${type}' encountered.`);
-        return ''; // or handle gracefully
+            // Include the spinner div before the submit button
+            return `
+<div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
+    <div class="formique-spinner"></div>
+    <p class="message">Hang in tight, we are submitting your details…</p>
+</div>
+<input type="submit" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>
+            `.trim();
+        }
+        return ''; // Return empty string if no submit button is found in schema
     }
-}
 
+
+
+
+ // renderField method - No change needed here for this issue, but ensure it handles 'submit' type correctly if called directly
+    renderField(type, name, label, validate, attributes, options, subOptions = undefined) {
+        const fieldRenderMap = {
+            'text': this.renderTextField,
+            'email': this.renderEmailField,
+            'number': this.renderNumberField,
+            'password': this.renderPasswordField,
+            'textarea': this.renderTextAreaField,
+            'tel': this.renderTelField,
+            'date': this.renderDateField,
+            'time': this.renderTimeField,
+            'datetime-local': this.renderDateTimeField,
+            'month': this.renderMonthField,
+            'week': this.renderWeekField,
+            'url': this.renderUrlField,
+            'search': this.renderSearchField,
+            'color': this.renderColorField,
+            'checkbox': this.renderCheckboxField,
+            'radio': this.renderRadioField,
+            'file': this.renderFileField,
+            'hidden': this.renderHiddenField,
+            'image': this.renderImageField,
+            'singleSelect': this.renderSingleSelectField,
+            'multipleSelect': this.renderMultipleSelectField,
+            'dynamicSingleSelect': this.renderDynamicSingleSelectField,
+            'range': this.renderRangeField,
+            'recaptcha': this.renderRecaptchaField,
+            'submit': this.renderSubmitButton, // Keep this for completeness, but renderSubmitButtonElement will now handle it
+        };
+
+        const renderMethod = fieldRenderMap[type];
+
+        if (renderMethod) {
+            // If the type is 'submit', ensure we use the specific renderSubmitButtonElement
+            // Although, with the filter in renderForm(), this branch for 'submit' type
+            // might not be hit in the primary rendering flow, it's good practice.
+            return renderMethod.call(this, type, name, label, validate, attributes, options,subOptions);
+
+            if (type === 'submit') {
+                return this.renderSubmitButton(type, name, label, validate, attributes, options);
+            }
+            //return renderMethod.call(this, type, name, label, validate, attributes, options);
+        } else {
+            console.warn(`Unsupported field type '${type}' encountered.`);
+            return '';
+        }
+    }
+
+
+
+renderSubmitButton(type, name, label, validate, attributes) {
+        // This method can simply call the dedicated submit button renderer if it's kept separate.
+        // Or, if renderField is only used for non-submit fields, this method might not be strictly necessary
+        // to be called from renderField's map, but it needs to exist if mapped.
+        // For simplicity, I'll make it consistent with the new separation.
+        const id = attributes.id || name;
+        let buttonClass = this.submitButtonClass;
+        if ('class' in attributes) {
+            buttonClass = attributes.class;
+        }
+        let additionalAttrs = '';
+        for (const [key, value] of Object.entries(attributes)) {
+            if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+                if (key.startsWith('on')) {
+                    const eventValue = value.endsWith('()') ? value : `${value}()`;
+                    additionalAttrs += ` ${key}="${eventValue}"`;
+                } else {
+                    if (value === true) {
+                        additionalAttrs += ` ${key.replace(/_/g, '-')}`;
+                    } else if (value !== false) {
+                        additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"`;
+                    }
+                }
+            }
+        }
+        // No spinner div here, as that's added once by renderSubmitButtonElement
+        return `<input type="${type}" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>`;
+    }
 
 
 // Show success/error messages (externalizable)
@@ -504,117 +841,188 @@ hasFileInputs(form) {
 
 
 async handleEmailSubmission(formId) {
-  console.log(`Starting email submission for form ID: ${formId}`);
-  
-  const form = document.getElementById(formId);
-  if (!form) {
-    console.error(`Form with ID ${formId} not found`);
-    throw new Error(`Form with ID ${formId} not found`);
-  }
+    console.log(`Starting email submission for form ID: ${formId}`);
 
-  // Validate required settings - now checks if sendTo is array with at least one item
-  if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
-    console.error('formSettings.sendTo must be an array with at least one recipient email');
-    throw new Error('formSettings.sendTo must be an array with at least one recipient email');
-  }
-
-  // Serialize form data
-  const payload = {
-    formData: {},
-    metadata: {
-      recipients: this.formSettings.sendTo, // Now sending array
-      timestamp: new Date().toISOString()
+    const form = document.getElementById(formId);
+    if (!form) {
+        console.error(`Form with ID ${formId} not found`);
+        throw new Error(`Form with ID ${formId} not found`);
     }
-  };
 
-  let senderName = '';
-  let senderEmail = '';
-  let formSubject = '';
-
-  console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
-
-  // Process form fields (unchanged)
-  new FormData(form).forEach((value, key) => {
-    console.log(`Processing form field - Key: ${key}, Value: ${value}`);
-    payload.formData[key] = value;
-    
-    const lowerKey = key.toLowerCase();
-    if ((lowerKey === 'email' || lowerKey.includes('email'))) {
-      senderEmail = value;
+    // Validate required settings for 'sendTo'
+    if (!Array.isArray(this.formSettings?.sendTo) || this.formSettings.sendTo.length === 0) {
+        console.error('formSettings.sendTo must be an array with at least one recipient email');
+        throw new Error('formSettings.sendTo must be an array with at least one recipient email');
     }
-    if ((lowerKey === 'name' || lowerKey.includes('name'))) {
-      senderName = value;
-    }
-    if ((lowerKey === 'subject' || lowerKey.includes('subject'))) {
-      formSubject = value;
-    }
-  });
 
-  // Determine the email subject with fallback logic
-  payload.metadata.subject = formSubject || 
-                           this.formSettings.subject || 
-                           'Message From Contact Form';
-  
-  console.log('Determined email subject:', payload.metadata.subject);
+    // Serialize form data
+    const payload = {
+        formData: {},
+        metadata: {
+            recipients: this.formSettings.sendTo,
+            timestamp: new Date().toISOString(),
+        },
+    };
 
-  // Add sender information to metadata
-  if (senderEmail) {
-    payload.metadata.sender = senderEmail;
-    payload.metadata.replyTo = senderName 
-      ? `${senderName} <${senderEmail}>` 
-      : senderEmail;
-  }
+    let senderName = '';
+    let senderEmail = '';
+    let formSubject = '';
+    let registrantEmail = '';
 
-  console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
+    console.log('Initial payload structure:', JSON.parse(JSON.stringify(payload)));
 
-  try {
-    const endpoint = this.formiqueEndpoint || this.formAction;
-    const method = this.method || 'POST';
-    
-    console.log(`Preparing to send request to: ${endpoint}`);
-    console.log(`Request method: ${method}`);
-    console.log('Final payload being sent:', payload);
+    // Process form fields and find registrant's email
+    const formData = new FormData(form);
+    formData.forEach((value, key) => {
+        console.log(`Processing form field - Key: ${key}, Value: ${value}`);
+        payload.formData[key] = value;
 
-    const response = await fetch(endpoint, {
-      method: method,
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Formique-Version': '1.0' 
-      },
-      body: JSON.stringify(payload)
+        const lowerKey = key.toLowerCase();
+        if (lowerKey.includes('email')) {
+            senderEmail = value;
+        }
+        if (lowerKey.includes('name')) {
+            senderName = value;
+        }
+        if (lowerKey.includes('subject')) {
+            formSubject = value;
+        }
+
+        // Check if the current field is the registrant's email
+        if (this.formSettings.emailField && key === this.formSettings.emailField) {
+            registrantEmail = value;
+        }
     });
 
-    console.log(`Received response with status: ${response.status}`);
+    // Determine the email subject with fallback logic
+    payload.metadata.subject = formSubject ||
+                                this.formSettings.subject ||
+                                'Message From Contact Form';
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('API Error Response:', errorData);
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      document.getElementById("formiqueSpinner").style.display = "none";
+    console.log('Determined email subject:', payload.metadata.subject);
 
+    // Add sender information to metadata
+    if (senderEmail) {
+        payload.metadata.sender = senderEmail;
+        payload.metadata.replyTo = senderName
+            ? `${senderName} <${senderEmail}>`
+            : senderEmail;
     }
 
-    const data = await response.json();
-    console.log('API Success Response:', data);
-    
-    const successMessage = this.formSettings.successMessage || 
-                         data.message || 
-                         'Your message has been sent successfully!';
-    console.log(`Showing success message: ${successMessage}`);
+    // **NEW:** Add reCAPTCHA secret key to the metadata object
+    if (this.formSettings.recaptchaSecretKey) {
+        payload.metadata.recaptchaSecretKey = this.formSettings.recaptchaSecretKey;
+    }
 
-    this.showSuccessMessage(successMessage);
+    console.log('Payload after form processing:', JSON.parse(JSON.stringify(payload)));
 
-  } catch (error) {
-    console.error('Email submission failed:', error);
-    const errorMessage = this.formSettings.errorMessage || 
-                       error.message || 
-                       'Failed to send message. Please try again later.';
-    console.log(`Showing error message: ${errorMessage}`);
-    this.showErrorMessage(errorMessage);
-    document.getElementById("formiqueSpinner").style.display = "none";
+    // ... (The rest of your code remains the same)
+    try {
+      const endpoint = this.formiqueEndpoint || this.formAction;
+      const method = this.method || 'POST';
 
-  }
+      console.log(`Preparing to send primary request to: ${endpoint}`);
+      console.log(`Request method: ${method}`);
+      console.log('Final payload being sent to recipients:', payload);
+
+      // Send the first email to the 'sendTo' recipients
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Formique-Version': '1.0',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log(`Received response for primary email with status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', errorData);
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Primary API Success Response:', data);
+
+      // ------------------- NEW RSVP LOGIC -------------------
+      if (this.formSettings.submitMode === 'rsvp' && registrantEmail && this.formSettings.registrantMessage) {
+        console.log('RSVP mode detected. Sending confirmation email to registrant.');
+
+        // Create a new payload for the registrant
+        const rsvpPayload = {
+          formData: payload.formData,
+          metadata: {
+            recipients: [registrantEmail], // Send only to the registrant
+            timestamp: new Date().toISOString(),
+            subject: this.formSettings.registrantSubject || 'RSVP Confirmation',
+            body: this.processDynamicMessage(this.formSettings.registrantMessage, payload.formData),
+            sender: this.formSettings.sendFrom || 'noreply@yourdomain.com',
+            replyTo: this.formSettings.sendFrom || 'noreply@yourdomain.com',
+          },
+        };
+
+        try {
+          console.log('Preparing to send RSVP email. Final payload:', rsvpPayload);
+          const rsvpResponse = await fetch(endpoint, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Formique-Version': '1.0',
+            },
+            body: JSON.stringify(rsvpPayload),
+          });
+
+          if (!rsvpResponse.ok) {
+            const rsvpErrorData = await rsvpResponse.json().catch(() => ({}));
+            console.error('RSVP API Error Response:', rsvpErrorData);
+            // Log the error but don't fail the entire submission since the primary email was sent
+            console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
+          } else {
+            console.log('RSVP email sent successfully to registrant.');
+          }
+        } catch (rsvpError) {
+          console.error('RSVP email submission failed:', rsvpError);
+          console.warn('Failed to send RSVP email to registrant, but primary submission was successful.');
+        }
+      }
+      // ------------------- END NEW RSVP LOGIC -------------------
+
+      const successMessage = this.formSettings.successMessage ||
+                              data.message ||
+                              'Your message has been sent successfully!';
+      console.log(`Showing success message: ${successMessage}`);
+
+      this.showSuccessMessage(successMessage);
+
+    } catch (error) {
+      console.error('Email submission failed:', error);
+      const errorMessage = this.formSettings.errorMessage ||
+                            error.message ||
+                            'Failed to send message. Please try again later.';
+      console.log(`Showing error message: ${errorMessage}`);
+      this.showErrorMessage(errorMessage);
+    } finally {
+      document.getElementById("formiqueSpinner").style.display = "none";
+    }
 }
+
+// Add this method to your Formique class
+processDynamicMessage(message, formData) {
+  let processedMessage = message;
+  // Iterate over each key-value pair in the form data
+  for (const key in formData) {
+    if (Object.prototype.hasOwnProperty.call(formData, key)) {
+      const placeholder = `{${key}}`;
+      // Replace all occurrences of the placeholder with the corresponding form data value
+      processedMessage = processedMessage.split(placeholder).join(formData[key]);
+    }
+  }
+  return processedMessage;
+}
+
+
 
 
 
@@ -626,83 +1034,144 @@ validateEmail(email) {
 }
 
 
+attachSubmitListener() {
+    this.formElement.addEventListener('submit', (e) => {
+      // Find the reCAPTCHA field in the form schema.
+      const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
+      
+      // If a reCAPTCHA field is present, check its state.
+      if (recaptchaField) {
+        const recaptchaToken = grecaptcha.getResponse();
+
+        if (!recaptchaToken) {
+          // Prevent the default form submission.
+          e.preventDefault(); 
+          
+          // Display the alert and handle UI.
+          alert('Please verify that you are not a robot.');
+          document.getElementById("formiqueSpinner").style.display = "none";
+          return;
+        }
+      }
+
+      // If reCAPTCHA is valid or not present, proceed with submission logic.
+      this.handleOnPageFormSubmission(e); 
+    });
+  }
+
+
 
 // Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
-  const formElement = document.getElementById(formId);
-  //console.warn("handler fired also",formId,this.method,this.formAction);
+    const formElement = document.getElementById(formId);
 
-  if (formElement) {
-    // Gather form data
-    const formData = new FormData(formElement);
+    if (formElement) {
+        // Intercept the form's native submit event
+        formElement.addEventListener('submit', (e) => {
+            // Find the reCAPTCHA field in the form schema.
+            const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
 
-    // Submit form data using fetch to a test endpoint
-    fetch(this.formAction, {
-      method: this.method,
-      body: formData
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Success:', data);
-        // Handle the response data here, e.g., show a success message
+            // If a reCAPTCHA field exists, perform client-side validation.
+            if (recaptchaField) {
+                const recaptchaToken = grecaptcha.getResponse();
 
-        // Get the form container element
-const formContainer = document.getElementById(this.formContainerId);
+                // If the token is empty, the reCAPTCHA challenge has not been completed.
+                if (!recaptchaToken) {
+                    e.preventDefault(); // <-- The crucial line to stop default form submission
+                    
+                    // Hide the spinner to indicate the submission was halted.
+                    document.getElementById("formiqueSpinner").style.display = "none";
+                    
+                    // Display a user-friendly error message.
+                    alert('Please verify that you are not a robot.');
+                    
+                    // Stop the function's execution to prevent form submission.
+                    return;
+                }
+            }
 
-if (this.redirect && this.redirectURL) {
-  window.location.href = this.redirectURL;
-}
+            // At this point, reCAPTCHA is validated (or not present), so we can proceed with the fetch request.
+            // Show the spinner as submission is now beginning.
+            document.getElementById("formiqueSpinner").style.display = "block";
 
+            // Gather form data.
+            const formData = {};
+            new FormData(formElement).forEach((value, key) => {
+                formData[key] = value;
+            });
 
-if (formContainer) {
-  // Create a new div element for the success message
-  const successMessageDiv = document.createElement('div');
+            console.log("Setting Object",this.formSettings);
 
-  // Add custom classes for styling the success message
-  successMessageDiv.classList.add('success-message', 'message-container');
+            // Create the full payload with formData and metadata, including the secret key.
+            const payload = {
+                formData: formData,
+                metadata: {
+                    ...this.formSettings, // Include all formSettings
+                    // Other metadata like recipients and sender will be included from this.formSettings
+                }
+            };
 
-  // Set the success message text
-  successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
+            // Submit form data using fetch to the endpoint.
+            fetch(this.formAction, {
+                method: this.method,
+                headers: {
+                    'Content-Type': 'application/json' // Important: set the content type
+                },
+                body: JSON.stringify(payload) // Send the combined payload as JSON
+            })
+            .then(response => {
+                // Check if the response status is OK (200-299).
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                
+                // Hide the spinner on success.
+                document.getElementById("formiqueSpinner").style.display = "none";
 
-  // Replace the content of the form container with the success message div
-  formContainer.innerHTML = ''; // Clear existing content
-  formContainer.appendChild(successMessageDiv); // Append the new success message div
-}
+                const formContainer = document.getElementById(this.formContainerId);
+                if (this.redirect && this.redirectURL) {
+                    window.location.href = this.redirectURL;
+                }
+                if (formContainer) {
+                    const successMessageDiv = document.createElement('div');
+                    successMessageDiv.classList.add('success-message', 'message-container');
+                    successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
+                    formContainer.innerHTML = '';
+                    formContainer.appendChild(successMessageDiv);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
 
+                // Hide the spinner on error.
+                document.getElementById("formiqueSpinner").style.display = "none";
 
-      })
-      .catch(error => {
-  console.error('Error:', error);
+                const formContainer = document.getElementById(this.formContainerId);
+                if (formContainer) {
+                    let existingErrorDiv = formContainer.querySelector('.error-message');
+                    if (existingErrorDiv) {
+                        existingErrorDiv.remove();
+                    }
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.classList.add('error-message', 'message-container');
+                    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+                    err = `${err}<br/>Details: ${error.message}`;
+                    errorMessageDiv.innerHTML = err;
+                    formContainer.appendChild(errorMessageDiv);
+                }
+            });
 
-  const formContainer = document.getElementById(this.formContainerId);
-  if (formContainer) {
-    // Check if an error message div already exists and remove it
-    let existingErrorDiv = formContainer.querySelector('.error-message');
-    if (existingErrorDiv) {
-      existingErrorDiv.remove();
+            // Return false to ensure no other default action is taken, especially for legacy browsers.
+            return false;
+        });
     }
-
-    // Create a new div element for the error message
-    const errorMessageDiv = document.createElement('div');
-
-    // Add custom classes for styling the error message
-    errorMessageDiv.classList.add('error-message', 'message-container');
-
-    // Set the error message text
-    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
-    err = `${err}<br/>Details: ${error.message}`;
-    errorMessageDiv.innerHTML = err; 
-
-    // Append the new error message div to the form container
-    formContainer.appendChild(errorMessageDiv);
-  }
-});
-
-  }
 }
-
-
-
 
 // text field rendering
 renderTextField(type, name, label, validate, attributes) {
@@ -1374,17 +1843,18 @@ const telInputValidationAttributes = [
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  }
-  if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  }
-  if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+  // Handle the binding syntax
+    let bindingDirective = '';
+    if (attributes?.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding?.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -1495,13 +1965,13 @@ renderDateField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding?.startsWith('::') && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1616,14 +2086,15 @@ renderTimeField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
+  // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding?.startsWith('::') && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -1867,15 +2338,18 @@ renderMonthField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+    let bindingDirective = '';
+    if (attributes?.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding?.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
+
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -1989,15 +2463,17 @@ renderWeekField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding  && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+    let bindingDirective = '';
+    if (attributes?.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding?.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2107,15 +2583,18 @@ renderUrlField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+  // Handle the binding syntax
+let bindingDirective = '';
+if (attributes?.binding === 'bind:value' && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding?.startsWith('::') && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding && !name) {
+  console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+  return;
+}
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2224,15 +2703,17 @@ renderSearchField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value' && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+let bindingDirective = '';
+if (attributes?.binding === 'bind:value' && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding?.startsWith('::') && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding && !name) {
+  console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+  return;
+}
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2334,13 +2815,15 @@ renderColorField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
+  // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value') {
-    bindingDirective = `bind:value="${name}"\n`;
-  } else if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding?.startsWith('::') && name) {
+    bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -2371,8 +2854,13 @@ renderColorField(type, name, label, validate, attributes) {
   if ('class' in attributes) {
     inputClass = attributes.class; 
   } else {
-        inputClass = this.inputClass; 
+       // inputClass = this.inputClass; 
   }
+
+ if (type === 'color') {
+  inputClass += ' form-color-input'; // Add the new specific class for color inputs
+}
+
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
@@ -2445,16 +2933,17 @@ renderFileField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value') {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
-    bindingDirective = `bind:value="${name}"\n`;
-  }
-  if (attributes.binding && !name) {
-    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-    return;
-  }
+    let bindingDirective = '';
+    if (attributes?.binding === 'bind:value' && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding?.startsWith('::') && name) {
+      bindingDirective = `bind:value="${name}"\n`;
+    }
+    if (attributes?.binding && !name) {
+      console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+      return;
+    }
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2558,12 +3047,13 @@ renderHiddenField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value') {
-    bindingDirective = `bind:value="${name}"\n`;
-  } if (attributes.binding.startsWith('::') && name) {
+  if (attributes?.binding === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
   }
-  if (attributes.binding && !name) {
+  if (attributes?.binding?.startsWith('::') && name) {
+    bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (attributes?.binding && !name) {
     console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
     return;
   }
@@ -2600,9 +3090,9 @@ renderHiddenField(type, name, label, validate, attributes) {
 // Construct the final HTML string
   let formHTML = `
     <div class="${this.divClass}" id="${id + '-block'}">
-    <label for="${id}">${label}
+    <!--<label for="${id}">${label} 
   ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-</label>
+</label> -->
       <input 
         type="${type}"
         name="${name}"
@@ -2635,7 +3125,7 @@ renderHiddenField(type, name, label, validate, attributes) {
 }
 
 
-
+/*
 renderImageField(type, name, label, validate, attributes) {
   // Define valid validation attributes for image upload
   const imageUploadValidationAttributes = [
@@ -2666,12 +3156,18 @@ renderImageField(type, name, label, validate, attributes) {
   }
 
   // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding === 'bind:value') {
-    bindingDirective = ` bind:value="${name}"`;
-  } else if (attributes.binding.startsWith('::')) {
-    bindingDirective = ` bind:value="${name}"`;
-  }
+  // Handle the binding syntax
+let bindingDirective = '';
+if (attributes?.binding === 'bind:value' && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding?.startsWith('::') && name) {
+  bindingDirective = `bind:value="${name}"\n`;
+}
+if (attributes?.binding && !name) {
+  console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+  return;
+}
 
   // Get the id from attributes or fall back to name
   let id = attributes.id || name;
@@ -2738,26 +3234,33 @@ renderImageField(type, name, label, validate, attributes) {
   this.formMarkUp +=formattedHtml;
 }
 
-
-
+*/
 
 renderImageField(type, name, label, validate, attributes) {
-  // Define valid validation attributes for image upload
-  const imageUploadValidationAttributes = [
+  // Define valid validation attributes for image input
+  const imageValidationAttributes = [
     'accept',
     'required',
     'minwidth',
     'maxwidth',
     'minheight',
     'maxheight',
+    'src',
+    'alt',
+    'width',
+    'height'
   ];
 
   // Construct validation attributes
   let validationAttrs = '';
   if (validate) {
     Object.entries(validate).forEach(([key, value]) => {
-      if (imageUploadValidationAttributes.includes(key)) {
-        validationAttrs += `${key}="${value}"\n`;
+      if (imageValidationAttributes.includes(key)) {
+        if (typeof value === 'boolean' && value) {
+          validationAttrs += `  ${key}\n`;
+        } else {
+          validationAttrs += `  ${key}="${value}"\n`;
+        }
       } else {
         console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
       }
@@ -2766,8 +3269,16 @@ renderImageField(type, name, label, validate, attributes) {
 
   // Handle the binding syntax
   let bindingDirective = '';
-  if (attributes.binding === 'bind:value' || bindingSyntax.startsWith('::')) {
+  const bindingValue = attributes?.binding;
+  if (bindingValue === 'bind:value' && name) {
     bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (typeof bindingValue === 'string' && bindingValue.startsWith('::') && name) {
+    bindingDirective = `bind:value="${name}"\n`;
+  }
+  if (bindingValue && !name) {
+    console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+    return;
   }
 
   // Get the id from attributes or fall back to name
@@ -2776,7 +3287,8 @@ renderImageField(type, name, label, validate, attributes) {
   // Construct additional attributes dynamically
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
+    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2792,49 +3304,59 @@ renderImageField(type, name, label, validate, attributes) {
     }
   }
 
-  let inputClass; 
-  if ('class' in attributes) {
-    inputClass = attributes.class; 
+  // Special handling for image submit button
+  let inputElement;
+  if (type === 'image' && name === 'submit') {
+    inputElement = `
+      <input 
+        type="image"
+        name="${name}"
+        ${bindingDirective}
+        id="${id}"
+        class="${attributes.class || this.inputClass}"
+        src="${attributes.src || 'img_submit.gif'}"
+        alt="${attributes.alt || 'Submit'}"
+        width="${attributes.width || '48'}"
+        height="${attributes.height || '48'}"
+        ${additionalAttrs}
+        ${validationAttrs}
+      />`;
   } else {
-        inputClass = this.inputClass; 
-  }
-// Construct the final HTML string
-  let formHTML = `
-    <div class="${this.divClass}" id="${id + '-block'}">
-      <label for="${id}">${label}
-  ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-</label>
+    // Regular image input field
+    inputElement = `
       <input 
         type="${type}"
         name="${name}"
         ${bindingDirective}
         id="${id}"
-        class="${inputClass}"
+        class="${attributes.class || this.inputClass}"
         ${additionalAttrs}
         ${validationAttrs}
-      />
+      />`;
+  }
+
+  // Construct the final HTML string
+  let formHTML = `
+    <div class="${this.divClass}" id="${id + '-block'}">
+      ${type === 'image' && name === 'submit' ? '' : `<label for="${id}">${label}
+        ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+      </label>`}
+      ${inputElement}
     </div>
   `.replace(/^\s*\n/gm, '').trim();
 
-  let formattedHtml = formHTML; 
-
-  // Apply vertical layout to the <input> element only
-  formattedHtml = formattedHtml.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
-    // Reformat attributes into a vertical layout
+  // Format the HTML
+  let formattedHtml = formHTML.replace(/<input\s+([^>]*)\/>/, (match, p1) => {
     const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
     return `<input\n${attributes}\n/>`;
   });
 
-  // Ensure the <div> block starts on a new line and remove extra blank lines
   formattedHtml = formattedHtml.replace(/(<div\s+[^>]*>)/g, (match) => {
-    // Ensure <div> starts on a new line
     return `\n${match}\n`;
-  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+  }).replace(/\n\s*\n/g, '\n');
 
   return formattedHtml;
 }
-
-
 
 
 
@@ -2933,6 +3455,8 @@ renderTextAreaField(type, name, label, validate, attributes) {
 
 renderRadioField(type, name, label, validate, attributes, options) {
     // Define valid validation attributes for radio fields
+    console.log("RADIO DEBUG - options:", JSON.stringify(options, null, 2));
+
     const radioValidationAttributes = ['required'];
     
     // Construct validation attributes
@@ -2964,15 +3488,15 @@ renderRadioField(type, name, label, validate, attributes, options) {
     // Handle the binding syntax
     let bindingDirective = '';
     if (attributes.binding) {
-    if (attributes.binding === 'bind:value' && name) {
-        bindingDirective = ` bind:value="${name}"\n`;
-    } else if (attributes.binding.startsWith('::') && name) {
-        bindingDirective = ` bind:value="${name}"\n`;
-    } else if (attributes.binding && !name) {
-        console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
-        return;
+        if (attributes.binding === 'bind:value' && name) {
+            bindingDirective = ` bind:value="${name}"\n`;
+        } else if (attributes.binding.startsWith('::') && name) {
+            bindingDirective = ` bind:value="${name}"\n`;
+        } else if (attributes.binding && !name) {
+            console.log(`\x1b[31m%s\x1b[0m`, `You cannot set binding value when there is no name attribute defined in ${name} ${type} field.`);
+            return;
+        }
     }
-  }
 
     // Define attributes for the radio inputs
     let id = attributes.id || name;
@@ -2980,7 +3504,8 @@ renderRadioField(type, name, label, validate, attributes, options) {
     // Construct additional attributes dynamically
     let additionalAttrs = '';
     for (const [key, value] of Object.entries(attributes)) {
-      if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {            if (key.startsWith('on')) {
+        if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+            if (key.startsWith('on')) {
                 // Handle event attributes
                 const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
                 additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -2998,10 +3523,28 @@ renderRadioField(type, name, label, validate, attributes, options) {
 
     let inputClass = attributes.class || this.inputClass;
 
+    // Determine which option should be selected
+    let selectedValue = null;
+    
+    // Check options array for selected: true
+    if (options && options.length) {
+        const selectedOption = options.find(opt => opt.selected === true);
+        console.log("RADIO DEBUG - selectedOption:", selectedOption);
+        if (selectedOption) {
+            selectedValue = selectedOption.value;
+            console.log("RADIO DEBUG - selectedValue:", selectedValue);
+        }
+    }
+
     // Construct radio button HTML based on options
     let optionsHTML = '';
     if (options && options.length) {
         optionsHTML = options.map((option) => {
+            // Check if this option should be selected
+            const isSelected = (option.value === selectedValue);
+            console.log("RADIO DEBUG - option:", option.value, "isSelected:", isSelected);
+            const checkedAttr = isSelected ? ' checked' : '';
+            
             return `
             <div>
                 <input 
@@ -3013,6 +3556,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
                     ${attributes.id ? `id="${id}-${option.value}"` : `id="${id}-${option.value}"`}
                     class="${inputClass}"
                     ${validationAttrs}
+                    ${checkedAttr}
                 />
                 <label 
                     for="${attributes.id ? `${id}-${option.value}` : `${id}-${option.value}`}">
@@ -3047,13 +3591,13 @@ renderRadioField(type, name, label, validate, attributes, options) {
         return `\n${match}\n`;
     }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-    //return formattedHtml;
-    this.formMarkUp +=formattedHtml;
+    this.formMarkUp += formattedHtml;
 }
-
 
 renderCheckboxField(type, name, label, validate, attributes, options) {
   // Define valid validation attributes for checkbox fields
+  console.log("CHECKBOX DEBUG - options:", JSON.stringify(options, null, 2));
+
   const checkboxValidationAttributes = ['required'];
 
   // Construct validation attributes
@@ -3073,12 +3617,12 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
   // Handle the binding syntax
   let bindingDirective = '';
   if (attributes.binding) {
-  if (attributes.binding === 'bind:checked') {
-    bindingDirective = ` bind:checked="${name}"\n`;
-  } else if (attributes.binding.startsWith('::')) {
-    bindingDirective = ` bind:checked="${name}"\n`;
+    if (attributes.binding === 'bind:checked') {
+      bindingDirective = ` bind:checked="${name}"\n`;
+    } else if (attributes.binding.startsWith('::')) {
+      bindingDirective = ` bind:checked="${name}"\n`;
+    }
   }
- }
 
   // Define attributes for the checkbox inputs
   let id = attributes.id || name;
@@ -3086,7 +3630,8 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
   // Handle additional attributes
   let additionalAttrs = '';
   for (const [key, value] of Object.entries(attributes)) {
-  if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {      if (key.startsWith('on')) {
+    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+      if (key.startsWith('on')) {
         // Handle event attributes
         const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
         additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
@@ -3102,30 +3647,45 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
     }
   }
 
-
   let inputClass; 
   if ('class' in attributes) {
     inputClass = attributes.class; 
   } else {
-        inputClass = this.inputClass; 
+    inputClass = this.inputClass; 
   }
+
+  // Determine which options should be checked
+  const checkedValues = [];
+  if (options && options.length) {
+    options.forEach(option => {
+      if (option.checked === true || option.selected === true) {
+        checkedValues.push(option.value);
+      }
+    });
+  }
+  console.log("CHECKBOX DEBUG - checkedValues:", checkedValues);
 
   // Construct checkbox HTML based on options
   let optionsHTML = '';
   if (Array.isArray(options)) {
     optionsHTML = options.map((option) => {
       const optionId = `${id}-${option.value}`;
+      const isChecked = checkedValues.includes(option.value);
+      console.log("CHECKBOX DEBUG - option:", option.value, "isChecked:", isChecked);
+      const checkedAttr = isChecked ? ' checked' : '';
+      
       return `
         <div>
           <input 
-          type="checkbox" 
-          name="${name}" 
-          value="${option.value}"${bindingDirective} ${additionalAttrs}
+            type="checkbox" 
+            name="${name}" 
+            value="${option.value}"${bindingDirective} ${additionalAttrs}
             ${attributes.id ? `id="${optionId}"` : `id="${optionId}"`}
             class="${inputClass}"
+            ${checkedAttr}
           />
           <label 
-          for="${optionId}">
+            for="${optionId}">
             ${option.label}
           </label>
         </div>
@@ -3158,8 +3718,7 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  //return formattedHtml;
-  this.formMarkUp +=formattedHtml;
+  this.formMarkUp += formattedHtml;
 }
 
 
@@ -3167,264 +3726,237 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
 /* DYNAMIC SINGLE SELECT BLOCK */
 
 // Function to render the dynamic select field and update based on user selection
-renderDynamicSingleSelectField(type, name, label, validate, attributes, options) {
-  
-// Step 1: Transform the data into an array of objects
-const mainCategoryOptions = options.flat().map(item => {
-  // Check if any option has selected: true
-  const selected = item.options.some(option => option.selected === true);
+renderDynamicSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions) {
 
-  // Create a transformed object
-  return {
-    value: item.id,
-    label: item.label,
-    ...(selected && { selected: true }) // Conditionally add selected: true
-  };
-});
+    // Step 1: Transform the data into an array of objects
+    const mainCategoryOptions = options.map(item => {
+      // CRITICAL GUARD FIX: Check for item.options existence to prevent crash
+      const selected = item.options
+        ? item.options.some(option => option.selected === true)
+        : item.selected === true;
 
-const subCategoriesOptions=options;
-const mode='dynamicSingleSelect';
-this.renderSingleSelectField(type, name, label, validate, attributes, mainCategoryOptions, subCategoriesOptions, mode);
+      // Create a transformed object
+      return {
+        value: item.value,
+        label: item.label,
+        ...(selected && { selected: true })
+      };
+    });
 
-}
+    const mode = 'dynamicSingleSelect';
+   
+    // Pass the main options and the nested sub categories options to the single select renderer
+    this.renderSingleSelectField(type, name, label, validate, attributes, mainCategoryOptions, subCategoriesOptions, mode);
+  }
+ 
 
 
 renderSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions, mode) {
 
-    // Define valid validation attributes for select fields
-    const selectValidationAttributes = ['required'];
+  // Define valid validation attributes for select fields
+  const selectValidationAttributes = ['required'];
 
-    // Construct validation attributes
-    let validationAttrs = '';
-    if (validate) {
-        Object.entries(validate).forEach(([key, value]) => {
-            if (selectValidationAttributes.includes(key)) {
-                if (key === 'required') {
-                    validationAttrs += `${key} `;
-                }
-            } else {
-                console.warn(`\x1b[31mUnsupported validation attribute '${key}' for field '${name}' of type '${type}'.\x1b[0m`);
-            }
-        });
-    }
+  // Construct validation attributes
+  let validationAttrs = '';
+  // Store original required state for the main select
+  let originalRequired = false; // <--- This variable tracks if the main select was originally required
+  if (validate) {
+    Object.entries(validate).forEach(([key, value]) => {
+      if (selectValidationAttributes.includes(key)) {
+        if (key === 'required') {
+          validationAttrs += `${key} `;
+          originalRequired = true; // Mark that it was originally required
+        }
+      } else {
+        // Removed console.warn
+      }
+    });
+  }
 
-    // Handle the binding syntax
-    let bindingDirective = '';
-    if (attributes.binding) {
+  // Handle the binding syntax
+  let bindingDirective = '';
+  if (attributes.binding) {
     if (typeof attributes.binding === 'string' && attributes.binding.startsWith('::')) {
-        bindingDirective = ` bind:value="${name}" `;
+      bindingDirective = ` bind:value="${name}" `;
     }
   }
 
-    // Define attributes for the select field
-    let id = attributes.id || name;
-    let dimensionAttrs = ''; // No dimension attributes applicable for select fields
+  // Define attributes for the select field
+  let id = attributes.id || name;
+  let dimensionAttrs = ''; // No dimension attributes applicable for select fields
 
-    // Handle additional attributes
-    let additionalAttrs = '';
-    for (const [key, value] of Object.entries(attributes)) {
-      if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {            if (key.startsWith('on')) {
-                // Handle event attributes
-                const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-                additionalAttrs += `  @${key.replace(/^on/, '')}={${eventValue}}\n`;
-            } else {
-                // Handle boolean attributes
-                if (value === true) {
-                    additionalAttrs += `  ${key.replace(/_/g, '-')}\n`;
-                } else if (value !== false) {
-                    // Convert underscores to hyphens and set the attribute
-                    additionalAttrs += `  ${key.replace(/_/g, '-')}="${value}"\n`;
-                }
-            }
-        }
-    }
-
-    // Construct select options HTML based on options
-    let selectHTML = '';
-    if (Array.isArray(options)) {
-        // Add a default option
-        selectHTML += `
-        <option value="">Choose an option</option>
-        `;
-
-        // Add the provided options
-        selectHTML += options.map((option) => {
-            const isSelected = option.selected ? ' selected' : '';
-            return `
-            <option value="${option.value}"${isSelected}>${option.label}</option>
-            `;
-        }).join('');
-    }
-
-    let inputClass = attributes.class || this.inputClass;
-
-    const onchangeAttr = (mode === 'dynamicSingleSelect' && subCategoriesOptions) ? ' onchange="handleDynamicSingleSelect(this.value,id)"' : '';
-    
-    let labelDisplay;
-    let rawLabel; 
-
-    if (mode === 'dynamicSingleSelect' && subCategoriesOptions) {
-      if (label.includes('-')) {
-        const [mainCategoryLabel] = label.split('-');
-        labelDisplay = mainCategoryLabel; 
-        rawLabel = label;
+  // Handle additional attributes
+  let additionalAttrs = '';
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+      if (key.startsWith('on')) {
+        // Handle event attributes
+        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+        additionalAttrs += ` @${key.replace(/^on/, '')}={${eventValue}}\n`;
       } else {
-        labelDisplay = label;
-        rawLabel = label;
+        // Handle boolean attributes
+        if (value === true) {
+          additionalAttrs += ` ${key.replace(/_/g, '-')}\n`;
+        } else if (value !== false) {
+          // Convert underscores to hyphens and set the attribute
+          additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"\n`;
+        }
       }
+    }
+  }
+
+  // Construct select options HTML based on options
+  let selectHTML = '';
+  if (Array.isArray(options)) {
+    // Add a default option
+    selectHTML += `
+    <option value="">Choose an option</option>
+    `;
+
+    // Add the provided options
+    selectHTML += options.map((option) => {
+      const isSelected = option.selected ? ' selected' : '';
+      return `
+      <option value="${option.value}"${isSelected}>${option.label}</option>
+      `;
+    }).join('');
+  }
+
+  let inputClass = attributes.class || this.inputClass;
+
+  // Remove `onchange` from HTML; it will be handled by JavaScript event listeners
+  const onchangeAttr = ''; // <--- Ensure this is an empty string
+
+  let labelDisplay;
+  let rawLabel;
+
+  if (mode === 'dynamicSingleSelect' && subCategoriesOptions) {
+    if (label.includes('-')) {
+      const [mainCategoryLabel] = label.split('-');
+      labelDisplay = mainCategoryLabel;
+      rawLabel = label;
     } else {
       labelDisplay = label;
+      rawLabel = label;
     }
+  } else {
+    labelDisplay = label;
+  }
+
+  // Construct the final HTML string for the main select
+  let formHTML = `
+  <fieldset class="${this.selectGroupClass}" id="${id + '-block'}">
+    <legend>${labelDisplay}
+      ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+    </legend>
+    <label for="${id}"> Select ${labelDisplay}
+    <select name="${name}"
+      ${bindingDirective}
+      ${dimensionAttrs}
+      id="${id}"
+      class="${inputClass}"
+      ${additionalAttrs}
+      ${validationAttrs}
+      data-original-required="${originalRequired}" >
+      ${selectHTML}
+    </select>
+  </fieldset>
+`.replace(/^\s*\n/gm, '').trim();
+
+  // FIXED: Apply vertical layout to the <select> element and its children
+  // Only split on actual attribute boundaries, not within attribute values
+  let formattedHtml = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+    // Use regex to match complete attribute="value" pairs
+    const attributes = p1.match(/(\w+(?:-\w+)*=("[^"]*"|'[^']*'|\w+)|[^=\s]+(?!\s*=))/g) || [];
+    const formattedAttributes = attributes.map(attr => ` ${attr}`).join('\n');
+    return `<select\n${formattedAttributes}\n>\n${p2.trim()}\n</select>`;
+  });
+
+  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+  formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+    // Ensure <fieldset> starts on a new line
+    return `\n${match}\n`;
+  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+
+  this.formMarkUp+=formattedHtml;
 
 
-    // Construct the final HTML string
-    let formHTML = `
-    <fieldset class="${this.selectGroupClass}" id="${id + '-block'}">
-        <legend>${labelDisplay} 
-            ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-        </legend>
-        <label for="${id}"> Select ${labelDisplay} 
-        <select name="${name}"
+  /* dynamicSingleSelect - Sub-Category Generation Block */
+
+  if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
+
+    const categoryId = attributes.id || name; // This is the ID of the main dynamic select ('languages')
+
+    subCategoriesOptions.forEach((subCategory) => {
+      const { id, label, options: subOptions } = subCategory; // Renamed 'options' to 'subOptions' to avoid conflict
+
+      // IMPORTANT: Sub-category selects are *initially hidden*
+      // Therefore, by default, they are NOT required until they are revealed.
+      let isSubCategoryRequired = false; // Default to false as they are hidden
+      const subCategoryValidationAttrs = ''; // No direct 'required' in HTML initially
+
+      // Build the select options HTML for sub-category
+      const subSelectHTML = subOptions.map(option => {
+        const isSelected = option.selected ? ' selected' : '';
+        return `
+          <option value="${option.value}"${isSelected}>${option.label}</option>
+        `;
+      }).join('');
+
+
+      let subCategoryLabel;
+      
+      if (rawLabel.includes('-')) {
+        subCategoryLabel = rawLabel.split('-')?.[1] + ' Options';
+      } else {
+        subCategoryLabel = 'options';
+      }
+
+      let optionsLabel;
+      if (subCategoryLabel !== 'options') {
+        optionsLabel = rawLabel.split('-')?.[1] + ' Option';
+      } else {
+        optionsLabel = subCategoryLabel;
+      }
+
+
+      // Create the HTML for the sub-category fieldset and select elements
+      // Added a class based on the main select's ID for easy grouping/selection
+      let subFormHTML = `
+        <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}" style="display: none;"> <legend>${label} ${subCategoryLabel} ${isSubCategoryRequired && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+          </legend>
+          <label for="${id}"> Select ${label} ${optionsLabel}
+          </label>
+          <select name="${id}"
             ${bindingDirective}
             ${dimensionAttrs}
             id="${id}"
             class="${inputClass}"
             ${additionalAttrs}
-            ${validationAttrs}
-            ${onchangeAttr} 
-        >
-            ${selectHTML}
-        </select>
-    </fieldset>
-`.replace(/^\s*\n/gm, '').trim();
-
-
-    // Apply vertical layout to the <select> element and its children
-    let formattedHtml = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
-        // Reformat attributes into a vertical layout
-        const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
-        return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
-    });
-
-    // Ensure the <fieldset> block starts on a new line and remove extra blank lines
-    formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
-        // Ensure <fieldset> starts on a new line
-        return `\n${match}\n`;
-    }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
-
-    //console.log(formattedHtml);
-    this.formMarkUp+=formattedHtml;
-    //return formattedHtml;
-
-
-    /* dynamicSingleSelect */
-
-if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
-
-
-// Find the target div with id this.formContainerId
-const targetDiv = document.getElementById(this.formContainerId);
-
-let categoryId = attributes.id || name;
-
-
-if (targetDiv) {
-  // Create a script element
-  const scriptElement = document.createElement('script');
-  scriptElement.textContent = `
-  window.handleDynamicSingleSelect = function(category, fieldsetid) {
-    //console.log("HERE", fieldsetid);
-
-    // Hide all subcategory fields
-    document.querySelectorAll(\`[class*="\${fieldsetid}"]\`).forEach(div => {
-      div.style.display = "none";
-    });
-
-    // Show the selected category
-    const selectedCategoryFieldset = document.getElementById(category + '-options');
-    if (selectedCategoryFieldset) {
-      selectedCategoryFieldset.style.display = "block";
-    }
-  }
-`;
-
-  // Append the script element to the target div
-  targetDiv.appendChild(scriptElement);
-} else {
-  console.error(`Target div with id "${this.formContainerId}" not found.`);
-}
-
-subCategoriesOptions.forEach(subCategory => {
-  const { id, label, options } = subCategory;
-
-  // Build the select options HTML
-  const selectHTML = options.map(option => {
-    const isSelected = option.selected ? ' selected' : '';
-    return `
-      <option value="${option.value}"${isSelected}>${option.label}</option>
-    `;
-  }).join('');
-
-
-    let subCategoryLabel; 
-    console.log('Label:', rawLabel); // Debug log
-
-    if (rawLabel.includes('-')) {
-      subCategoryLabel = rawLabel.split('-')?.[1] + ' Options'; 
-    } else {
-      subCategoryLabel = 'options';
-    }
-
-    let optionsLabel;
-    if (subCategoryLabel !== 'options') {
-      optionsLabel = rawLabel.split('-')?.[1] + ' Option'; 
-    } else {
-    optionsLabel  = subCategoryLabel; 
-    }
-
-
-  // Create the HTML for the fieldset and select elements
-  let formHTML = `
-    <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}-options" style="display: none;">
-        <legend> ${label} ${subCategoryLabel} ${this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-        </legend>
-        <label for="${id}"> Select ${label} ${optionsLabel}           
-        </label>
-        <select name="${id}"
-            ${bindingDirective}
-            ${dimensionAttrs}
-            id="${id + '-block'}"
-            class="${inputClass}"
-            ${additionalAttrs}
-            ${validationAttrs}
-        >
+            ${subCategoryValidationAttrs}
+            data-original-required="${isSubCategoryRequired}" >
             <option value="">Choose an option</option>
-            ${selectHTML}
-        </select>
-    </fieldset>
-  `.replace(/^\s*\n/gm, '').trim();
+            ${subSelectHTML}
+          </select>
+        </fieldset>
+      `.replace(/^\s*\n/gm, '').trim();
 
-  // Apply vertical layout to the <select> element and its children
-  formHTML = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
-    // Reformat attributes into a vertical layout
-    const attributes = p1.trim().split(/\s+/).map(attr => `  ${attr}`).join('\n');
-    return `<select\n${attributes}\n>\n${p2.trim()}\n</select>`;
-  });
+      // FIXED: Apply the same corrected formatting to sub-category selects
+      subFormHTML = subFormHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+        const attributes = p1.match(/(\w+(?:-\w+)*=("[^"]*"|'[^']*'|\w+)|[^=\s]+(?!\s*=))/g) || [];
+        const formattedAttributes = attributes.map(attr => ` ${attr}`).join('\n');
+        return `<select\n${formattedAttributes}\n>\n${p2.trim()}\n</select>`;
+      });
 
-  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
-  formHTML = formHTML.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
-    // Ensure <fieldset> starts on a new line
-    return `\n${match}\n`;
-  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
+      // Ensure the <fieldset> block starts on a new line and remove extra blank lines
+      subFormHTML = subFormHTML.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
+        return `\n${match}\n`;
+      }).replace(/\n\s*\n/g, '\n');
 
-  // Append the generated HTML to formMarkUp
-  this.formMarkUp += formHTML;
-
-  //return formHTML;
-});
-
-
-}
+      // Append the generated HTML to formMarkUp
+      this.formMarkUp += subFormHTML;
+    });
+  }
 }
 
 
@@ -3627,6 +4159,24 @@ renderRangeField(type, name, label, validate, attributes) {
 }
 
 
+renderRecaptchaField(type, name, label, validate, attributes = {}) {
+    const fieldId = attributes.id || name;
+    const siteKey = attributes.siteKey;
+    // Check for the presence of a siteKey
+    if (!siteKey) {
+        console.error('reCAPTCHA siteKey is missing from the field attributes.');
+        return ''; // Do not render if the key is missing
+    }
+
+    return `
+        <div class="${this.divClass}" id="${fieldId}-block">
+            <label for="${fieldId}">${label}</label>
+            <div class="g-recaptcha" id="${fieldId}" data-sitekey="${siteKey}"></div>
+        </div>
+    `;
+}
+
+
 
 /*
 renderRangeField(type, name, label, validate, attributes) {
@@ -3784,17 +4334,15 @@ const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: ce
 
 
 
- renderFormHTML () {
-
-this.formMarkUp+= '</form>'; 
-//console.log(this.formMarkUp);
-const formContainer = document.getElementById(this.formContainerId);
-//alert(this.formContainerId);
-if (!formContainer) {
-  console.error(`Error: formContainer not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
-} else {
-  formContainer.innerHTML = this.formMarkUp;
-}
+ renderFormHTML() {
+        this.formMarkUp += '</form>';
+        const formContainer = document.getElementById(this.formContainerId);
+        if (!formContainer) {
+            console.error(`Error: form container with ID ${this.formContainerId} not found. Please ensure an element with id ${this.formContainerId} exists in the HTML.`);
+        } else {
+            formContainer.innerHTML = this.formMarkUp;
+        }
+    
 
 //return this.formMarkUp;
 
@@ -3810,14 +4358,3 @@ if (!formContainer) {
 
 
 export default Formique;
-
-
-
-
-
-
-
-
-
-
-

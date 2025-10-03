@@ -270,7 +270,7 @@ Option
 // Key Primitives (Cleaned up)
 // -----------------------------------------------------------
 AttributeKey
-= [a-zA-Z][a-zA-Z0-9_-]* { return text() }
+= [a-zA-Z][a-zA-Z0-9_ \-]* { return text() }
 
 AttributeFlag
 = [a-zA-Z][a-zA-Z0-9_-]* { return text() }
@@ -288,9 +288,9 @@ return createNode('Identifier', location().start, location().end, { value: text(
 }
 
 ExtendedIdentifier
-// Starts with a standard identifier character, then allows a very broad set of characters.
+// Starts with a standard identifier character, then allows a very broad set of characters, including space.
 = head:[a-zA-Z_] 
-  tail:[a-zA-Z0-9_./:\-?&=()@#%+!\[\]]* { 
+  tail:[a-zA-Z0-9_./:\-?&=()@#%+!\[\] ]* { // 💡 FIX: Added space ' '
     return createNode('StringLiteral', location().start, location().end, { 
       value: text() // Returns the entire matched text
     })
