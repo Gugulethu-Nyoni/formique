@@ -239,7 +239,7 @@ return options;
 // No need for separate BooleanLiteral/NumberLiteral here since UnquotedAttributeString
 // is the intended handler for all simple text.
 AttributeValue
-= StringLiteral / UnquotedAttributeString
+= ExtendedIdentifier / StringLiteral / UnquotedAttributeString
 
 
 // -----------------------------------------------------------
@@ -286,3 +286,12 @@ __ = [ \t\n\r]+
 Identifier = [a-zA-Z_][a-zA-Z0-9_-]* {
 return createNode('Identifier', location().start, location().end, { value: text() })
 }
+
+ExtendedIdentifier
+// Starts with a standard identifier character, then allows a very broad set of characters.
+= head:[a-zA-Z_] 
+  tail:[a-zA-Z0-9_./:\-?&=()@#%+!\[\]]* { 
+    return createNode('StringLiteral', location().start, location().end, { 
+      value: text() // Returns the entire matched text
+    })
+  }
