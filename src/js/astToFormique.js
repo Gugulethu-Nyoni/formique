@@ -771,14 +771,25 @@ buildDynamicSingleSelect(node, rawFieldName) {
 
 // Handle special case for 'sendTo' which might use a structure like OptionList
 if (key === 'sendTo') {
-    // Assuming 'sendTo' value is parsed as an OptionList (Array of Options)
+    let result;
+
+    // 1. Handle Array/OptionList (Preferred path)
     if (node.value && Array.isArray(node.value.values)) {
-        const sendToEmails = node.value.values.map(option => option.value);
-        this.formSettings[key] = sendToEmails;
+        // Map the array of option objects to an array of email strings
+        result = node.value.values.map(option => option.value);
     } else {
-        // Fallback for single email string
-        this.formSettings[key] = val;
+        // 2. Handle Fallback (Single string or null)
+        // Ensure 'val' is treated as a single-element array if it exists.
+        if (val) {
+            // SUEGICAL FIX: Wrap the single email string in an array.
+            result = [val]; 
+        } else {
+            result = []; // Use an empty array if no value is present
+        }
     }
+    
+    // 3. Assign the final array result
+    this.formSettings[key] = result;
 } else
 {
     // All other custom form settings
