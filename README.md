@@ -97,7 +97,7 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 - Textarea: ```html <textarea> ```
 - Radio: ```html <input type="radio"> ```
 - Checkbox: ```html <input type="checkbox"> ```
-- Select (Single & Multiple): ```html <select> ```
+- Select (singleSelect & multipleSelect): ```html <select> ```
 - Dynamic Single Select: Displays a single-select dropdown of subcategories based on a selected category. For example, it dynamically shows a dropdown of states when a country is selected from a list of countries: ```html <select> ```
 - Submit: ```html <input type="submit"> ```
 
