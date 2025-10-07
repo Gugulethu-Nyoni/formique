@@ -201,7 +201,7 @@ There are two primary ways to install and use Formique in your project:
 2. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
     ```html
-      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.12/formique.umd.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/formique@1.0.13/formique.umd.min.js"></script>
     ```
 
 ### Usage Example:
@@ -266,7 +266,7 @@ There are two primary ways to install and use Formique in your project:
   <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.13/formique-css.css" />
 
 
- <script src="https://cdn.jsdelivr.net/npm/formique@1.0.12/formique.umd.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/formique@1.0.13/formique.umd.min.js"></script>
 
 
   <!-- Initialize Formique via ES Module script -->
