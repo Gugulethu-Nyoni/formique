@@ -11,6 +11,8 @@
 
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/images/formique-js-form-builder-anyframework.png" alt="Formique JS Form Builder Example">
 
+[![](https://data.jsdelivr.com/v1/package/npm/formique/badge)](https://www.jsdelivr.com/package/npm/formique)
+
 If you want a quick guide for `@formique/semantq`, please visit:
 [Formique Semantq Guide](https://github.com/Gugulethu-Nyoni/formique/tree/main/integrations/formique-semantq)
 
