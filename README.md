@@ -7,11 +7,14 @@
 <a href="https://github.com/Gugulethu-Nyoni/formique/blob/main/LICENSE">
   <img alt="Formique uses the MIT license" src="https://img.shields.io/github/license/Gugulethu-Nyoni/formique" style="max-width: 100%;">
 </a>
-[![GitHub Workflow](https://img.shields.io/github/workflow/status/Gugulethu-Nyoni/formique/CI/main.svg)](https://github.com/Gugulethu-Nyoni/formique/actions)
+[![GitHub Workflow](https://img.shields.io/github/workflow/status/Gugulethu-Nyoni/formique/CI/main.svg)](https://github.com/Gugulethu-Nyoni/formique/actions) 
+
+
+[![](https://data.jsdelivr.com/v1/package/npm/formique/badge)](https://www.jsdelivr.com/package/npm/formique)
+
 
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/images/formique-js-form-builder-anyframework.png" alt="Formique JS Form Builder Example">
 
-[![](https://data.jsdelivr.com/v1/package/npm/formique/badge)](https://www.jsdelivr.com/package/npm/formique)
 
 If you want a quick guide for `@formique/semantq`, please visit:
 [Formique Semantq Guide](https://github.com/Gugulethu-Nyoni/formique/tree/main/integrations/formique-semantq)
