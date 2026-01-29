@@ -54,6 +54,7 @@ class FormBuilder
 class Formique extends FormBuilder {
     constructor(formDefinition, formSettings = {}, formParams = {}) {
         super();
+      
         let formSchema;
         let finalSettings = formSettings;
         let finalParams = formParams;
@@ -82,6 +83,11 @@ class Formique extends FormBuilder {
             asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
             ...finalSettings
         };
+
+               // Only inject CSS if the user hasn't explicitly disabled it
+       if (this.formSettings.disableStyles !== true) {
+                this.injectInternalStyles();
+            }
 
         //console.log("constructor",this.formSettings);
 
@@ -225,23 +231,87 @@ this.initDependencyGraph();
 this.registerObservers();
 this.attachDynamicSelectListeners(); 
 
-// Apply theme
-if (this.themeColor) {
-    this.applyCustomTheme(this.themeColor, this.formContainerId); 
-} else if (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) {
-    let theme = this.formSettings.theme;
-    this.applyTheme(theme, this.formContainerId);
+
+// In your constructor, after attachDynamicSelectListeners:
+//console.log('FORM SCHEMA FOR DYNAMIC SELECT:');
+const dynamicField = this.formSchema.find(f => f[0] === 'dynamicSingleSelect');
+if (dynamicField) {
+  //console.log('Main options:', dynamicField[5]);
+  //console.log('Sub options:', dynamicField[6]);
+  
+  // Check the IDs
+  const mainOptions = dynamicField[5] || [];
+  mainOptions.forEach(opt => {
+    //console.log(`Option ID: ${opt.id}, Label: ${opt.label}`);
+  });
+}
+
+
+// --- CONDITIONAL CONSOLIDATED THEME LOGIC ---
+if (this.formSettings.disableStyles !== true) {
+    const container = document.getElementById(this.formContainerId);
+    
+    if (container) {
+        // Apply the base class regardless of theme choice
+        container.classList.add('formique');
+
+        if (this.themeColor) {
+            // Priority 1: Custom Hex Color Override
+            this.applyCustomTheme(this.themeColor, this.formContainerId);
+        } else {
+            // Priority 2: Named Theme (or fallback to 'dark')
+            const activeTheme = (this.formSettings.theme && this.themes.includes(this.formSettings.theme)) 
+                                ? this.formSettings.theme 
+                                : 'light';
+            this.applyTheme(activeTheme, this.formContainerId);
+        }
+
+        // Priority 3: Manual Inline Style Overrides (Highest Specificity)
+        if (this.formSettings.formContainerStyle) {
+            container.style.cssText += this.formSettings.formContainerStyle;
+        }
+    }
 } else {
-    this.applyTheme('dark', this.formContainerId); // Default to 'dark'
+    // Optional: Log that styles are being skipped for easier debugging
+    console.log("Formique: Internal styles disabled by user settings.");
 }
 
 
         
        // DISABLE DOM LISTENER
-        }); // DOM LISTENER WRAPPER
+    }); // DOM LISTENER WRAPPER
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
+
+
+
+
+
+
+injectInternalStyles() {
+        if (document.getElementById('formique-internal-css')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'formique-internal-css';
+        style.textContent = FORMIQUE_INTERNAL_CSS;
+        document.head.appendChild(style);
+    }
+
+
+
+applyCustomTheme(color, formContainerId) {
+    const container = document.getElementById(formContainerId);
+    if (!container) return;
+
+    // Set variables directly on the element (highest specificity)
+    container.style.setProperty('--formique-focus-color', color);
+    container.style.setProperty('--formique-btn-bg', color);
+    
+    // Add a transparent shadow using the hex color
+    container.style.setProperty('--formique-btn-shadow', `0 4px 14px ${color}66`);
+}
+
 
 
 generateFormId() {
@@ -450,48 +520,59 @@ registerObservers() {
 
 // --- NEW METHOD FOR DYNAMIC SELECT LISTENERS ---
 attachDynamicSelectListeners() {
+    //console.log('DEBUG: attachDynamicSelectListeners called');
+    
     this.formSchema.forEach(field => {
         const [type, name, label, validate, attributes = {}] = field;
 
         if (type === 'dynamicSingleSelect') {
             const mainSelectId = attributes.id || name;
+            //console.log('Setting up dynamic select for:', mainSelectId);
+            
             const mainSelectElement = document.getElementById(mainSelectId);
 
             if (mainSelectElement) {
+                //console.log('Found main select element:', mainSelectElement);
+                
                 mainSelectElement.addEventListener('change', (event) => {
-                    const selectedCategory = event.target.value; // e.g., 'frontend', 'backend', 'server'
-
+                    const selectedCategory = event.target.value;
+                    //console.log('Select changed to:', selectedCategory);
+                    
                     // Find all sub-category fieldsets related to this main select
                     const subCategoryFieldsets = document.querySelectorAll(`.${mainSelectId}`);
-
+                    //console.log(`Found ${subCategoryFieldsets.length} fieldsets with class .${mainSelectId}`);
+                    
                     subCategoryFieldsets.forEach(fieldset => {
-                        const subSelect = fieldset.querySelector('select'); // Get the actual select element
+                        //console.log('Hiding fieldset:', fieldset.id);
+                        const subSelect = fieldset.querySelector('select');
                         if (subSelect) {
-                            // Save original required state (if it was true) then set to false if hidden
                             subSelect.setAttribute('data-original-required', subSelect.required.toString());
-                            subSelect.required = false; // Always set to false when hiding
+                            subSelect.required = false;
                         }
-                        fieldset.style.display = 'none'; // Hide all sub-category fieldsets initially
+                        fieldset.style.display = 'none';
                     });
 
-                    // Show the selected sub-category fieldset and manage its required state
-                    const selectedFieldsetId = selectedCategory; // Matches the ID format in renderSingleSelectField
+                    // Show the selected sub-category fieldset
+                    const selectedFieldsetId = selectedCategory;
+                    //console.log('Looking for fieldset with ID:', selectedFieldsetId);
+                    
                     const selectedFieldset = document.getElementById(selectedFieldsetId);
-
+                    
                     if (selectedFieldset) {
-                        selectedFieldset.style.display = 'block'; // Show the selected one
+                       // console.log('Found selected fieldset, showing it:', selectedFieldset);
+                        selectedFieldset.style.display = 'block';
                         const selectedSubSelect = selectedFieldset.querySelector('select');
                         if (selectedSubSelect) {
-                            // Restore original required state for the visible select
                             selectedSubSelect.required = selectedSubSelect.getAttribute('data-original-required') === 'true';
                         }
+                    } else {
+                        console.warn('Selected fieldset not found with ID:', selectedFieldsetId);
                     }
                 });
 
-                // IMPORTANT: Trigger the change listener once on load if a default option is selected
-                // This ensures correct initial visibility and required states if there's a pre-selected main category.
-                // We do this by dispatching a 'change' event programmatically if the select has a value.
+                // Trigger initial state
                 if (mainSelectElement.value) {
+                    console.log('Triggering initial change event for:', mainSelectId);
                     const event = new Event('change');
                     mainSelectElement.dispatchEvent(event);
                 }
@@ -502,59 +583,26 @@ attachDynamicSelectListeners() {
     });
 }
 
+
+
 applyTheme(theme, formContainerId) {
-  //const stylesheet = document.querySelector('link[formique-style]');
-
-  const stylesheet = document.querySelector('link[href*="formique-css"]');
-  
-  if (!stylesheet) {
-    console.error("Stylesheet with 'formique-css' in the name not found!");
-    return;
-  }
-
-  fetch(stylesheet.href)
-    .then(response => response.text())
-    .then(cssText => {
-      // Extract theme-specific CSS rules
-      const themeRules = cssText.match(new RegExp(`\\.${theme}-theme\\s*{([^}]*)}`, 'i'));
-
-      if (!themeRules) {
-        console.error(`Theme rules for ${theme} not found in the stylesheet.`);
+    // Safety Guard: If styles are disabled, exit immediately
+    if (this.formSettings.disableStyles === true) {
+        // console.warn('applyTheme ignored because disableStyles is true.');
         return;
-      }
+    }
 
-      // Extract CSS rules for the theme
-      const themeCSS = themeRules[1].trim();
-
-      // Find the form container element
-      const formContainer = document.getElementById(formContainerId);
-
-      if (formContainer) {
-        // Append the theme class to the form container
+    const formContainer = document.getElementById(formContainerId);
+    if (formContainer) {
+        // Apply classes for backward compatibility
         formContainer.classList.add(`${theme}-theme`, 'formique');
 
-
-        // Create a <style> tag with the extracted theme styles
-        const clonedStyle = document.createElement('style');
-        clonedStyle.textContent = `
-          #${formContainerId} {
-            ${themeCSS}
-          }
-        `;
-
-        // Insert the <style> tag above the form container
-        formContainer.parentNode.insertBefore(clonedStyle, formContainer);
-
-       // console.log(`Applied ${theme} theme to form container: ${formContainerId}`);
-      } else {
+        // Set the data attribute for our internal CSS variables
+        formContainer.setAttribute('data-theme', theme);
+    } else {
         console.error(`Form container with ID ${formContainerId} not found.`);
-      }
-    })
-    .catch(error => {
-      console.error('Error loading the stylesheet:', error);
-    });
+    }
 }
-
 
 
 // New method to apply a custom theme based on a color
@@ -612,7 +660,7 @@ applyCustomTheme(color, formContainerId) {
     // Insert the style element into the head or before the form container
     formContainer.parentNode.insertBefore(styleElement, formContainer);
 
-    console.log(`Applied custom theme with color: ${color} to form container: ${formContainerId}`);
+    //console.log(`Applied custom theme with color: ${color} to form container: ${formContainerId}`);
 }
 
 
@@ -3455,7 +3503,7 @@ renderTextAreaField(type, name, label, validate, attributes) {
 
 renderRadioField(type, name, label, validate, attributes, options) {
     // Define valid validation attributes for radio fields
-    console.log("RADIO DEBUG - options:", JSON.stringify(options, null, 2));
+    //console.log("RADIO DEBUG - options:", JSON.stringify(options, null, 2));
 
     const radioValidationAttributes = ['required'];
     
@@ -3529,10 +3577,10 @@ renderRadioField(type, name, label, validate, attributes, options) {
     // Check options array for selected: true
     if (options && options.length) {
         const selectedOption = options.find(opt => opt.selected === true);
-        console.log("RADIO DEBUG - selectedOption:", selectedOption);
+        //console.log("RADIO DEBUG - selectedOption:", selectedOption);
         if (selectedOption) {
             selectedValue = selectedOption.value;
-            console.log("RADIO DEBUG - selectedValue:", selectedValue);
+           // console.log("RADIO DEBUG - selectedValue:", selectedValue);
         }
     }
 
@@ -3542,7 +3590,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
         optionsHTML = options.map((option) => {
             // Check if this option should be selected
             const isSelected = (option.value === selectedValue);
-            console.log("RADIO DEBUG - option:", option.value, "isSelected:", isSelected);
+            //console.log("RADIO DEBUG - option:", option.value, "isSelected:", isSelected);
             const checkedAttr = isSelected ? ' checked' : '';
             
             return `
@@ -3596,7 +3644,7 @@ renderRadioField(type, name, label, validate, attributes, options) {
 
 renderCheckboxField(type, name, label, validate, attributes, options) {
   // Define valid validation attributes for checkbox fields
-  console.log("CHECKBOX DEBUG - options:", JSON.stringify(options, null, 2));
+  //console.log("CHECKBOX DEBUG - options:", JSON.stringify(options, null, 2));
 
   const checkboxValidationAttributes = ['required'];
 
@@ -3663,7 +3711,7 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
       }
     });
   }
-  console.log("CHECKBOX DEBUG - checkedValues:", checkedValues);
+  //console.log("CHECKBOX DEBUG - checkedValues:", checkedValues);
 
   // Construct checkbox HTML based on options
   let optionsHTML = '';
@@ -3671,7 +3719,7 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
     optionsHTML = options.map((option) => {
       const optionId = `${id}-${option.value}`;
       const isChecked = checkedValues.includes(option.value);
-      console.log("CHECKBOX DEBUG - option:", option.value, "isChecked:", isChecked);
+      //console.log("CHECKBOX DEBUG - option:", option.value, "isChecked:", isChecked);
       const checkedAttr = isChecked ? ' checked' : '';
       
       return `
@@ -3726,30 +3774,35 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
 /* DYNAMIC SINGLE SELECT BLOCK */
 
 // Function to render the dynamic select field and update based on user selection
-renderDynamicSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions) {
-
-    // Step 1: Transform the data into an array of objects
-    const mainCategoryOptions = options.map(item => {
-      // CRITICAL GUARD FIX: Check for item.options existence to prevent crash
-      const selected = item.options
-        ? item.options.some(option => option.selected === true)
-        : item.selected === true;
-
-      // Create a transformed object
-      return {
-        value: item.value,
-        label: item.label,
-        ...(selected && { selected: true })
-      };
-    });
-
-    const mode = 'dynamicSingleSelect';
-   
-    // Pass the main options and the nested sub categories options to the single select renderer
-    this.renderSingleSelectField(type, name, label, validate, attributes, mainCategoryOptions, subCategoriesOptions, mode);
-  }
- 
-
+renderDynamicSingleSelectField(type, name, label, validate, attributes, options) {
+  //console.log('DEBUG: renderDynamicSingleSelectField called with options:', options);
+  
+  // Step 1: Extract main categories from options
+  const mainCategoryOptions = options.map(item => {
+    // Use item.id as the value for the main select
+    return {
+      value: item.id,    // ← FIXED: Use id, not value
+      label: item.label,
+      // You can add selected logic if needed
+    };
+  });
+  
+  // Step 2: The nested options ARE your sub-categories!
+  // Transform the structure
+  const subCategoriesOptions = options.map(item => ({
+    id: item.id,           // Same as main category value
+    label: item.label + ' Technologies', // Or customize
+    options: item.options  // The nested options array
+  }));
+  
+  //console.log('Main categories:', mainCategoryOptions);
+  //console.log('Sub categories:', subCategoriesOptions);
+  
+  const mode = 'dynamicSingleSelect';
+  
+  // Pass both to the renderer
+  this.renderSingleSelectField(type, name, label, validate, attributes, mainCategoryOptions, subCategoriesOptions, mode);
+}
 
 renderSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions, mode) {
 
@@ -4354,6 +4407,558 @@ const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: ce
 
 // no renderMethod below here
 }
+
+
+const FORMIQUE_INTERNAL_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+
+/* ==================== */
+/* BASE FORM VARIABLES */
+/* ==================== */
+
+:root {
+    --formique-border-radius: 6px;
+    --formique-padding: 2rem;
+}
+/*
+:root {
+    --formique-base-bg: white;
+    --formique-base-text: #333;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #555;
+    --formique-input-border: #ddd;
+    --formique-focus-color: #6a4fbf;
+    --formique-btn-bg: #6a4fbf;
+    --formique-btn-text: white;
+    --formique-btn-shadow: 0 2px 10px rgba(106, 79, 191, 0.3);
+    --formique-border-radius: 6px;
+    --formique-max-width: 100%;
+    --formique-padding: 2rem;
+}
+*/
+/* ==================== */
+/* BASE FORM STYLES */
+/* ==================== */
+.formique {
+    width: 100%;
+    max-width: var(--formique-max-width);
+    margin: 2rem auto;
+    padding: var(--formique-padding);
+    background-color: var(--formique-base-bg);
+    border-radius: var(--formique-border-radius);
+    box-shadow: var(--formique-base-shadow);
+    font-family: 'Montserrat', sans-serif;
+    color: var(--formique-base-text);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* Input Block */
+.formique .input-block {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.formique .input-block label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--formique-base-label);
+    font-size: 0.9rem;
+}
+
+.formique .input-block .form-input,
+.formique .input-block .form-control {
+    width: 100%;
+    padding: 0.75rem 0;
+    border: none;
+    border-bottom: 1px solid var(--formique-input-border);
+    background-color: transparent;
+    color: var(--formique-base-text);
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.formique .input-block .form-input:focus,
+.formique .input-block .form-control:focus {
+    outline: none;
+    border-bottom-width: 2px;
+    border-bottom-color: var(--formique-focus-color);
+}
+
+.formique .input-block .form-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Fieldset General Styling */
+.formique fieldset {
+    border: 1px solid var(--formique-input-border);
+    border-radius: var(--formique-border-radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: var(--formique-base-bg);
+    transition: all 0.3s ease;
+}
+
+.formique fieldset legend {
+    font-weight: 600;
+    color: var(--formique-base-label);
+    font-size: 1rem;
+    padding: 0 0.5rem;
+}
+
+/* Radio Group */
+.formique .radio-group {
+    /* Styles are now handled by the general fieldset or input-block if used outside fieldset */
+}
+
+.formique .radio-group legend {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: var(--formique-base-label);
+    font-size: 0.9rem;
+}
+
+.formique .radio-group div {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.formique .radio-group .form-radio-input {
+    margin-right: 0.75rem;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--formique-focus-color);
+    cursor: pointer;
+}
+
+/* Checkbox Group */
+.formique .checkbox-group {
+    /* Styles are now handled by the general fieldset or input-block if used outside fieldset */
+}
+
+.formique .checkbox-group legend {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: var(--formique-base-label);
+    font-size: 0.9rem;
+}
+
+.formique .checkbox-group div {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.formique .checkbox-group .form-checkbox-input {
+    margin-right: 0.75rem;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--formique-focus-color);
+    cursor: pointer;
+}
+
+/* Select (Dropdowns) */
+.formique .form-select {
+    margin-bottom: 1.5rem;
+}
+
+.formique .form-select label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--formique-base-label);
+    font-size: 0.9rem;
+}
+
+.formique .form-select .form-input { /* Changed from .form-select-input to .form-input */
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--formique-input-border);
+    border-radius: var(--formique-border-radius);
+    background-color: var(--formique-base-bg);
+    color: var(--formique-base-text);
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    /* Custom arrow for select element */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20256%20256%22%3E%3Cpath%20fill%3D%22%23'+encodeURIComponent(var(--formique-base-text)).substring(1)+'%22%20d%3D%22M208.5%2084.5l-80%2080a12%2012%200%2001-17%200l-80-80a12%2012%200%200117-17L128%20139l71.5-71.5a12%2012%200%200117%2017z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    cursor: pointer;
+}
+
+.formique .form-select .form-input:focus { /* Changed from .form-select-input to .form-input */
+    outline: none;
+    border-color: var(--formique-focus-color);
+    box-shadow: 0 0 0 2px rgba(106, 79, 191, 0.1);
+}
+
+/* Multiple Selects */
+.formique .form-select .form-input[multiple] {
+    min-height: 100px; /* Adjust as needed */
+    padding: 0.5rem;
+    background-image: none; /* Remove custom arrow for multiselect */
+}
+
+/* Submit Button */
+.formique .form-submit-btn {
+    display: block;
+    width: 100%;
+    padding: 0.875rem 1.75rem;
+    border: none;
+    border-radius: var(--formique-border-radius);
+    background-color: var(--formique-btn-bg);
+    color: var(--formique-btn-text);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--formique-btn-shadow);
+    box-sizing: border-box;
+}
+
+.formique .form-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px var(--formique-btn-shadow);
+}
+
+.formique .form-submit-btn:active {
+    transform: translateY(0);
+}
+
+/* ==================== */
+/* THEME DEFINITIONS */
+/* ==================== */
+.dark-theme {
+    --formique-base-bg: #1e1e1e;
+    --formique-base-text: #e0e0e0;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    --formique-base-label: #b0b0b0;
+    --formique-input-border: #444;
+    --formique-focus-color: #b0b0b0;
+    --formique-btn-bg: #b0b0b0;
+    --formique-btn-text: #1e1e1e;
+    --formique-btn-shadow: 0 2px 10px rgba(176, 176, 176, 0.3);
+}
+
+.light-theme {
+    --formique-base-bg: #ffffff;
+    --formique-base-text: #333333;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #555555;
+    --formique-input-border: #dddddd;
+    --formique-focus-color: #555555;
+    --formique-btn-bg: #777777;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.pink-theme {
+    --formique-base-bg: #ffffff;
+    --formique-base-text: #333333;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #555555;
+    --formique-input-border: #dddddd;
+    --formique-focus-color: #ff4081;
+    --formique-btn-bg: #ff4081;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(255, 64, 129, 0.3);
+}
+
+.indigo-theme {
+    --formique-base-bg: #ffffff;
+    --formique-base-text: #333333;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #555555;
+    --formique-input-border: #dddddd;
+    --formique-focus-color: #3f51b5;
+    --formique-btn-bg: #3f51b5;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(63, 81, 181, 0.3);
+}
+
+.dark-blue-theme {
+    --formique-base-bg: #0a192f;
+    --formique-base-text: #e6f1ff;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --formique-base-label: #a8b2d1;
+    --formique-input-border: #233554;
+    --formique-focus-color: #64ffda;
+    --formique-btn-bg: #64ffda;
+    --formique-btn-text: #0a192f;
+    --formique-btn-shadow: 0 2px 10px rgba(100, 255, 218, 0.3);
+}
+
+.light-blue-theme {
+    --formique-base-bg: #f5f9ff;
+    --formique-base-text: #2a4365;
+    --formique-base-shadow: 0 10px 30px rgba(66, 153, 225, 0.1);
+    --formique-base-label: #4299e1;
+    --formique-input-border: #bee3f8;
+    --formique-focus-color: #3182ce;
+    --formique-btn-bg: #3182ce;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(49, 130, 206, 0.3);
+}
+
+.dark-orange-theme {
+    --formique-base-bg: #2d3748;
+    --formique-base-text: #f7fafc;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    --formique-base-label: #cbd5e0;
+    --formique-input-border: #4a5568;
+    --formique-focus-color: #ed8936;
+    --formique-btn-bg: #ed8936;
+    --formique-btn-text: #1a202c;
+    --formique-btn-shadow: 0 2px 10px rgba(237, 137, 54, 0.3);
+}
+
+.bright-yellow-theme {
+    --formique-base-bg: #ffffff;
+    --formique-base-text: #1a202c;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #4a5568;
+    --formique-input-border: #e2e8f0;
+    --formique-focus-color: #f6e05e;
+    --formique-btn-bg: #f6e05e;
+    --formique-btn-text: #1a202c;
+    --formique-btn-shadow: 0 2px 10px rgba(246, 224, 94, 0.3);
+}
+
+.green-theme {
+    --formique-base-bg: #ffffff;
+    --formique-base-text: #1a202c;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #4a5568;
+    --formique-input-border: #e2e8f0;
+    --formique-focus-color: #48bb78;
+    --formique-btn-bg: #48bb78;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(72, 187, 120, 0.3);
+}
+
+.purple-theme {
+    --formique-base-bg: #ffffff;
+    --formique-base-text: #1a202c;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #4a5568;
+    --formique-input-border: #e2e8f0;
+    --formique-focus-color: #9f7aea;
+    --formique-btn-bg: #9f7aea;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(159, 122, 234, 0.3);
+}
+
+.midnight-blush-theme {
+    --formique-base-bg: #1a1a2e;
+    --formique-base-text: #e6e6e6;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --formique-base-label: #b8b8b8;
+    --formique-input-border: #4e4e6a;
+    --formique-focus-color: #f67280;
+    --formique-btn-bg: #f67280;
+    --formique-btn-text: #1a1a2e;
+    --formique-btn-shadow: 0 2px 10px rgba(246, 114, 128, 0.3);
+}
+
+.deep-blue-theme {
+    --formique-base-bg: #0f172a;
+    --formique-base-text: #e2e8f0;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --formique-base-label: #94a3b8;
+    --formique-input-border: #1e293b;
+    --formique-focus-color: #60a5fa;
+    --formique-btn-bg: #60a5fa;
+    --formique-btn-text: #0f172a;
+    --formique-btn-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
+}
+
+.blue-theme {
+    --formique-base-bg: #ffffff;
+    --formique-base-text: #1e3a8a;
+    --formique-base-shadow: 0 10px 30px rgba(29, 78, 216, 0.1);
+    --formique-base-label: #3b82f6;
+    --formique-input-border: #bfdbfe;
+    --formique-focus-color: #2563eb;
+    --formique-btn-bg: #2563eb;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+}
+
+.brown-theme {
+    --formique-base-bg: #f5f5f5;
+    --formique-base-text: #3e2723;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #5d4037;
+    --formique-input-border: #d7ccc8;
+    --formique-focus-color: #8d6e63;
+    --formique-btn-bg: #6d4c41;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(109, 76, 65, 0.3);
+}
+
+.orange-theme {
+    --formique-base-bg: #ffffff;
+    --formique-base-text: #7b341e;
+    --formique-base-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --formique-base-label: #dd6b20;
+    --formique-input-border: #fed7aa;
+    --formique-focus-color: #ed8936;
+    --formique-btn-bg: #ed8936;
+    --formique-btn-text: #ffffff;
+    --formique-btn-shadow: 0 2px 10px rgba(237, 137, 54, 0.3);
+}
+/* ==================== */
+/* WIDTH CONTROL CLASSES */
+/* ==================== */
+.formique {
+    padding: 1rem;
+}
+.formique.width-full {
+    --formique-max-width: 100%;
+}
+
+.formique.width-half {
+    --formique-max-width: 50%;
+}
+
+.formique.width-medium {
+    --formique-max-width: 600px;
+}
+
+.formique.width-small {
+    --formique-max-width: 400px;
+}
+
+.formique.width-custom {
+    /* To be set inline or via JS */
+}
+
+/* Spinner Container */
+#formiqueSpinner {
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--formique-font-family, 'Montserrat, sans-serif');
+    padding: 1rem;
+    border-radius: var(--formique-border-radius, 6px);
+    background-color: var(--formique-base-bg);
+    color: var(--formique-base-text);
+    margin-top: 1rem;
+}
+
+/* Spinner Circle */
+.formique-spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--formique-btn-bg);
+    animation: formique-spin 1s ease-in-out infinite;
+}
+
+/* Spinner Animation */
+@keyframes formique-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Message */
+#formiqueSpinner .message {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--formique-focus-color);
+}
+
+
+.formique-success, .formique-error {
+    /* Background with opacity to work with both themes */
+    background-color: var(--formique-base-bg); /* Based on --formique-btn-bg */
+    
+    /* Text styling using theme variables */
+    color: var(--formique-focus-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    
+    /* Border using focus color with opacity */
+    border: 1px solid var(--formique-focus-color); /* Based on --formique-btn-bg */
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    
+    /* Layout */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Animation */
+    animation: fadeIn 0.3s ease-in-out;
+    
+    /* Shadow using theme variable */
+    box-shadow: var(--formique-base-shadow);
+}
+
+.formique-success::before {
+    content: "âœ“";
+    color: var(--formique-btn-bg); /* Using button background color for checkmark */
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.formique-error::before {
+    content: "âœ—";
+    color: var(--formique-btn-bg); /* Using button background color for checkmark */
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* --- */
+/* Specific Styles for Color Input */
+.formique .input-block .form-color-input {
+    /* Restore native appearance */
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
+    appearance: auto;
+    
+    /* Reset properties that typically interfere with native color inputs */
+    padding: 2px; /* Small padding to allow native swatch to show */
+    border: 1px solid var(--formique-input-border); /* Visible border */
+    background-color: var(--formique-base-bg); /* Ensure it has a background */
+    width: 50px; /* A typical width for the color swatch */
+    height: 30px; /* A typical height for the color swatch */
+    cursor: pointer; /* Indicates it's interactive */
+    
+    /* Ensure border-radius and vertical alignment blend with other inputs */
+    border-radius: var(--formique-border-radius);
+    vertical-align: middle; /* Aligns with text if label is inline */
+    
+    /* Override any focus border-bottom rules from general .form-input if needed */
+    border-bottom: 1px solid var(--formique-input-border); /* Keep consistent border for focus */
+}
+
+.formique .input-block .form-color-input:focus {
+    outline: none; /* Remove default browser outline */
+    border-color: var(--formique-focus-color); /* Apply theme focus color */
+    border-bottom-color: var(--formique-focus-color); /* Ensure bottom border matches on focus */
+    box-shadow: 0 0 0 2px rgba(var(--formique-focus-color-rgb, 106, 79, 191), 0.1); /* Optional: subtle shadow */
+}
+
+`;
 
 
 
