@@ -642,7 +642,6 @@ getOptionValuesByKey(attributes, targetKey) {
 
 
 buildDynamicSingleSelect(node, rawFieldName) {
-
     const cleanString = this.cleanFieldName(rawFieldName);
     const fieldName = cleanString.input_name;
 
@@ -661,7 +660,6 @@ buildDynamicSingleSelect(node, rawFieldName) {
         inputParams = { validations: {}, attributes: {} }
     }
 
-
     validations = inputParams.validations;
     attributes = inputParams.attributes;
 
@@ -669,47 +667,37 @@ buildDynamicSingleSelect(node, rawFieldName) {
         validations['required'] = true;
     }
 
-    // 1. CRITICAL FIX: Extract 'options' (main dropdown values) from attributes and store separately (Index 5).
+    // Extract 'options' (main dropdown values)
     if (attributes.options) {
         mainSelectOptions = attributes.options;
         delete attributes.options;
     }
 
-    // Since the AST is now clean, we assume the only remaining attributes are standard HTML attributes (or empty {}).
-    // The previous workaround for fragmented 'South' and 'Africa' keys is now removed.
-
-    // Push Schema Elements (Index 3 and 4)
     fieldSchema.push(validations); // Index 3
-    fieldSchema.push(attributes); // Index 4 (Should be {} if no HTML attributes were defined)
+    fieldSchema.push(attributes); // Index 4
 
-
-    /// NOW BUILD SCENARIO (SUB-OPTIONS) BLOCKS (Index 6)
-
-    // optionValues retrieves all unique keys that are NOT 'options'
+    // Build scenario blocks (Index 6)
     const optionValues = this.extractOptionValues(node.attributes);
     let scenarioBlocks = [];
 
-
     if (optionValues.length > 0) {
         optionValues.forEach(option => {
-
             let schema = {};
-            const lowerCaseOption = option.toLowerCase();
-
-            // Set the ID/label for the scenario block
-            schema['id'] = option; //lowerCaseOption;
+            
+            // Use the original option string as the ID
+            schema['id'] = option;
             schema['label'] = option;
 
-            // Use the option string directly as the attribute key for lookup (e.g., 'South Africa' -> 'South Africa')
-            const attributeKey = option; 
-            
-            /// Add sub-options now
-            const keyOptions = this.getOptionValuesByKey(node.attributes, attributeKey);
+            // Get sub-options for this category
+            const keyOptions = this.getOptionValuesByKey(node.attributes, option);
             let options = [];
 
             if (keyOptions.length > 0) {
                 keyOptions.forEach(subOption => {
-                    options.push({ value: subOption.toLowerCase(), label: this.toTitleCase(subOption) })
+                    options.push({ 
+                        value: subOption.toLowerCase(), 
+                        label: this.toTitleCase(subOption) 
+                    });
                 });
                 schema['options'] = options;
                 scenarioBlocks.push(schema);
@@ -717,15 +705,9 @@ buildDynamicSingleSelect(node, rawFieldName) {
         });
     }
 
+    fieldSchema.push(mainSelectOptions); // Index 5
+    fieldSchema.push(scenarioBlocks); // Index 6
 
-    // 3. PUSH MAIN OPTIONS: Add the main select options list (Index 5)
-    fieldSchema.push(mainSelectOptions);
-
-    // 4. PUSH SCENARIO BLOCKS: Add the list of scenario blocks (Index 6)
-    fieldSchema.push(scenarioBlocks);
-
-
-    // 5. Final push to the form schema
     this.formSchema.push(fieldSchema);
 }
 
@@ -958,6 +940,7 @@ buildField(node) {
 
   // 5. Finalize Schema
   this.formSchema.push(fieldSchema);
+  console.log("formSchema", JSON.stringify(this.formSchema,null,2));
 }
 
 
