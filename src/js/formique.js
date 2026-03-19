@@ -279,7 +279,7 @@ if (this.formSettings.disableStyles !== true) {
 
         
        // DISABLE DOM LISTENER
-    }); // DOM LISTENER WRAPPER
+       }); // DOM LISTENER WRAPPER
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
@@ -782,51 +782,48 @@ renderForm() {
 
  // renderField method - No change needed here for this issue, but ensure it handles 'submit' type correctly if called directly
     renderField(type, name, label, validate, attributes, options, subOptions = undefined) {
-        const fieldRenderMap = {
-            'text': this.renderTextField,
-            'email': this.renderEmailField,
-            'number': this.renderNumberField,
-            'password': this.renderPasswordField,
-            'textarea': this.renderTextAreaField,
-            'tel': this.renderTelField,
-            'date': this.renderDateField,
-            'time': this.renderTimeField,
-            'datetime-local': this.renderDateTimeField,
-            'month': this.renderMonthField,
-            'week': this.renderWeekField,
-            'url': this.renderUrlField,
-            'search': this.renderSearchField,
-            'color': this.renderColorField,
-            'checkbox': this.renderCheckboxField,
-            'radio': this.renderRadioField,
-            'file': this.renderFileField,
-            'hidden': this.renderHiddenField,
-            'image': this.renderImageField,
-            'singleSelect': this.renderSingleSelectField,
-            'multipleSelect': this.renderMultipleSelectField,
-            'dynamicSingleSelect': this.renderDynamicSingleSelectField,
-            'range': this.renderRangeField,
-            'recaptcha': this.renderRecaptchaField,
-            'submit': this.renderSubmitButton, // Keep this for completeness, but renderSubmitButtonElement will now handle it
-        };
+    const fieldRenderMap = {
+        'text': this.renderTextField,
+        'email': this.renderEmailField,
+        'number': this.renderNumberField,
+        'password': this.renderPasswordField,
+        'textarea': this.renderTextAreaField,
+        'tel': this.renderTelField,
+        'date': this.renderDateField,
+        'time': this.renderTimeField,
+        'datetime-local': this.renderDateTimeField,
+        'month': this.renderMonthField,
+        'week': this.renderWeekField,
+        'url': this.renderUrlField,
+        'search': this.renderSearchField,
+        'color': this.renderColorField,
+        'checkbox': this.renderCheckboxField,
+        'radio': this.renderRadioField,
+        'file': this.renderFileField,
+        'hidden': this.renderHiddenField,
+        'image': this.renderImageField,
+        'singleSelect': this.renderSingleSelectField,
+        'multipleSelect': this.renderMultipleSelectField,
+        'dynamicSingleSelect': this.renderDynamicSingleSelectField,
+        'range': this.renderRangeField,
+        'recaptcha': this.renderRecaptchaField,
+        'html': this.renderHtmlField,
+        'submit': this.renderSubmitButton,
+    };
 
-        const renderMethod = fieldRenderMap[type];
+    const renderMethod = fieldRenderMap[type];
 
-        if (renderMethod) {
-            // If the type is 'submit', ensure we use the specific renderSubmitButtonElement
-            // Although, with the filter in renderForm(), this branch for 'submit' type
-            // might not be hit in the primary rendering flow, it's good practice.
-            return renderMethod.call(this, type, name, label, validate, attributes, options,subOptions);
-
-            if (type === 'submit') {
-                return this.renderSubmitButton(type, name, label, validate, attributes, options);
-            }
-            //return renderMethod.call(this, type, name, label, validate, attributes, options);
-        } else {
-            console.warn(`Unsupported field type '${type}' encountered.`);
-            return '';
-        }
+    if (renderMethod) {
+        // IMPORTANT: Pass ALL arguments including subOptions
+        return renderMethod.call(this, type, name, label, validate, attributes, options, subOptions);
+    } else {
+        console.warn(`Unsupported field type '${type}' encountered.`);
+        return '';
     }
+}
+
+
+
 
 
 
@@ -3364,6 +3361,10 @@ renderImageField(type, name, label, validate, attributes) {
 }
 
 
+
+
+// Radio field rendering
+
 renderRadioField(type, name, label, validate, attributes, options) {
     // Define valid validation attributes for radio fields
     //console.log("RADIO DEBUG - options:", JSON.stringify(options, null, 2));
@@ -3637,244 +3638,227 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
 /* DYNAMIC SINGLE SELECT BLOCK */
 
 // Function to render the dynamic select field and update based on user selection
-renderDynamicSingleSelectField(type, name, label, validate, attributes, options) {
-  //console.log('DEBUG: renderDynamicSingleSelectField called with options:', options);
-  
-  // Step 1: Extract main categories from options
-  const mainCategoryOptions = options.map(item => {
-    // Use item.id as the value for the main select
-    return {
-      value: item.id,    // ← FIXED: Use id, not value
-      label: item.label,
-      // You can add selected logic if needed
-    };
-  });
-  
-  // Step 2: The nested options ARE your sub-categories!
-  // Transform the structure
-  const subCategoriesOptions = options.map(item => ({
-    id: item.id,           // Same as main category value
-    label: item.label + ' Technologies', // Or customize
-    options: item.options  // The nested options array
-  }));
-  
-  //console.log('Main categories:', mainCategoryOptions);
-  //console.log('Sub categories:', subCategoriesOptions);
-  
-  const mode = 'dynamicSingleSelect';
-  
-  // Pass both to the renderer
-  this.renderSingleSelectField(type, name, label, validate, attributes, mainCategoryOptions, subCategoriesOptions, mode);
+renderDynamicSingleSelectField(type, name, label, validate, attributes, options, subOptions) {
+    console.log('DEBUG: renderDynamicSingleSelectField called', { 
+        type, name, label, 
+        options: options ? options.length : 'none',
+        subOptions: subOptions ? subOptions.length : 'none'
+    });
+    
+    // Check if options exist
+    if (!options || !Array.isArray(options)) {
+        console.warn('Dynamic single select field missing options:', name);
+        options = [];
+    }
+    
+    // Step 1: Extract main categories from options
+    // Options should already be in the correct format from the parser
+    const mainCategoryOptions = options.map(item => {
+        // Handle both string and object formats
+        if (typeof item === 'string') {
+            return {
+                value: item.toLowerCase().replace(/\s+/g, '-'),
+                label: item
+            };
+        } else {
+            // Already an object with value/label
+            return {
+                value: item.value || item.id || item,
+                label: item.label || item.value || item
+            };
+        }
+    });
+    
+    // Step 2: Handle subCategoriesOptions (scenario blocks)
+    let subCategoriesOptions = [];
+    
+    if (subOptions && Array.isArray(subOptions)) {
+        // Use the subOptions exactly as provided by the parser
+        // They should already have the correct structure
+        subCategoriesOptions = subOptions.map(item => {
+            // Ensure each subCategory has the required structure
+            return {
+                id: item.id || item.value || '',
+                label: item.label || item.id || '',
+                options: Array.isArray(item.options) ? item.options : []
+            };
+        });
+    }
+    
+    console.log('Main categories:', mainCategoryOptions);
+    console.log('Sub categories:', subCategoriesOptions);
+    
+    // Pass both to the renderer with the mode flag
+    this.renderSingleSelectField(
+        type, 
+        name, 
+        label, 
+        validate, 
+        attributes, 
+        mainCategoryOptions, 
+        subCategoriesOptions, 
+        'dynamicSingleSelect'
+    );
 }
 
+
+
+
+
 renderSingleSelectField(type, name, label, validate, attributes, options, subCategoriesOptions, mode) {
+    // Define valid validation attributes for select fields
+    const selectValidationAttributes = ['required'];
 
-  // Define valid validation attributes for select fields
-  const selectValidationAttributes = ['required'];
+    // Construct validation attributes
+    let validationAttrs = '';
+    let originalRequired = false;
+    if (validate) {
+        Object.entries(validate).forEach(([key, value]) => {
+            if (selectValidationAttributes.includes(key)) {
+                if (key === 'required') {
+                    validationAttrs += `${key} `;
+                    originalRequired = true;
+                }
+            }
+        });
+    }
 
-  // Construct validation attributes
-  let validationAttrs = '';
-  // Store original required state for the main select
-  let originalRequired = false; // <--- This variable tracks if the main select was originally required
-  if (validate) {
-    Object.entries(validate).forEach(([key, value]) => {
-      if (selectValidationAttributes.includes(key)) {
-        if (key === 'required') {
-          validationAttrs += `${key} `;
-          originalRequired = true; // Mark that it was originally required
+    // Handle the binding syntax
+    let bindingDirective = '';
+    if (attributes.binding) {
+        if (typeof attributes.binding === 'string' && attributes.binding.startsWith('::')) {
+            bindingDirective = ` bind:value="${name}" `;
         }
-      } else {
-        // Removed console.warn
-      }
-    });
-  }
-
-  // Handle the binding syntax
-  let bindingDirective = '';
-  if (attributes.binding) {
-    if (typeof attributes.binding === 'string' && attributes.binding.startsWith('::')) {
-      bindingDirective = ` bind:value="${name}" `;
     }
-  }
 
-  // Define attributes for the select field
-  let id = attributes.id || name;
-  let dimensionAttrs = ''; // No dimension attributes applicable for select fields
+    // Define attributes for the select field
+    let id = attributes.id || name;
+    let dimensionAttrs = '';
 
-  // Handle additional attributes
-  let additionalAttrs = '';
-  for (const [key, value] of Object.entries(attributes)) {
-    if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
-      if (key.startsWith('on')) {
-        // Handle event attributes
-        const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
-        additionalAttrs += ` @${key.replace(/^on/, '')}={${eventValue}}\n`;
-      } else {
-        // Handle boolean attributes
-        if (value === true) {
-          additionalAttrs += ` ${key.replace(/_/g, '-')}\n`;
-        } else if (value !== false) {
-          // Convert underscores to hyphens and set the attribute
-          additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"\n`;
+    // Handle additional attributes
+    let additionalAttrs = '';
+    for (const [key, value] of Object.entries(attributes)) {
+        if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
+            if (key.startsWith('on')) {
+                const eventValue = value.endsWith('()') ? value.slice(0, -2) : value;
+                additionalAttrs += ` @${key.replace(/^on/, '')}={${eventValue}}\n`;
+            } else {
+                if (value === true) {
+                    additionalAttrs += ` ${key.replace(/_/g, '-')}\n`;
+                } else if (value !== false) {
+                    additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"\n`;
+                }
+            }
         }
-      }
     }
-  }
 
-  // Construct select options HTML based on options
-  let selectHTML = '';
-  if (Array.isArray(options)) {
-    // Add a default option
-    selectHTML += `
-    <option value="">Choose an option</option>
-    `;
-
-    // Add the provided options
-    selectHTML += options.map((option) => {
-      const isSelected = option.selected ? ' selected' : '';
-      return `
-      <option value="${option.value}"${isSelected}>${option.label}</option>
-      `;
-    }).join('');
-  }
-
-  let inputClass = attributes.class || this.inputClass;
-
-  // Remove `onchange` from HTML; it will be handled by JavaScript event listeners
-  const onchangeAttr = ''; // <--- Ensure this is an empty string
-
-  let labelDisplay;
-  let rawLabel;
-
-  if (mode === 'dynamicSingleSelect' && subCategoriesOptions) {
-    if (label.includes('-')) {
-      const [mainCategoryLabel] = label.split('-');
-      labelDisplay = mainCategoryLabel;
-      rawLabel = label;
-    } else {
-      labelDisplay = label;
-      rawLabel = label;
-    }
-  } else {
-    labelDisplay = label;
-  }
-
-  // Construct the final HTML string for the main select
-  let formHTML = `
-  <fieldset class="${this.selectGroupClass}" id="${id + '-block'}">
-    <legend>${labelDisplay}
-      ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-    </legend>
-    <label for="${id}"> Select ${labelDisplay}
-    <select name="${name}"
-      ${bindingDirective}
-      ${dimensionAttrs}
-      id="${id}"
-      class="${inputClass}"
-      ${additionalAttrs}
-      ${validationAttrs}
-      data-original-required="${originalRequired}" >
-      ${selectHTML}
-    </select>
-  </fieldset>
-`.replace(/^\s*\n/gm, '').trim();
-
-  // FIXED: Apply vertical layout to the <select> element and its children
-  // Only split on actual attribute boundaries, not within attribute values
-  let formattedHtml = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
-    // Use regex to match complete attribute="value" pairs
-    const attributes = p1.match(/(\w+(?:-\w+)*=("[^"]*"|'[^']*'|\w+)|[^=\s]+(?!\s*=))/g) || [];
-    const formattedAttributes = attributes.map(attr => ` ${attr}`).join('\n');
-    return `<select\n${formattedAttributes}\n>\n${p2.trim()}\n</select>`;
-  });
-
-  // Ensure the <fieldset> block starts on a new line and remove extra blank lines
-  formattedHtml = formattedHtml.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
-    // Ensure <fieldset> starts on a new line
-    return `\n${match}\n`;
-  }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
-
-  this.formMarkUp+=formattedHtml;
-
-
-  /* dynamicSingleSelect - Sub-Category Generation Block */
-
-  if (mode && mode ==='dynamicSingleSelect' && subCategoriesOptions) {
-
-    const categoryId = attributes.id || name; // This is the ID of the main dynamic select ('languages')
-
-    subCategoriesOptions.forEach((subCategory) => {
-      const { id, label, options: subOptions } = subCategory; // Renamed 'options' to 'subOptions' to avoid conflict
-
-      // IMPORTANT: Sub-category selects are *initially hidden*
-      // Therefore, by default, they are NOT required until they are revealed.
-      let isSubCategoryRequired = false; // Default to false as they are hidden
-      const subCategoryValidationAttrs = ''; // No direct 'required' in HTML initially
-
-      // Build the select options HTML for sub-category
-      const subSelectHTML = subOptions.map(option => {
-        const isSelected = option.selected ? ' selected' : '';
-        return `
-          <option value="${option.value}"${isSelected}>${option.label}</option>
+    // Construct select options HTML based on options
+    let selectHTML = '';
+    if (Array.isArray(options) && options.length > 0) {
+        // Add a default option
+        selectHTML += `
+        <option value="">Choose an option</option>
         `;
-      }).join('');
 
+        // Add the provided options
+        selectHTML += options.map((option) => {
+            const optionValue = option.value || option;
+            const optionLabel = option.label || option;
+            const isSelected = option.selected ? ' selected' : '';
+            return `
+            <option value="${optionValue}"${isSelected}>${optionLabel}</option>
+            `;
+        }).join('');
+    }
 
-      let subCategoryLabel;
-      
-      if (rawLabel.includes('-')) {
-        subCategoryLabel = rawLabel.split('-')?.[1] + ' Options';
-      } else {
-        subCategoryLabel = 'options';
-      }
+    let inputClass = attributes.class || this.inputClass;
 
-      let optionsLabel;
-      if (subCategoryLabel !== 'options') {
-        optionsLabel = rawLabel.split('-')?.[1] + ' Option';
-      } else {
-        optionsLabel = subCategoryLabel;
-      }
-
-
-      // Create the HTML for the sub-category fieldset and select elements
-      // Added a class based on the main select's ID for easy grouping/selection
-      let subFormHTML = `
-        <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}" style="display: none;"> <legend>${label} ${subCategoryLabel} ${isSubCategoryRequired && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
-          </legend>
-          <label for="${id}"> Select ${label} ${optionsLabel}
-          </label>
-          <select name="${id}"
+    // Construct the final HTML string for the main select
+    let formHTML = `
+    <fieldset class="${this.selectGroupClass}" id="${id + '-block'}">
+        <legend>${label}
+            ${validationAttrs.includes('required') && this.formSettings.requiredFieldIndicator ? this.formSettings.asteriskHtml : ''}
+        </legend>
+        <label for="${id}"> Select ${label}
+        <select name="${name}"
             ${bindingDirective}
             ${dimensionAttrs}
             id="${id}"
             class="${inputClass}"
             ${additionalAttrs}
-            ${subCategoryValidationAttrs}
-            data-original-required="${isSubCategoryRequired}" >
-            <option value="">Choose an option</option>
-            ${subSelectHTML}
-          </select>
-        </fieldset>
-      `.replace(/^\s*\n/gm, '').trim();
+            ${validationAttrs}
+            data-original-required="${originalRequired}" >
+            ${selectHTML}
+        </select>
+    </fieldset>
+    `.replace(/^\s*\n/gm, '').trim();
 
-      // FIXED: Apply the same corrected formatting to sub-category selects
-      subFormHTML = subFormHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+    // Format the HTML
+    let formattedHtml = formHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
         const attributes = p1.match(/(\w+(?:-\w+)*=("[^"]*"|'[^']*'|\w+)|[^=\s]+(?!\s*=))/g) || [];
         const formattedAttributes = attributes.map(attr => ` ${attr}`).join('\n');
         return `<select\n${formattedAttributes}\n>\n${p2.trim()}\n</select>`;
-      });
-
-      // Ensure the <fieldset> block starts on a new line and remove extra blank lines
-      subFormHTML = subFormHTML.replace(/(<fieldset\s+[^>]*>)/g, (match) => {
-        return `\n${match}\n`;
-      }).replace(/\n\s*\n/g, '\n');
-
-      // Append the generated HTML to formMarkUp
-      this.formMarkUp += subFormHTML;
     });
-  }
-}
 
+    this.formMarkUp += formattedHtml;
+
+    /* dynamicSingleSelect - Sub-Category Generation Block */
+    if (mode === 'dynamicSingleSelect' && subCategoriesOptions && Array.isArray(subCategoriesOptions) && subCategoriesOptions.length > 0) {
+        const categoryId = attributes.id || name;
+
+        subCategoriesOptions.forEach((subCategory) => {
+            // Skip invalid subCategories
+            if (!subCategory || !subCategory.id) {
+                console.warn('Invalid subCategory in dynamic select:', subCategory);
+                return;
+            }
+
+            const { id, label: subLabel, options: subOptions } = subCategory;
+            
+            // Ensure subOptions is an array
+            const subOptionArray = Array.isArray(subOptions) ? subOptions : [];
+            
+            // Build the select options HTML for sub-category
+            const subSelectHTML = subOptionArray.length > 0 ? 
+                subOptionArray.map(option => {
+                    const optionValue = option.value || option;
+                    const optionLabel = option.label || option;
+                    const isSelected = option.selected ? ' selected' : '';
+                    return `
+                        <option value="${optionValue}"${isSelected}>${optionLabel}</option>
+                    `;
+                }).join('') :
+                '<option value="">No options available</option>';
+
+            // Create the HTML for the sub-category fieldset
+            let subFormHTML = `
+                <fieldset class="${this.selectGroupClass} ${categoryId}" id="${id}" style="display: none;">
+                    <legend>${subLabel || id}</legend>
+                    <label for="${id}"> Select ${subLabel || id}</label>
+                    <select name="${id}"
+                        ${bindingDirective}
+                        ${dimensionAttrs}
+                        id="${id}"
+                        class="${inputClass}"
+                        ${additionalAttrs}
+                        data-original-required="false">
+                        <option value="">Choose an option</option>
+                        ${subSelectHTML}
+                    </select>
+                </fieldset>
+            `.replace(/^\s*\n/gm, '').trim();
+
+            // Format the HTML
+            subFormHTML = subFormHTML.replace(/<select\s+([^>]*)>([\s\S]*?)<\/select>/g, (match, p1, p2) => {
+                const attributes = p1.match(/(\w+(?:-\w+)*=("[^"]*"|'[^']*'|\w+)|[^=\s]+(?!\s*=))/g) || [];
+                const formattedAttributes = attributes.map(attr => ` ${attr}`).join('\n');
+                return `<select\n${formattedAttributes}\n>\n${p2.trim()}\n</select>`;
+            });
+
+            this.formMarkUp += subFormHTML;
+        });
+    }
+}
 
 
 renderMultipleSelectField(type, name, label, validate, attributes, options) {
@@ -4185,10 +4169,42 @@ renderRangeField(type, name, label, validate, attributes) {
 
 
 
-
-
-
 /* END DYNAMIC SINGLE SELECT BLOCK */
+
+
+renderHtmlField(type, element, contents, validate, attributes) {
+    // Get the id from attributes or generate one
+    const id = attributes.id || `html-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Build class string
+    let elementClass = 'html-content';
+    if ('class' in attributes) {
+        elementClass = attributes.class;
+    }
+    
+    // Build additional attributes (excluding id and class)
+    let additionalAttrs = '';
+    for (const [key, value] of Object.entries(attributes)) {
+        if (key !== 'id' && key !== 'class' && value !== undefined) {
+            if (value === true) {
+                additionalAttrs += ` ${key}`;
+            } else if (value !== false) {
+                additionalAttrs += ` ${key}="${value}"`;
+            }
+        }
+    }
+    
+    // Construct HTML with form-group wrapper
+    const formHTML = `
+        <div class="form-group" id="${id}-block">
+            <${element} id="${id}" class="${elementClass}"${additionalAttrs}>
+                ${contents}
+            </${element}>
+        </div>
+    `;
+    
+    this.formMarkUp += formHTML;
+}
 
 
 

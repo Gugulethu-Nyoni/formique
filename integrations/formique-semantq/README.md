@@ -1,5 +1,6 @@
-# Formique-Semantq
+Here's the updated README with the new HTML feature section and a navigable table of contents:
 
+# Formique-Semantq
 
 <div align="center">
   <p align="center">
@@ -12,29 +13,38 @@
   </p>
 </div>
 
-
-
-
-<!--
-[![npm downloads](https://img.shields.io/npm/dm/formique-semantq.svg?style=for-the-badge)](https://www.npmjs.com/package/formique-semantq)
-
-[![npm](https://img.shields.io/npm/dt/formique-semantq.svg?style=for-the-badge)](https://www.npmjs.com/package/formique-semantq)
-
-[![Coverage Status](https://img.shields.io/coveralls/github/Gugulethu-Nyoni/formique-semantq/master?style=for-the-badge)](https://coveralls.io/github/Gugulethu-Nyoni/formique-semantq?branch=master)
--->
-
-
 <img src="https://github.com/Gugulethu-Nyoni/formique/blob/main/images/formique-js-form-builder-anyframework.png" alt="Formique JS Form Builder Example">
 
+## Table of Contents
+
+- [About Formique Semantq](#about-formique-semantq)
+- [Features](#features)
+- [Installation](#how-to-install-formique-in-semantq)
+- [Quick Start](#demo-creating-a-new-route-in-semantq-for-formique)
+- [Form Schema Guide](#form-schema-guide)
+  - [Standard Input Fields](#standard-input-fields)
+  - [Radio & Checkbox Groups](#radio--checkbox-groups)
+  - [Select Dropdowns](#select-dropdowns)
+  - [Dynamic Single Select](#dynamic-single-select)
+  - [HTML Content Blocks ✨ New](#html-content-blocks)
+  - [Conditional Logic](#conditional-logic)
+- [Styling Guide](#-1-styling-the-form)
+  - [Built-in Themes](#available-built-in-themes)
+  - [Custom Theme Colors](#fine-grained-theme-control)
+  - [Container Sizing](#2-styling-and-sizing-the-form-container)
+  - [Complete CSS Classes](#-complete-list-of-formique-scoped-css-classes)
+- [Email Forms](#-3-contact-form-quick-setup)
+- [Domain Verification](#⚠️-domain-verification-for-email-submissions)
 
 ## About Formique Semantq
 
-Formique Semantq is a native Semantq JS framework Schema Defintion Language (SDL) and Formique Form Definition Language (Low Code). The library is a robust and elegant Web Content Accessibility Guidelines (WCAG) and Web Accessibility Initiative – Accessible Rich Internet Applications (WAI-ARIA) compliant form-building library tailored for JavaScript enthusiasts. It supports a wide array of input types, features JavaScript-driven themes, and offers advanced functionalities like nested conditional logic and dynamic dropdowns. Highly customizable and extensible, Formique is built for the Semantq JS Framework but integrates seamlessly with Vanilla JS, Semantq, Semantq, and Vue. This guide covers implementing Formique in Semantq.
+Formique Semantq is a native Semantq JS framework Schema Definition Language (SDL) and Formique Form Definition Language (Low Code). The library is a robust and elegant Web Content Accessibility Guidelines (WCAG) and Web Accessibility Initiative – Accessible Rich Internet Applications (WAI-ARIA) compliant form-building library tailored for JavaScript enthusiasts. It supports a wide array of input types, features JavaScript-driven themes, and offers advanced functionalities like nested conditional logic and dynamic dropdowns. Highly customizable and extensible, Formique is built for the Semantq JS Framework but integrates seamlessly with Vanilla JS, Semantq, and Vue. This guide covers implementing Formique in Semantq.
 
 ## Features
 
 - **Declarative Syntax**: Define forms using a simple and intuitive schema.
 - **Wide Range of Inputs**: Supports text, email, number, password, date, time, file uploads, and more.
+- **HTML Content Blocks**: Insert custom HTML or plain text anywhere in your form.
 - **Validation and Attributes**: Easily specify validation rules and attributes for each form field.
 - **Dynamic Form Generation**: Generate forms dynamically based on your schema.
 - **Framework Agnostic**: Currently works with Semantq and Vanilla JS (more frameworks to be added).
@@ -53,116 +63,90 @@ Formique Semantq is a native Semantq JS framework Schema Defintion Language (SDL
 Create a new Semantq project using the following commands:
 
 ```bash
-# create a new project in the current directory
-npx sv create
+# install semantq globally 
+npm i -g semantq
 
 # create a new project in my-app
-npx sv create my-app
+semantq create my-app
 ```
 
-> **Note:** Always refer to the latest official Semantq guide on how to create a Semantq app, as this may change. [Semantq Documentation: Creating a Project](https://Semantq.dev/docs/kit/creating-a-project)
+> **Note:** Always refer to the latest official Semantq guide on how to create a Semantq app, as this may change. [Semantq Documentation: Creating a Project](https://github.com/Gugulethu-Nyoni/semantq)
 
-
-## Developing
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev
-```
-
-
-## Demo: Creating a New Route in Semantq for Formique
-
-### Step 1: Create a New Route
-
-For demo purposes, let's create a new route (page) in `src/routes/registration`.
-
-1. **Create the Route**:
-   - Create a new directory for the route:
-     ```bash
-     mkdir src/routes/registration
-     ```
-
-2. **Create the Semantq Page**:
-   - Inside the route directory, create a new Semantq page:
-     ```bash
-     touch src/routes/registration/+page.Semantq
-     ```
-
-## Step 2: Add the CSS (Optional)
-
-The NPM option:  
-
-```javascript
-npm i formique-css
-```
-
-```javascript
-import 'formique-css';
-```
-
-The CDN Option:
-
-Include this inside the @head .. @end block of page layout file: `@layout.smq`
-
-```html
-<link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.11/formique-css.css" />
-```
-
-
-**Note:** The provided Formique CSS is optional. Formique will function fully without it, allowing you full flexibility to apply your own styles. However, for convenience, a set of default class names is available to help you quickly style form containers, form elements, and input types. See the sections below for a complete list of available class names.
-
-## Step 3: Install `@formique/semantq`
-
-To use Formique in your Semantq application, you need to install the `formique-semantq` package.
-
+### Step 2: Install Formique
 
 ```bash
 npm i @formique/semantq
 ```
 
-### Step 4: Implement the Form in `+page.Semantq`
+### Step 3: CSS Styling (Optional)
 
-Add the following code to +page.Semantq:
+Formique now **automatically injects its internal styles** by default - no additional CSS files needed! The library handles styling internally with built-in themes and CSS variables.
 
+#### Using Built-in Styles (Default)
 
-```Semantq
-<script>
-  import { onMount } from 'Semantq';
+Formique automatically applies its styling system. Just use the `theme` or `themeColor` options in your `formSettings`:
+
+```javascript
+const formSettings = {
+  theme: 'midnight-blush',  // Apply a built-in theme
+  // OR use a custom color:
+  themeColor: '#4338ca'      // Override with your own hex color
+};
+```
+
+#### Disabling Default Styles
+
+If you prefer to use your **own custom CSS**, you can disable Formique's internal styles:
+
+```javascript
+const formSettings = {
+  disableStyles: true,  // Prevents internal CSS injection
+  // Now you can provide your own CSS file or styles
+};
+```
+
+When `disableStyles: true` is set, Formique will not inject any styles, giving you complete control over the form's appearance. You can then link your own CSS file:
+
+```html
+<!-- Your custom CSS -->
+<link rel="stylesheet" href="/path/to/your-custom-form-styles.css" />
+```
+
+#### Why This Change?
+
+- **Zero configuration**: Forms look great out of the box
+- **Reduced dependencies**: No need to manage separate CSS packages
+- **Better performance**: Styles are injected efficiently
+- **Theming flexibility**: Built-in themes and CSS variables work seamlessly
+- **Opt-out option**: Full control when you need it
+- **Eliminates FOUC (Flash of Unstyled Content)**: Styles are injected before form rendering, ensuring the form appears fully styled immediately
+
+## Demo: Creating a New Route in Semantq for Formique
+
+### Step 1: Create a New Route
+
+```bash
+semantq make:route registration
+```
+
+### Step 2: Implement the Form
+
+```
+@script
   import Formique from '@formique/semantq';
 
-  // Define the form schema
   const formSchema = [
     ['text', 'name', 'Name', { required: true }],
     ['text', 'surname', 'Surname', { required: true }],
     ['email', 'email', 'Email', { required: true }],
-    ['singleSelect', 'title', 'Title', { required: true }, { dependents: ['status'] },
-      [
-        { value: 'mr', label: 'Mr' },
-        { value: 'ms', label: 'Ms' },
-        { value: 'mrs', label: 'Mrs' },
-        { value: 'dr', label: 'Dr' },
-        { value: 'prof', label: 'Prof' }
-      ]
-    ],
-    ['singleSelect', 'status', 'Status', { required: true }, { dependsOn: 'title', condition: 'prof' },
-      [
-        { value: 'full professor', label: 'Full Professor' },
-        { value: 'associate professor', label: 'Associate Professor' }
-      ]
-    ],
     ['submit', 'submit', 'Submit', {}, { style: 'width: 100%;' }],
   ];
 
-  // Define form parameters
   const formParams = {
     id: "regForm",
     method: "POST",
   };
 
-  // Define form settings
   const formSettings = {
     submitOnPage: true,
     theme: "midnight-blush",
@@ -170,27 +154,228 @@ Add the following code to +page.Semantq:
     placeholders: true,  
   };
 
-  // Initialize the form on component mount
-  onMount(() => {
+  $onMount(() => {
     const form = new Formique(formSchema, formParams, formSettings);
   });
-</script>
+@end
 
-<!-- Target element where the form will be inserted -->
+@html
 <div id="formique"></div>
 ```
-## Step 5: View the Form
 
-To see the form in your browser, run the following command:
+## Form Schema Guide
 
-```bash
-npm run dev
+Formique uses a simple, intuitive array-based schema to define forms. Each field follows this format:
+
+```javascript
+[type, name, label, validation, attributes, options]
 ```
 
-Once the server is running, you can view the form at:
+### Standard Input Fields
 
-http://localhost:5173/registration
+```javascript
+[
+  ['text', 'username', 'Username', { required: true, minlength: 3 }],
+  ['email', 'user_email', 'Email Address', { required: true }],
+  ['password', 'user_pass', 'Password', { required: true, minlength: 8 }],
+  ['number', 'age', 'Age', { min: 18, max: 99 }],
+  ['tel', 'phone', 'Phone Number', { pattern: '[0-9]{3}-[0-9]{3}-[0-9]{4}' }],
+  ['date', 'dob', 'Date of Birth'],
+  ['time', 'appointment', 'Appointment Time'],
+  ['color', 'fav_color', 'Favorite Color', {}, { value: '#ff0056' }],
+  ['file', 'avatar', 'Profile Picture', { accept: 'image/*' }],
+  ['textarea', 'bio', 'Biography', { maxlength: 500 }, { rows: 5 }],
+  ['url', 'website', 'Personal Website'],
+  ['search', 'search', 'Search'],
+]
+```
 
+### Radio & Checkbox Groups
+
+```javascript
+// Radio buttons (single selection)
+[
+  'radio', 'gender', 'Gender', { required: true }, {}, [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' }
+  ]
+],
+
+// Checkbox group (multiple selection)
+[
+  'checkbox', 'interests', 'Interests', {}, {}, [
+    { value: 'coding', label: 'Coding', selected: true },
+    { value: 'design', label: 'Design' },
+    { value: 'music', label: 'Music' }
+  ]
+]
+```
+
+### Select Dropdowns
+
+```javascript
+// Single select
+[
+  'singleSelect', 'country', 'Country', { required: true }, {}, [
+    { value: 'us', label: 'United States', selected: true },
+    { value: 'uk', label: 'United Kingdom' },
+    { value: 'ca', label: 'Canada' }
+  ]
+],
+
+// Multiple select
+[
+  'multipleSelect', 'skills', 'Skills', { required: true }, {}, [
+    { value: 'js', label: 'JavaScript' },
+    { value: 'python', label: 'Python' },
+    { value: 'java', label: 'Java' }
+  ]
+]
+```
+
+### Dynamic Single Select
+
+Create cascading dropdowns where options in the second select depend on the first selection:
+
+```javascript
+[
+  'dynamicSingleSelect',       // Field type
+  'programming',               // Field name
+  'Programming Languages',     // Label
+  { required: true },          // Validation
+  {},                          // Attributes
+  [  // Main categories (appear in first dropdown)
+    {
+      id: 'frontend',
+      label: 'Front End',
+      options: [
+        { value: 'javascript', label: 'JavaScript' },
+        { value: 'react', label: 'React' },
+        { value: 'vue', label: 'Vue' }
+      ]
+    },
+    {
+      id: 'backend',
+      label: 'Back End',
+      options: [
+        { value: 'nodejs', label: 'Node.js' },
+        { value: 'python', label: 'Python' },
+        { value: 'java', label: 'Java' }
+      ]
+    }
+  ]
+]
+```
+
+### HTML Content Blocks ✨ New
+
+Insert custom HTML or plain text anywhere in your form. Perfect for section headers, instructional text, warnings, or embedded content:
+
+```javascript
+[
+  'html',           // Field type
+  'div',            // HTML element to render (div, p, span, section, etc.)
+  'Your content here', // Content (HTML or plain text)
+  {},               // Validation (not used for HTML blocks -but do keep the empty {})
+  {                 // Attributes for the HTML element
+    id: 'section-header',
+    class: 'info-message highlight',
+    style: 'color: #4338ca; padding: 1rem; background: #f5f3ff;',
+    'data-type': 'instructional'
+  }
+]
+```
+
+#### Examples:
+
+**Plain text paragraph:**
+```javascript
+['html', 'p', 'Please fill out all required fields marked with *', {}, {
+  class: 'instruction-text',
+  style: 'font-style: italic;'
+}]
+```
+
+**Section header with custom styling:**
+```javascript
+['html', 'h3', 'Personal Information', {}, {
+  class: 'form-section-header',
+  style: 'border-bottom: 2px solid #4338ca; margin-top: 2rem;'
+}]
+```
+
+**Warning message:**
+```javascript
+['html', 'div', '⚠️ Your session will expire in 5 minutes', {}, {
+  class: 'warning-banner',
+  role: 'alert'
+}]
+```
+
+**Complex HTML with nested elements:**
+```javascript
+['html', 'div', `
+  <div class="info-box">
+    <strong>Note:</strong> 
+    <span>All fields are required unless marked optional</span>
+  </div>
+`, {}, {
+  class: 'custom-wrapper'
+}]
+```
+
+**Resulting HTML structure:**
+```html
+<div class="form-group" id="section-header-block">
+  <div id="section-header" class="info-message highlight" style="color: #4338ca; padding: 1rem;">
+    Your content here
+  </div>
+</div>
+```
+
+Each HTML block is automatically wrapped in a `form-group` div for consistent spacing and layout with form fields.
+
+### Conditional Logic
+
+Show/hide fields based on other field values:
+
+```javascript
+// Parent field with dependents
+[
+  'singleSelect', 'role', 'Role', 
+  { required: true }, 
+  { dependents: ['topic', 'mode'] },  // Fields that depend on this
+  [
+    { value: 'attendee', label: 'Attendee' },
+    { value: 'presenter', label: 'Presenter' }
+  ]
+],
+
+// Dependent field with string condition
+[
+  'text', 'topic', 'Presentation Topic', 
+  {}, 
+  { 
+    dependsOn: 'role', 
+    condition: 'presenter'  // Shows when role = 'presenter'
+  }
+],
+
+// Dependent field with function condition
+[
+  'singleSelect', 'mode', 'Presentation Mode',
+  { required: true },
+  { 
+    dependsOn: 'role', 
+    condition: (value) => value === 'presenter'  // Function condition
+  },
+  [
+    { value: 'virtual', label: 'Virtual' },
+    { value: 'physical', label: 'Physical' }
+  ]
+]
+```
 
 ## ✨ 1. Styling the Form
 
@@ -223,7 +408,7 @@ const formSettings = {
   theme: 'indigo'
 };
 ```
-If no theme is set, Formique will default to the dark theme. 
+If no theme is set, Formique will default to the light theme. 
 
 ### Fine-Grained Theme Control
 
@@ -237,17 +422,16 @@ const formSettings = {
 
 ### Custom Styling
 
-Formique’s form classes are exposed for complete customization. You can target the form using `.formique`, and inputs with classes like `.formique-input`, `.formique-label`, `.formique-submit`. See section below.
+Formique’s form classes are exposed for complete customization. You can target the form using `.formique`, and inputs with classes like `.form-input`, `.form-label`, `.form-submit-btn`. See section below.
 
 Example:
 
 ```css
-.formique-input {
+.form-input {
   border-radius: 5px;
   padding: 10px;
 }
 ```
-
 
 ## 2. Styling and Sizing the Form Container
 
@@ -259,7 +443,7 @@ Formique renders inside a container `<div>` that you specify by ID.
 <div id="formique" class=""></div>
 ```
 
-### ⚙Custom Container ID
+### ⚙ Custom Container ID
 
 You can use any custom container ID by declaring it in your `formSettings`:
 
@@ -277,10 +461,10 @@ And in your HTML:
 
 ### Built-in Container Size Classes
 
-Formique includes several responsive width utility classes that can be used directly on your form container:
+Formique includes several responsive width utility classes:
 
 | Class Name     | Description       |
-| -- | -- |
+|----------------|-------------------|
 | `width-full`   | 100% width        |
 | `width-half`   | 50% width         |
 | `width-medium` | 600px fixed width |
@@ -294,7 +478,7 @@ Example:
 
 ### Custom Inline Style Control
 
-If you want precise control over the container styling, use the `formContainerStyle` setting:
+For precise container control:
 
 ```js
 const formSettings = {
@@ -302,17 +486,9 @@ const formSettings = {
 };
 ```
 
-> This will override the container’s `style` attribute directly.
+## Complete List of `.formique`-Scoped CSS Classes
 
-
-
-
-## ✅ Complete List of `.formique`-Scoped CSS Classes
-
-Here is a clean, alphabetically grouped list of **all unique CSS class selectors** used in your Formique stylesheet:
-
-### 📦 Container & Layout
-
+### Container & Layout
 * `.formique`
 * `.formique-form`
 * `.width-full`
@@ -321,8 +497,7 @@ Here is a clean, alphabetically grouped list of **all unique CSS class selectors
 * `.width-small`
 * `.width-custom`
 
-### 🏷️ Labels & Inputs
-
+### Labels & Inputs
 * `.form-label`
 * `.form-input`
 * `.form-control`
@@ -331,15 +506,15 @@ Here is a clean, alphabetically grouped list of **all unique CSS class selectors
 * `.form-select-input`
 * `.form-radio-input`
 * `.form-checkbox-input`
+* `.form-color-input`
 
-### 📚 Input Wrappers
-
+### Input Wrappers
 * `.input-block`
 * `.radio-group`
 * `.checkbox-group`
+* `.form-group`
 
-### 🎨 Themes
-
+### Themes
 * `.custom-theme`
 * `.dark-theme`
 * `.light-theme`
@@ -357,66 +532,61 @@ Here is a clean, alphabetically grouped list of **all unique CSS class selectors
 * `.brown-theme`
 * `.orange-theme`
 
-### 🚀 Button
-
+### Button
 * `.form-submit-btn`
 
-### 🔁 Loading
-
+### Loading
 * `#formiqueSpinner`
 * `.formique-spinner`
 * `.formique-spinner .message`
 
 ### Status Messages
-
 * `.formique-success`
 * `.formique-error`
 
+## 3. Contact Form Quick Setup
 
+Formique supports plug-and-play email contact forms.
 
-## 📬 3. Contact Form Quick Setup
-
-Formique supports plug-and-play email contact forms using `@formique/semantq`.
-
-### 🔧 Basic Email Contact Setup
+### Basic Email Contact Setup
 
 ```js
 const formSettings = {
   submitMode: 'email',                  // Required
   submitOnPage: true,                   // Required
-  successMessage: 'Survey filled successfully',  // Optional
-  errorMessage: 'Something went wrong',         // Optional
-  sendTo: ['contacts@yourwebsite.com']  // Your actual email
+  successMessage: 'Message sent successfully!',
+  errorMessage: 'Something went wrong',
+  sendTo: ['contacts@yourwebsite.com']  // Recipient email(s)
 };
 ```
 
-### 📑 Defining a Form Schema
+### Complete Contact Form Example
 
-Create your form fields using a simple schema array:
-
-```js
+```javascript
 const formSchema = [
-  ['text', 'name', 'Name', { required: true }],
-  ['text', 'surname', 'Surname', { required: true }],
-  ['email', 'email', 'Email', { required: true }, { style: 'color: red' }],
-  ['textarea', 'message', 'Your Message here', { required: true }]
+  ['html', 'h3', 'Get in Touch', {}, { 
+    class: 'form-section',
+    style: 'margin-top: 0;'
+  }],
+  ['text', 'name', 'Your Name', { required: true }],
+  ['email', 'email', 'Email Address', { required: true }],
+  ['text', 'subject', 'Subject', { required: true }],
+  ['textarea', 'message', 'Message', { required: true, minlength: 20 }, { rows: 5 }],
+  ['html', 'p', 'We\'ll respond within 24 hours', {}, { 
+    class: 'form-note',
+    style: 'font-size: 0.9rem; color: #666;'
+  }],
+  ['submit', 'submit', 'Send Message']
 ];
+
+const formSettings = {
+  submitMode: 'email',
+  submitOnPage: true,
+  sendTo: ['hello@yourwebsite.com'],
+  theme: 'blue',
+  requiredFieldIndicator: true
+};
 ```
-
-### Schema Syntax Recap
-
-Each form field follows this format:
-
-```js
-['field type', 'field name', 'Label', { inlineValidation }, { inputAttributes }, [options]]
-```
-
-Examples:
-
-* `text`, `email`, `textarea`, `select`, `checkbox`, `radio`
-* Inline validation can include `{ required: true }`
-* Additional HTML attributes (like `style`, `placeholder`, etc.) are supported.
-
 
 ## ⚠️ Domain Verification for Email Submissions
 
@@ -424,6 +594,4 @@ To enable email submissions, ensure your domain is **registered on your [useform
 
 This is required for sender verification and spam protection.
 
-
-For more comprehensive details on Formique's features and usage and options visit the [Formique GitHub Repository](https://github.com/Gugulethu-Nyoni/formique).
-
+For more comprehensive details on Formique's features and options, visit the [Formique GitHub Repository](https://github.com/Gugulethu-Nyoni/formique).

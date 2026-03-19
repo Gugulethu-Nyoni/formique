@@ -807,6 +807,7 @@ renderForm() {
         'dynamicSingleSelect': this.renderDynamicSingleSelectField,
         'range': this.renderRangeField,
         'recaptcha': this.renderRecaptchaField,
+        'html': this.renderHtmlField,
         'submit': this.renderSubmitButton,
     };
 
@@ -4168,10 +4169,42 @@ renderRangeField(type, name, label, validate, attributes) {
 
 
 
-
-
-
 /* END DYNAMIC SINGLE SELECT BLOCK */
+
+
+renderHtmlField(type, element, contents, validate, attributes) {
+    // Get the id from attributes or generate one
+    const id = attributes.id || `html-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Build class string
+    let elementClass = 'html-content';
+    if ('class' in attributes) {
+        elementClass = attributes.class;
+    }
+    
+    // Build additional attributes (excluding id and class)
+    let additionalAttrs = '';
+    for (const [key, value] of Object.entries(attributes)) {
+        if (key !== 'id' && key !== 'class' && value !== undefined) {
+            if (value === true) {
+                additionalAttrs += ` ${key}`;
+            } else if (value !== false) {
+                additionalAttrs += ` ${key}="${value}"`;
+            }
+        }
+    }
+    
+    // Construct HTML with form-group wrapper
+    const formHTML = `
+        <div class="form-group" id="${id}-block">
+            <${element} id="${id}" class="${elementClass}"${additionalAttrs}>
+                ${contents}
+            </${element}>
+        </div>
+    `;
+    
+    this.formMarkUp += formHTML;
+}
 
 
 
