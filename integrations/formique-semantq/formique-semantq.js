@@ -424,7 +424,7 @@ attachInputChangeListener(parentField) {
           // Convert value to lowercase for consistent comparison with 'yes' condition
           //this.handleParentFieldChange(parentField, value.toLowerCase()); 
           
-          this.handleParentFieldChange(parentField, value.toLowerCase()); 
+          this.handleParentFieldChange(parentField, value); 
       });
   });
 }
