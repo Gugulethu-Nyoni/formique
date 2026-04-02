@@ -61,11 +61,11 @@ class Formique extends FormBuilder {
 
         if (typeof formDefinition === 'string') {
             const ast = LowCodeParser.parse(formDefinition.trim());
-           // console.log("AST", JSON.stringify(ast, null,2));
+           //console.log("AST", JSON.stringify(ast, null,2));
 
             const formObjects = new astToFormique(ast);
 
-            //console.log("formSchema", JSON.stringify(formObjects.formSchema,null,2));
+            //console.log("CHECK formSchema", JSON.stringify(formObjects.formSchema,null,2));
             // Assign from formObjects if a string is passed
             formSchema = formObjects.formSchema;
             finalSettings = { ...formSettings, ...formObjects.formSettings };
@@ -1919,7 +1919,7 @@ const telInputValidationAttributes = [
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n'); // Remove extra blank lines
 
-  return formattedHtml;
+  this.formMarkUp += formattedHtml;
 }
 
 renderDateField(type, name, label, validate, attributes) {
@@ -3357,7 +3357,7 @@ renderImageField(type, name, label, validate, attributes) {
     return `\n${match}\n`;
   }).replace(/\n\s*\n/g, '\n');
 
-  return formattedHtml;
+  this.formMarkUp += formattedHtml;
 }
 
 
