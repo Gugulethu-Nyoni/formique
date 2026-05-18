@@ -404,6 +404,32 @@ gender: { type: 'radio', priority: 10 },
 
   }
 
+
+
+
+// Helper to handle the "Country-State" -> "Country" transformation
+formatLabel(str) {
+  if (!str) return "";
+  // Capitalize first letter only
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+  // NEW: Optimized Mapping Loop
+  mapFields() {
+    const fieldNode = this.ast.find(node => node.type === 'FormFields');
+    if (!fieldNode) return [];
+
+    fieldNode.fields.forEach(field => {
+      //  Branching Logic: Check for the new fieldType property
+      if (field.fieldType === "dynamicSingleSelect") {
+        this.buildDynamicSingleSelect(field);
+      } else {
+        this.buildStandardField(field);
+      }
+    });
+
+    return this.formSchema;
+  }
   
 // formDirective , formProperties, formProperty, formFields, 
 // optionsAttribute, fieldsAttribute 
@@ -445,16 +471,18 @@ inferInputType(fieldName) {
 
 
 cleanFieldName(str) {
-  const [rawName = '', rawType = ''] = str.split(':');
-
-  const input_name = rawName
-    .trim()
-    .replace(/[^\w-]/g, ''); // keeps letters, digits, underscores, hyphens
-
-  const input_type = rawType.trim(); // untouched for now
-
+  // Get everything before colon (removes :type)
+  let rawName = str.split(':')[0];
+  
+  // Remove * and ! markers
+  let input_name = rawName.replace(/[*!]/g, '');
+  
+  // Get type after colon (if exists)
+  let input_type = str.includes(':') ? str.split(':')[1] : '';
+  
   return { input_name, input_type };
 }
+
 
 
 cleanToInputType(str) {
@@ -642,102 +670,85 @@ getOptionValuesByKey(attributes, targetKey) {
 
 
 buildDynamicSingleSelect(node, rawFieldName) {
+  const attrs = node.attributes || [];
+  
+  // 1. Setup Basic Identity
+  const { input_name } = this.cleanFieldName(rawFieldName);
+  const cleanName = input_name.toLowerCase().replace(/\s+/g, '-');
+  const cleanLabel = this.formatLabel(input_name);
 
-    const cleanString = this.cleanFieldName(rawFieldName);
-    const fieldName = cleanString.input_name;
+  // 2. Identify Primary Options
+  const optionsAttr = attrs.find(a => a.key === 'options');
+  const primaryValues = optionsAttr 
+    ? (Array.isArray(optionsAttr.values) 
+        ? optionsAttr.values.map(v => v.value) 
+        : optionsAttr.value.value.split(',').map(v => v.trim()))
+    : [];
 
-    let fieldSchema = [];
-    fieldSchema.push('dynamicSingleSelect', fieldName, this.toTitleCase(fieldName));
+  const mainOptions = primaryValues.map(val => ({
+    value: val.toLowerCase().replace(/\s+/g, '-'),
+    label: this.formatLabel(val)
+  }));
 
-    let validations;
-    let attributes;
-    let mainSelectOptions = []; // Index 5
+  // 3. Identify Secondary Scenarios (Attributes whose keys are in primaryValues)
+  const scenarioBlocks = attrs
+    .filter(a => a.key !== 'options' && primaryValues.includes(a.key))
+    .map(attr => {
+      const rawVals = Array.isArray(attr.values) 
+        ? attr.values.map(v => v.value) 
+        : attr.value.value.split(',').map(v => v.trim());
+        
+      return {
+        id: attr.key.toLowerCase().replace(/\s+/g, '-'),
+        label: attr.key,
+        options: rawVals.map(opt => ({
+          value: opt.toLowerCase().replace(/\s+/g, '-'),
+          label: this.formatLabel(opt)
+        }))
+      };
+    });
 
-    let inputParams;
+  // 4. Determine Labels (Handle "Country-State" split if present)
+  let primaryLabel = cleanLabel;
+  let secondaryLabel = "Options";
+  if (rawFieldName.includes('-')) {
+    const parts = rawFieldName.split('-');
+    primaryLabel = this.formatLabel(parts[0].replace(/[*!]/g, ''));
+    secondaryLabel = this.formatLabel(parts[1].split(':')[0].replace(/[*!]/g, ''));
+  }
+  const combinedLabel = `${primaryLabel}-${secondaryLabel}`;
 
-    if (node.attributes.length > 0) {
-        inputParams = this.handleAttributes(node.attributes);
-    } else {
-        inputParams = { validations: {}, attributes: {} }
-    }
+  // 5. Validations & Attributes (Excluding the ones used for scenarios)
+  const { validations, attributes } = this.handleAttributes(
+    attrs.filter(a => a.key === 'options' || !primaryValues.includes(a.key)), 
+    rawFieldName
+  );
 
+  if (this.isRequired(rawFieldName)) {
+    validations['required'] = true;
+  }
 
-    validations = inputParams.validations;
-    attributes = inputParams.attributes;
+  // 6. Build Final Formique Schema
+  const dynamicSchema = [
+    "dynamicSingleSelect", 
+    cleanName, 
+    combinedLabel, 
+    validations, 
+    attributes, 
+    mainOptions, 
+    scenarioBlocks 
+  ];
 
-    if (this.isRequired(rawFieldName)) {
-        validations['required'] = true;
-    }
-
-    // 1. CRITICAL FIX: Extract 'options' (main dropdown values) from attributes and store separately (Index 5).
-    if (attributes.options) {
-        mainSelectOptions = attributes.options;
-        delete attributes.options;
-    }
-
-    // Since the AST is now clean, we assume the only remaining attributes are standard HTML attributes (or empty {}).
-    // The previous workaround for fragmented 'South' and 'Africa' keys is now removed.
-
-    // Push Schema Elements (Index 3 and 4)
-    fieldSchema.push(validations); // Index 3
-    fieldSchema.push(attributes); // Index 4 (Should be {} if no HTML attributes were defined)
-
-
-    /// NOW BUILD SCENARIO (SUB-OPTIONS) BLOCKS (Index 6)
-
-    // optionValues retrieves all unique keys that are NOT 'options'
-    const optionValues = this.extractOptionValues(node.attributes);
-    let scenarioBlocks = [];
-
-
-    if (optionValues.length > 0) {
-        optionValues.forEach(option => {
-
-            let schema = {};
-            const lowerCaseOption = option.toLowerCase();
-
-            // Set the ID/label for the scenario block
-            schema['id'] = option; //lowerCaseOption;
-            schema['label'] = option;
-
-            // Use the option string directly as the attribute key for lookup (e.g., 'South Africa' -> 'South Africa')
-            const attributeKey = option; 
-            
-            /// Add sub-options now
-            const keyOptions = this.getOptionValuesByKey(node.attributes, attributeKey);
-            let options = [];
-
-            if (keyOptions.length > 0) {
-                keyOptions.forEach(subOption => {
-                    options.push({ value: subOption.toLowerCase(), label: this.toTitleCase(subOption) })
-                });
-                schema['options'] = options;
-                scenarioBlocks.push(schema);
-            }
-        });
-    }
-
-
-    // 3. PUSH MAIN OPTIONS: Add the main select options list (Index 5)
-    fieldSchema.push(mainSelectOptions);
-
-    // 4. PUSH SCENARIO BLOCKS: Add the list of scenario blocks (Index 6)
-    fieldSchema.push(scenarioBlocks);
-
-
-    // 5. Final push to the form schema
-    this.formSchema.push(fieldSchema);
+  this.formSchema.push(dynamicSchema);
+  console.log(`Built dynamicSingleSelect: ${cleanName}`);
 }
-
-
-
 
 
   // Builder methods - implement these according to your needs
   buildDirective(node) {
     //console.log(`Processing FormDirective: ${node.name.value}`);
    
-   	this.formParams['id'] = node.name.value;
+    this.formParams['id'] = node.name.value;
     // Handle directive specific logic
   }
 
@@ -821,143 +832,80 @@ if (key === 'sendTo') {
 
 buildField(node) {
   const rawFieldName = node.name;
-  const cleanString = this.cleanFieldName(rawFieldName);
-  const cleanFieldName = cleanString.input_name;
-
-  let fieldType;
-
-  // 1. Determine the Field Type
-  if (cleanString.input_type) {
-    fieldType = this.cleanToInputType(cleanString.input_type);
-  } else {
-    let attributeKeys;
-    if (node.attributes.length > 0) {
-      attributeKeys = this.extractAttributeKeys(node.attributes);
-      
-      // Check for 'manyof' attribute to force 'checkbox' type
-      if (attributeKeys.includes('manyof')) {
-        fieldType = 'checkbox';
-      } else {
-        fieldType = this.inputTypeResolver(cleanFieldName, attributeKeys);
-      }
-    } else {
-      fieldType = this.inferInputType(cleanFieldName);
-    }
-  }
-
-  // Handle Dynamic Selects (assuming external function)
-  if (fieldType === 'dynamicSingleSelect') {
+  
+  // 1. High-Priority check for Dynamic Select
+  if (node.fieldType === 'dynamicSingleSelect') {
     this.buildDynamicSingleSelect(node, rawFieldName);
     return;
   }
 
-  // Initialize Schema Structure
-  const fieldSchema = [];
-  const fieldLabel = this.toTitleCase(cleanFieldName);
+  // 2. Resolve Names and Types
+  const cleanString = this.cleanFieldName(rawFieldName);
+  const cleanFieldName = cleanString.input_name;
+  const fieldLabel = this.formatLabel(cleanFieldName);
 
-  // Push Base Definition: [type, name, label]
-  fieldSchema.push(fieldType, cleanFieldName, fieldLabel);
+  let fieldType;
+  if (cleanString.input_type) {
+    fieldType = this.cleanToInputType(cleanString.input_type);
+  } else {
+    const attributeKeys = node.attributes?.length > 0 ? this.extractAttributeKeys(node.attributes) : [];
+    if (attributeKeys.includes('manyof')) {
+      fieldType = 'checkbox';
+    } else {
+      fieldType = this.inputTypeResolver(cleanFieldName, attributeKeys);
+    }
+  }
 
+  // 3. Process Attributes & Validations
   let validations = {};
   let attributes = {};
 
-  // 2. Process Attributes and Validations
-  let inputParams;
-  if (node.attributes.length > 0) {
-    // Pass rawFieldName to handleAttributes for specific logic (like 'accept')
-    inputParams = this.handleAttributes(node.attributes, rawFieldName);
-  } else {
-    inputParams = { validations: {}, attributes: {} };
+  if (node.attributes && node.attributes.length > 0) {
+    const params = this.handleAttributes(node.attributes, rawFieldName);
+    validations = params.validations;
+    attributes = params.attributes;
   }
 
-  validations = inputParams.validations;
-  attributes = inputParams.attributes;
-
-  // 3. Clean up Attributes and Add Required Validation
-  // CRITICAL: We only delete the attributes that are used to build the final list
-  // but should NOT appear in the attributes object. Dependents/dependsOn SHOULD remain.
-  delete attributes.options;
-  delete attributes.selected;
-  delete attributes.default; 
-  // delete attributes.dependents; // REMOVED: This attribute needs to be in the final object
-  // delete attributes.dependsOn; // REMOVED: This attribute needs to be in the final object
-  // delete attributes.condition; // REMOVED: This attribute needs to be in the final object
-  delete attributes.manyof; // If 'manyof' is not needed in the final attributes, delete it.
-
+  // 4. Add required validation from asterisk marker
   if (this.isRequired(rawFieldName)) {
     validations['required'] = true;
   }
 
-  // Push Validation and Attributes: [..., validations, attributes]
-  fieldSchema.push(validations);
-  fieldSchema.push(attributes);
-
-  // 4. Handle Option-Based Fields (The list of choices)
-  if (node.attributes.length > 0 && (fieldType === 'checkbox' || fieldType === 'radio' || fieldType === 'select' || fieldType === 'multipleSelect' || fieldType === 'singleSelect')) {
-
-    // Helper function to correctly retrieve single string OR array of selected values.
-    const getSelectedValues = (attributes) => {
-      const isMultiSelect = (fieldType === 'checkbox' || fieldType === 'multipleSelect');
-      
-      // 1. Look for OptionsAttributes (list: selected: a, b)
-      const selectedOptionsAttr = node.attributes.find(attr =>
-        attr?.type === "OptionsAttribute" && (attr?.key === "selected" || attr?.key === "default")
-      );
-
-      if (selectedOptionsAttr && selectedOptionsAttr.values && selectedOptionsAttr.values.length > 0) {
-        const values = selectedOptionsAttr.values.map(v => v.value.toLowerCase());
-        return isMultiSelect ? values : values[0]; // array or first item
-      }
-
-      // 2. Look for FieldAttributes (single: selected: a)
-      const selectedAttr = node.attributes.find(attr =>
-        attr?.type === "FieldAttribute" && (attr?.key === "selected" || attr?.key === "default")
-      );
-
-      if (selectedAttr) {
-        // Use a safe value retrieval/lower-casing
-        const rawValue = selectedAttr.value?.value || selectedAttr.value;
-        const value = (typeof rawValue === 'string' ? rawValue.toLowerCase() : rawValue);
-        
-        return isMultiSelect ? [value].filter(Boolean) : value; // array or string
-      }
-
-      return isMultiSelect ? [] : null;
-    };
-
-    const isMultiSelection = (fieldType === 'checkbox' || fieldType === 'multipleSelect');
-    const selectedValues = getSelectedValues(node.attributes); 
-    const optionValues = this.extractOptionValues(node.attributes); 
-    let options = [];
-
-    if (optionValues.length > 0) {
-      optionValues.forEach(option => {
-        //const optValue = option.toLowerCase();
-        const optValue = option;
-        let isSelected = false;
-
-        if (isMultiSelection) {
-          // Check if value is IN the array of selected values
-          isSelected = Array.isArray(selectedValues) && selectedValues.includes(optValue);
-        } else {
-          // Check if value EQUALS the single selected string
-          isSelected = (optValue === selectedValues);
-        }
-
-        if (isSelected) {
-          options.push({value: optValue, label: this.toTitleCase(option), selected: true});
-        } else {
-          options.push({value: optValue, label: this.toTitleCase(option)});
-        }
-      });
-      
-      // Push Options Array: [..., validations, attributes, options_array]
-      fieldSchema.push(options); 
-    }
+  // 5. SPECIAL: Add 'multiple' attribute for multipleSelect
+  if (fieldType === 'multipleSelect') {
+    attributes['multiple'] = true;
   }
 
-  // 5. Finalize Schema
+  // 6. Build base schema: [type, name, label, validations, attributes]
+  const fieldSchema = [fieldType, cleanFieldName, fieldLabel, validations, attributes];
+
+  // 7. Handle Options for Radio/Checkbox/Select fields
+  const isOptionField = ['checkbox', 'radio', 'select', 'singleSelect', 'multipleSelect'].includes(fieldType);
+  if (isOptionField) {
+    let options = [];
+    
+    // Get options from attributes (already processed) or extract from AST
+    if (attributes.options && Array.isArray(attributes.options)) {
+      options = attributes.options;
+    } else {
+      const optionValues = this.extractOptionValues(node.attributes || []);
+      options = optionValues.map(opt => ({
+        value: opt.toLowerCase().replace(/\s+/g, '-'),
+        label: this.formatLabel(opt)
+      }));
+    }
+    
+    if (options.length > 0) {
+      fieldSchema.push(options);
+    }
+    
+    // Remove options from attributes to avoid duplication
+    delete attributes.options;
+  }
+
+  // 8. Push to schema
   this.formSchema.push(fieldSchema);
+  console.log(`Built field: ${cleanFieldName} (${fieldType})`);
 }
 
 
@@ -966,143 +914,107 @@ handleAttributes(attributesAST, fieldName) {
     let validations = {};
     let attributes = {};
 
-    // Helper to extract the final value from a nested AST node (unchanged)
+    /**
+     * @helper extractValue
+     * Safely extracts the raw value from various node types in the AST.
+     */
     const extractValue = (attrValue) => {
-        let value;
-        if (attrValue && typeof attrValue === 'object') {
-            if (attrValue.value !== undefined) {
-                value = attrValue.value;
-            } else {
-                value = attrValue;
-            }
-        } else {
-            value = attrValue;
+        if (!attrValue) return "";
+        
+        // 1. If it's a standard Node (StringLiteral, BooleanLiteral, NumberLiteral)
+        if (typeof attrValue === 'object' && attrValue.value !== undefined) {
+            return attrValue.value;
         }
-        if (typeof value === 'string') {
-            value = value.trim();
-            if (value.length >= 2 && value.startsWith("'") && value.endsWith("'")) {
-                value = value.slice(1, -1);
-            }
+        
+        // 2. If it's an OptionsAttribute node containing a values array
+        if (attrValue.type === 'OptionsAttribute' && Array.isArray(attrValue.values)) {
+            return attrValue.values.map(v => (typeof v === 'object' ? v.value : v)).join(', ');
         }
-        return value;
+
+        // 3. Fallback for raw strings or already extracted values
+        return attrValue;
     };
+
+    // --- STEP 1: Identify and Extract Options ---
+    // We look for any attribute with the key 'options'
+    let allOptions = [];
+    const optionsAttrs = attributesAST.filter(attr => attr.key === 'options');
     
-// ----------------------------------------------------------------------
-// 1. Initial Pass: Process all attributes (including single-value dependents/dependsOn)
-// ----------------------------------------------------------------------
+    for (const attr of optionsAttrs) {
+        // Get the value regardless of whether it's a simple attribute or a list
+        let rawValue = extractValue(attr.type === 'OptionsAttribute' ? attr : attr.value);
+
+        if (rawValue && typeof rawValue === 'string') {
+            const parts = rawValue.split(',').map(p => p.trim()).filter(p => p);
+            allOptions.push(...parts);
+        } else if (Array.isArray(rawValue)) {
+            allOptions.push(...rawValue);
+        }
+    }
+    
+    if (allOptions.length > 0) {
+        // Map to Formique option format: { value, label }
+        attributes['options'] = [...new Set(allOptions)].map(opt => ({
+            value: opt.toLowerCase().replace(/\s+/g, '-'),
+            label: this.formatLabel(opt)
+        }));
+    }
+    
+    // --- STEP 2: Process All Other Attributes ---
     attributesAST.forEach(attr => {
         const key = attr.key;
+        if (key === 'options') return; // Already handled above
 
-        if (attr.type === 'FieldAttribute') {
-            let value = extractValue(attr.value);
+        // Extract the value (handles StringLiterals vs OptionsAttributes)
+        let value = extractValue(attr.type === 'OptionsAttribute' ? attr : attr.value);
 
-            // Only skip list-building keys ('selected', 'default', 'options'). 
-            if (this.ignoreAttributes && this.ignoreAttributes.includes(key)) return;
-            if (['selected', 'default', 'options'].includes(key)) return; 
-            
-            // Categorize key
-            if (this.inputAttributes && this.inputAttributes.includes(key)) {
-                attributes[key] = value;
-            } else if (this.validationAttributes && this.validationAttributes.includes(key)) {
-                validations[key] = value;
+        // Skip internal/meta attributes
+        if (this.ignoreAttributes?.includes(key)) return;
+        if (['selected', 'default'].includes(key)) return;
+
+        // --- Logic: Conditional Routing ---
+        if (key === 'dependsOn') {
+            if (typeof value === 'string' && value.includes(',')) {
+                const parts = value.split(',').map(p => p.trim());
+                attributes['dependsOn'] = parts[0];
+                if (parts[1]) attributes['condition'] = parts[1].toLowerCase();
             } else {
-                // For 'dependents', 'dependsOn', 'manyof', and any unrecognized attributes
-                
-                // 💡 CRITICAL FIX: Ensure 'dependents' value is always an array
-                if (key === 'dependents') {
-                    // This handles AST parsing a single value as a FieldAttribute.
-                    attributes[key] = Array.isArray(value) ? value : [value];
-                } else {
-                    attributes[key] = value;
-                }
+                attributes['dependsOn'] = Array.isArray(value) ? value[0] : value;
             }
-        } 
-// ----------------------------------------------------------------------
-// 2. Process OptionsAttribute (List) Nodes for 'dependents', 'accept', and 'dependsOn'
-// ----------------------------------------------------------------------
-        else if (attr.type === 'OptionsAttribute') {
-            
-            // ⭐ NEW/FIXED HANDLING: Process 'dependents' (List of field names)
-            if (key === 'dependents') {
-                const dependentFields = attr.values
-                    .map(option => extractValue(option))
-                    .filter(Boolean);
-                    
-                if (dependentFields.length > 0) {
-                    attributes[key] = dependentFields;
-                }
-            }
+            return;
+        }
 
-            // SPECIAL HANDLING: Process 'accept' for file inputs
-            if (key === 'accept' && fieldName.includes(':file')) {
-                const acceptValues = attr.values
-                    .map(option => extractValue(option))
-                    .filter(Boolean);
-                    
-                if (acceptValues.length > 0) {
-                    attributes[key] = acceptValues.join(',');
-                }
+        if (key === 'condition') {
+            attributes['condition'] = typeof value === 'string' ? value.toLowerCase() : value;
+            return;
+        }
+
+        if (key === 'dependents') {
+            const deps = typeof value === 'string' ? value.split(',').map(v => v.trim()) : value;
+            attributes['dependents'] = Array.isArray(deps) ? deps : [deps];
+            return;
+        }
+
+        // --- Logic: Validation Extraction ---
+        if (this.validationAttributes?.includes(key)) {
+            let finalVal = value;
+            // Type Casting for JSON-safe schema
+            if (value === 'true' || value === true) finalVal = true;
+            else if (value === 'false' || value === false) finalVal = false;
+            else if (!isNaN(value) && typeof value === 'string' && value !== '') {
+                finalVal = Number(value);
             }
-            
-            // SPECIAL HANDLING: Process 'dependsOn' (Conditional Logic) if it's a list
-            if (key === 'dependsOn' && attr.values && attr.values.length >= 2) {
-                const dependsOnValue = extractValue(attr.values[0]);
-                const dependsOnCondition = extractValue(attr.values[1]);
-                
-                if (dependsOnValue && dependsOnCondition) {
-                    attributes['dependsOn'] = dependsOnValue;
-                    attributes['condition'] = dependsOnCondition.toLowerCase();
-                }
-            }
+            validations[key] = finalVal;
+        } else {
+            // All other custom attributes (e.g., placeholder, class, etc.)
+            attributes[key] = value;
         }
     });
 
-
-// ----------------------------------------------------------------------
-// 3. Handle 'options' Extraction (List of choices) - UNCHANGED
-// ----------------------------------------------------------------------
-    const optionsAttr = attributesAST.find(attr => attr.type === "OptionsAttribute" && attr.key === "options");
-    if (optionsAttr?.values) {
-        const options = optionsAttr.values.map(option => ({
-            value: extractValue(option),
-            label: extractValue(option) // Simple case: value is also the label
-        }));
-        if (options.length > 0) {
-            attributes['options'] = options;
-        }
-    }
-
-// ----------------------------------------------------------------------
-// 4. Handle 'selected' (Single or Multi-Select) - UNCHANGED
-// ----------------------------------------------------------------------
-    const selectedListAttr = attributesAST.find(attr => attr.type === "OptionsAttribute" && attr.key === "selected");
-    if (selectedListAttr && selectedListAttr.values) {
-        const selectedValues = selectedListAttr.values
-            .map(option => extractValue(option))
-            .filter(Boolean);
-        if (selectedValues.length > 0) {
-            attributes['selected'] = selectedValues;
-        }
-    } else {
-        const selectedSingleAttr = attributesAST.find(attr => attr.type === "FieldAttribute" && attr.key === "selected");
-        if (selectedSingleAttr) {
-            attributes['selected'] = extractValue(selectedSingleAttr.value);
-        }
-    }
-
-// ----------------------------------------------------------------------
-// 5. Handle 'default' (Single Value) - UNCHANGED
-// ----------------------------------------------------------------------
-    const defaultAttr = attributesAST.find(attr => attr.type === "FieldAttribute" && attr.key === "default");
-    if (defaultAttr) {
-        attributes['default'] = extractValue(defaultAttr.value);
-    }
-
-    return {
-        validations,
-        attributes
-    };
+    return { validations, attributes };
 }
+
+
 
 
   buildOptionsAttribute(node) {

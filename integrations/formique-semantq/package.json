@@ -1,6 +1,6 @@
 {
   "name": "@formique/semantq",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Formique is a native form builder for the Semantq JS Framework",
   "main": "formique-semantq.js",
   "type": "module",
@@ -36,5 +36,8 @@
   },
   "peerDependencies": {
     "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "@formique/semantq": "^1.1.7"
   }
 }

@@ -40,7 +40,7 @@ Formique is a robust and elegant WCAG and ARIA compliant form-building library t
 Formique is Open-source &amp; MIT licensed.
 
 
-## Accessibility Compliance - 
+## Accessibility Compliance
 
 Formique is designed with a laser focus on WAI-ARIA and WCAG usability and accessibility, ensuring that the generated form HTML markup meets the highest standards of web accessibility.
 
