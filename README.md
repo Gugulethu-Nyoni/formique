@@ -34,7 +34,7 @@ If you want a quick guide for `@formique/semantq`, please visit:
 
 ## About Formique
 
-Formique is a robust and elegant WCAG and ARIA compliant form-building library tailored for JavaScript enthusiasts. It supports a wide array of input types, features JS-driven themes, and offers advanced functionalities like nested conditional logic and dynamic dropdowns. Highly customizable and extensible, Formique is built for the Semantq JS Framework but seamlessly integrates with Vanilla JS, React, Vue, Angular, and Svelte.
+Formique is a robust and elegant WCAG and ARIA compliant form-building library tailored for JavaScript enthusiasts. It supports a wide array of input types, features JS-driven themes, and offers advanced functionalities like nested conditional logic and dynamic dropdowns. Highly customizable and extensible, Formique is built for the Semantq JS Framework but seamlessly integrates with Vanilla JS, React, Vue, Angular, and Svelte. Formique has three modes, the code mode (schema definition language), low code mode (Formique Form Definition Language (FFDL)) and the no code drag and drop mode. 
 
 
 Formique is Open-source &amp; MIT licensed.
