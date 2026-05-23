@@ -870,7 +870,123 @@ const formSettings = {
 
 - **formContainerId**: Allows targeting a specific container by its ID where the form will be rendered. If the container ID is `'formique'`, this parameter can be omitted.
 
-**All settings are optional:** You can use only the settings that are relevant to your needs.
+- **validateBeforeSubmit**: When set to `true`, the submit button remains **disabled** until all required and visible form fields pass HTML5 validation. The button becomes clickable only once every required field is properly filled. If a user attempts to click the disabled button, an alert appears with the message *"Fill all the required details before you submit."* Hidden fields (those controlled by conditional logic via `dependsOn`) are automatically excluded from the validation check. If this parameter is omitted or set to `false`, the submit button is always enabled and relies on the browser's default validation behavior.
+
+- **themeColor**: Overrides the predefined theme's button background and input focus border color with a custom hex value. This takes priority over the `theme` setting and is useful when you need to match your brand colors without creating a custom theme. Example: `themeColor: '#4338ca'`.
+
+- **disableStyles**: When set to `true`, Formique will not inject its internal CSS styles into the page. Use this option when you want to provide your own complete stylesheet and avoid any style conflicts. If this parameter is omitted, internal styles are injected automatically.
+
+- **formContainerStyle**: Applies custom inline CSS styles directly to the form container element. This gives you the highest specificity for controlling the container's appearance, such as width, padding, margins, or any other CSS property. Example: `formContainerStyle: 'width: 100% !important; max-width: 700px; padding: 2rem;'`.
+
+- **submitMode**: Determines how the form submission is handled when `submitOnPage` is set to `true`. Available options are `'email'` (sends form data to the email addresses specified in `sendTo`) and `'rsvp'` (sends the notification email plus a confirmation email to the registrant). If this parameter is omitted, the form uses the default on-page submission behavior without email handling.
+
+- **sendTo**: An array of email addresses that will receive the form submission data. This parameter is required when `submitMode` is set to `'email'` or `'rsvp'`. Supports multiple recipients. Example: `sendTo: ['info@website.com', 'admin@website.com']`.
+
+- **registrantMessage**: The confirmation message body sent to the registrant when `submitMode` is set to `'rsvp'`. Supports dynamic placeholders using `{fieldName}` syntax, which will be replaced with the actual form field values. Example: `registrantMessage: 'Hi {name}, thanks for registering for {event}!'`.
+
+- **registrantSubject**: The subject line for the RSVP confirmation email sent to the registrant when `submitMode` is set to `'rsvp'`. If omitted, defaults to `'RSVP Confirmation'`.
+
+- **emailField**: Specifies the name of the form field that contains the registrant's email address. Required when `submitMode` is set to `'rsvp'` so Formique knows which field to use for sending the confirmation. Example: `emailField: 'email'`.
+
+- **sendFrom**: The sender email address used for RSVP confirmation emails when `submitMode` is set to `'rsvp'`. If omitted, defaults to `'noreply@yourdomain.com'`.
+
+- **subject**: The subject line for notification emails sent to the recipients listed in `sendTo`. Supports static text. If omitted, Formique will first check for a form field named "subject" and use its value, or fall back to `'Message From Contact Form'`.
+
+- **recaptchaSecretKey**: The Google reCAPTCHA secret key used for server-side verification. Required when a `recaptcha` field is included in the form schema. This key must match the site key used in the reCAPTCHA field attributes.
+
+- **redirect**: When set to `true`, the page will redirect to the URL specified in `redirectURL` after a successful form submission. If omitted, no redirect occurs and the success message is displayed on the same page.
+
+- **redirectURL**: The target URL for post-submission redirects. Only used when `redirect` is set to `true`. Example: `redirectURL: 'https://example.com/thank-you'`.
+
+
+**All settings are optional:** You can use only the settings that are relevant to your needs or set up.
+
+
+### `validateBeforeSubmit`
+
+When set to `true`, the submit button remains **disabled** until all required fields are properly filled. If a user attempts to click the disabled button, an alert reminds them to complete all required fields first.
+
+#### Behavior
+
+| Setting | Submit Button State | Click Behavior |
+|---------|---------------------|----------------|
+| `validateBeforeSubmit: true` | Disabled until all required fields pass HTML5 validation | Alert: *"Fill all the required details before you submit."* |
+| `validateBeforeSubmit: false` or omitted | Always enabled | Submits normally (browser validation still applies) |
+
+#### How It Works
+
+- The button is **disabled on page load**
+- Formique listens for `input` and `change` events across the entire form
+- After every change, it checks if **all visible** required fields pass HTML5 validation
+- Hidden dependency fields (those controlled by conditional logic) are automatically skipped
+- Once every required field is valid, the button becomes enabled
+- If a user clears a required field, the button returns to a disabled state
+
+#### Example
+
+```javascript
+const formSettings = {
+    validateBeforeSubmit: true,  // Enables submit validation
+    theme: 'blue',
+    submitOnPage: true,
+};
+
+const formParams = {
+    method: 'POST',
+};
+
+const form = new Formique(formSchema, formSettings, formParams);
+```
+
+#### Full Working Example
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formique - Submit Validation Example</title>
+</head>
+<body>
+  <div id="formique" class="width-full"></div>
+
+  <script type="module">
+    import Formique from './formique-semantq-patch.js';
+
+    const formSchema = [
+        ['text', 'name', 'Name', { required: true }, {}],
+        ['text', 'slug', 'Slug', { required: true }, {}],
+        ['text', 'description', 'Description', { required: true }, {}],
+        ['file', 'cv', 'Upload CV', { required: true }, {}],
+        ['submit', 'submit', 'Submit']
+    ];
+
+    const formSettings = {
+        validateBeforeSubmit: true,
+        theme: 'blue',
+        submitOnPage: true,
+    };
+
+    const formParams = {
+        method: 'POST',
+    };
+
+    const form = new Formique(formSchema, formSettings, formParams);
+    console.log('Formique initialized with submit validation enabled');
+  </script>
+</body>
+</html>
+```
+
+#### Important Notes
+
+- **Only visible fields are validated.** Fields hidden by conditional logic (`dependsOn`) are automatically excluded from the validation check
+- The validation uses the browser's built-in HTML5 constraint validation API (`checkValidity()`)
+- Works alongside other `formSettings` options like `submitOnPage`, `submitMode`, and `requiredFieldIndicator`
+- The alert message is currently built-in; customization support is planned for a future release
+
+
 
 Default Invocation: Just like the formParams object, if no formSettings object is provided, you can simply initialize Formique with the form schema as follows:
 
