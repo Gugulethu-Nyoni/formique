@@ -529,6 +529,7 @@ const formSettings = {
   formContainerId: 'myForm',      // ID of the form wrapper (default is 'formique' - no need to define formContainerId here if the container element is 'formique')
   //formContainerStyle: 'width: 100%; max-width: 700px; padding: 2rem;'
                                     // [Optional] Inline style for the form container
+  validateBeforeSubmit: true, // When set to true, the submit button remains disabled until all required fields are properly filled. If a user attempts to click the disabled button, an alert reminds them to complete all required fields first.
 };
 
     /**
@@ -590,8 +591,6 @@ When submit the filled form it will be submitted to the test `POST` api end poin
 
     const form = new Formique(formSchema, formParams, formSettings);
     ```
-
----
 
 ### Other Formats
 
@@ -659,8 +658,7 @@ Formique can be used as either a UMD module with a simple `<script>` tag or as a
 
 # Form Schema Example
 
-
-Here's an example of a form schema that defines various input fields with validation, attributes, binding syntax and options:
+Below is an example of a form schema that defines various input fields with validation, attributes, and options:
 
 ```javascript
 const formSchema = [
@@ -811,14 +809,46 @@ The `formSettings` object allows you to customize the behavior and appearance of
 
 ```javascript
 const formSettings = {
-  theme: "dark-blue", // Form theme: see section below on complete list of themes
-  submitOnPage: true, // Enable form submission on the same page
-  successMessage: "Your registration details have been captured successfully!", // Success message
-  errorMessage: "There was an error in submitting your details. Please try again!", // Error message
-  requiredFieldIndicator: true, // Display asterisk for required fields
-  framework: 'semantq', // Specify framework (optional)
-  placeholders: true, // Use labels as placeholders
-  formContainerId: 'form-div', // Target container by ID (optional)
+  // --- Appearance ---
+  theme: "dark-blue",               // Form theme: see section below on complete list of themes
+  themeColor: '#4338ca',            // Overrides theme with a specific hex color for buttons and focus states
+  formContainerStyle: 'width: 100% !important; max-width: 700px; padding: 2rem;', // Inline styles for the form container
+  requiredFieldIndicator: true,     // Display asterisk (*) for required fields
+  placeholders: true,               // Use labels as placeholders inside input fields
+  disableStyles: false,             // Set to true to prevent Formique from injecting internal CSS
+
+  // --- Submission ---
+  submitOnPage: true,               // Enable form submission on the same page without navigation
+  submitMode: 'email',              // Submission mode: 'email' or 'rsvp' (requires submitOnPage: true)
+  sendTo: [                         // Recipient email(s) — required if submitMode is 'email' or 'rsvp'
+    'contacts@website.com',
+    'admin@someentity.com'
+  ],
+  validateBeforeSubmit: true,       // Disable submit button until all required fields are valid
+
+  // --- Messages ---
+  successMessage: "Your registration details have been captured successfully!", // Custom success message
+  errorMessage: "There was an error in submitting your details. Please try again!", // Custom error message
+
+  // --- RSVP (requires submitMode: 'rsvp') ---
+  registrantMessage: 'Hi {name}, thanks for registering!', // RSVP confirmation message (supports {fieldName} placeholders)
+  registrantSubject: 'RSVP Confirmation',                  // Subject line for RSVP email
+  emailField: 'email',                                     // Field name that contains the registrant's email
+  sendFrom: 'noreply@yourdomain.com',                      // Sender email address for RSVP emails
+  subject: 'Message From Contact Form',                    // Subject line for notification emails
+
+  // --- reCAPTCHA ---
+  recaptchaSecretKey: 'your_secret_key_here', // Secret key for server-side reCAPTCHA verification
+
+  // --- Redirect ---
+  redirect: true,                    // Enable redirect after successful submission
+  redirectURL: 'https://example.com/thank-you', // URL to redirect to
+
+  // --- Container ---
+  formContainerId: 'form-div',      // Target container by ID (default is 'formique')
+
+  // --- Framework ---
+  framework: 'semantq',             // Specify framework for syntax transformations (e.g., 'semantq', 'svelte','react','vue')
 };
 ```
 
@@ -1128,7 +1158,7 @@ The following schema demonstrates how to implement dynamic dropdowns with nested
 ]
 ```
 
-# ✨ Styling the Form 
+# Styling the Form 
 
 Formique provides a robust and flexible system for styling forms, offering built-in themes, CSS classes for various components, and options for fine-grained customization of both form elements and the form container.
 
@@ -1177,7 +1207,7 @@ const formSettings = {
 };
 ```
 
-### CSS Classes for Form Elements 🖌
+### CSS Classes for Form Elements
 
 Formique provides a set of default CSS classes for various form components, enabling consistent styling. These classes are predefined in the `formique.css` stylesheet, which developers can use directly or as a reference for custom CSS.
 
@@ -1260,7 +1290,7 @@ const formSettings = {
 
 Here's an alphabetically grouped list of all unique CSS class selectors used in Formique for comprehensive customization:
 
-### 📦 Container & Layout
+### Container & Layout
 
   * `.formique`
   * `.formique-form`
@@ -1270,7 +1300,7 @@ Here's an alphabetically grouped list of all unique CSS class selectors used in 
   * `.width-medium`
   * `.width-small`
 
-### 🏷️ Labels & Inputs
+### Labels & Inputs
 
   * `.form-checkbox-input`
   * `.form-control`
@@ -1281,7 +1311,7 @@ Here's an alphabetically grouped list of all unique CSS class selectors used in 
   * `.form-select-input`
   * `.form-textarea`
 
-### 📚 Input Wrappers
+### Input Wrappers
 
   * `.checkbox-group`
   * `.input-block`
