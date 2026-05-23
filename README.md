@@ -103,77 +103,7 @@ For more information on the Web Content (Forms) Accessibility Guidelines (WCAG),
 - Select (singleSelect & multipleSelect): ```html <select> ```
 - Dynamic Single Select: Displays a single-select dropdown of subcategories based on a selected category. For example, it dynamically shows a dropdown of states when a country is selected from a list of countries: ```html <select> ```
 - Submit: ```html <input type="submit"> ```
-
-
-### Raw HTML Block
-
-The `'html'` input type allows you to inject arbitrary, static HTML directly into your form layout. This is useful for adding custom headings, informational notes, complex layouts, or decorative elements that aren't standard form fields.
-
-#### Schema Definition
-
-```javascript
-[
-  'html',           // 1. Type (required) — must be the string 'html'
-  'div',            // 2. Wrapper Element Tag (required) — any valid HTML tag like 'div', 'section', 'span', etc.
-  'HTML Content',   // 3. Inner Content (required) — can be a plain string or a mix of HTML tags and text
-  {},               // 4. Validation (required but ignored) — always use an empty object {}
-  {                 // 5. Attributes (optional) — applied to the wrapper element defined in step 2
-    class: 'formique-note',
-    id: 'custom-note'
-  }
-]
-```
-
-**Parameter Breakdown:**
-
-1.  **`'html'`**: The input type identifier.
-2.  **`'div'`**: The HTML tag for the wrapper element. The library will create this element. Replace `'div'` with `'section'`, `'aside'`, `'span'`, etc., as needed.
-3.  **`'<small><h3>Some Title</h3>Content</small>'`**: The inner content of the wrapper element. This can be any valid string of HTML or plain text.
-4.  **`{}`**: An empty object. Validation is not applicable, so this must be present but is ignored.
-5.  **`{ class: 'formique-note', id: 'unique-id' }`**: Attributes for the wrapper element. You can include any valid HTML attributes like `class`, `id`, `style`, `data-*` attributes, etc.
-
-#### Example Usage
-
-This example creates an informational note box within the form:
-
-```javascript
-const formSchema = [
-  // Other fields...
-  ['text', 'username', 'Username', { required: true }],
-
-  // An HTML note explaining the password requirements
-  [
-    'html',
-    'div',
-    '<small><h3>Password Requirements</h3>Must be at least 8 characters, including one number and one special character.</small>',
-    {},
-    { class: 'formique-note', style: 'margin-bottom: 1.5rem;' }
-  ],
-
-  ['password', 'password', 'Password', { required: true, minlength: 8 }],
-  // More fields...
-];
-```
-
-**Rendered HTML Output:**
-
-The above schema will generate the following HTML structure inside your form:
-
-```html
-<div class="formique-note" style="margin-bottom: 1.5rem;">
-  <small>
-    <h3>Password Requirements</h3>
-    Must be at least 8 characters, including one number and one special character.
-  </small>
-</div>
-```
-
-**Important Notes:**
-
-- The `'html'` type is for **static content only**. It is not a reactive input and does not have a `name` or `value` that gets submitted with the form.
-- The third parameter (inner content) is injected as a raw HTML string, so be mindful of script injection risks if you are populating this with user-generated or untrusted data.
-- All attributes defined in the fifth parameter are applied directly to the wrapper element you specify in the second parameter.
-
+- html: ```html <div class="formique-note"> <h3> </h3> <small> </small> </div> ```
 
 # How to Write Form Schema
 
@@ -254,17 +184,104 @@ In the example above:
   In the example given: the blue option will be selected by default.
 
 
+### Raw HTML Block
+
+The `'html'` input type allows you to inject arbitrary, static HTML directly into your form layout. This is useful for adding custom headings, informational notes, complex layouts, or decorative elements that aren't standard form fields.
+
+#### Schema Definition
+
+```javascript
+[
+  'html',           // 1. Type (required) — must be the string 'html'
+  'div',            // 2. Wrapper Element Tag (required) — any valid HTML tag like 'div', 'section', 'span', etc.
+  'HTML Content',   // 3. Inner Content (required) — can be a plain string or a mix of HTML tags and text
+  {},               // 4. Validation (required but ignored) — always use an empty object {}
+  {                 // 5. Attributes (optional) — applied to the wrapper element defined in step 2
+    class: 'formique-note',
+    id: 'custom-note'
+  }
+]
+```
+
+**Parameter Breakdown:**
+
+1.  **`'html'`**: The input type identifier.
+2.  **`'div'`**: The HTML tag for the wrapper element. The library will create this element. Replace `'div'` with `'section'`, `'aside'`, `'span'`, etc., as needed.
+3.  **`'<small><h3>Some Title</h3>Content</small>'`**: The inner content of the wrapper element. This can be any valid string of HTML or plain text.
+4.  **`{}`**: An empty object. Validation is not applicable, so this must be present but is ignored.
+5.  **`{ class: 'formique-note', id: 'unique-id' }`**: Attributes for the wrapper element. You can include any valid HTML attributes like `class`, `id`, `style`, `data-*` attributes, etc.
+
+#### Example Usage
+
+This example creates an informational note box within the form:
+
+```javascript
+const formSchema = [
+  // Other fields...
+  ['text', 'username', 'Username', { required: true }],
+
+  // An HTML note explaining the password requirements
+  [
+    'html',
+    'div',
+    '<small><h3>Password Requirements</h3>Must be at least 8 characters, including one number and one special character.</small>',
+    {},
+    { class: 'formique-note', style: 'margin-bottom: 1.5rem;' }
+  ],
+
+  ['password', 'password', 'Password', { required: true, minlength: 8 }],
+  // More fields...
+];
+```
+
+**Rendered HTML Output:**
+
+The above schema will generate the following HTML structure inside your form:
+
+```html
+<div class="formique-note" style="margin-bottom: 1.5rem;">
+  <small>
+    <h3>Password Requirements</h3>
+    Must be at least 8 characters, including one number and one special character.
+  </small>
+</div>
+```
+
+**Important Notes:**
+
+- The `'html'` type is for **static content only**. It is not a reactive input and does not have a `name` or `value` that gets submitted with the form.
+- The third parameter (inner content) is injected as a raw HTML string, so be mindful of script injection risks if you are populating this with user-generated or untrusted data.
+- All attributes defined in the fifth parameter are applied directly to the wrapper element you specify in the second parameter.
+
+
 ## Installation (Vanilla JS)
 
-There are two primary ways to install and use Formique in your project: 
+There are two primary ways to install and use Formique in your project:
 
 ### Option A: Use Formique in a Browser Context (No Bundler Required)
 
-1. **Include the CSS** in the head section of your HTML file:
+1. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
-```html
-<link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.13/formique-css.css" />
-```
+    ```html
+<script src="https://cdn.jsdelivr.net/npm/formique@1.2.4/formique.umd.min.js"></script>
+    ```
+
+    **Note:** Formique now bundles its CSS internally. No separate stylesheet link is required — styles are injected automatically when the form initializes.
+
+    <details>
+    <summary><strong>⚠️ Deprecated: External CSS (versions prior to 1.2.4)</strong></summary>
+
+    If you are using an older version of Formique, you may need to include the CSS separately:
+
+    ```html
+    <link rel="stylesheet" href="https://unpkg.com/formique-css@1.0.13/formique-css.css" />
+    ```
+
+    This is no longer required from v1.2.4 onwards. Upgrade to the latest version to simplify your setup.
+
+    </details>
+
+
 
 2. **Include the JavaScript** before the closing `</body>` tag of your HTML file:
 
