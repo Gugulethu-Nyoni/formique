@@ -1,6 +1,8 @@
 'use strict';
 import LowCodeParser from './LowCodeParser.js';
 import astToFormique from './astToFormique.js'; 
+import RepeaterManager from './RepeaterManager.js';
+
 /**
  * Formique Semantq Class Library
  * 
@@ -84,6 +86,15 @@ class Formique extends FormBuilder {
             ...finalSettings
         };
 
+
+                // NEW: Initialize repeater manager
+        this.repeaterManager = new RepeaterManager(this);
+        
+        // NEW: Compact repeater arrays setting
+        this.formSettings.compactRepeaterArrays = formSettings.compactRepeaterArrays !== false;
+
+
+
                // Only inject CSS if the user hasn't explicitly disabled it
        if (this.formSettings.disableStyles !== true) {
                 this.injectInternalStyles();
@@ -132,7 +143,7 @@ class Formique extends FormBuilder {
         this.formiqueEndpoint = "https://formiqueapi.onrender.com/api/send-email";
 
         // DISABLE DOM LISTENER 
-       document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {
             // 1. Build the form's HTML in memory
             this.formMarkUp += this.renderFormElement(); // Adds opening <form> tag and any hidden inputs
 
@@ -210,6 +221,52 @@ if (formElement) {
             }
         }
 
+        // Gather form data
+        const formData = {};
+        new FormData(formElement).forEach((value, key) => {
+            formData[key] = value;
+        });
+
+        // Compact repeater arrays if enabled
+        let payloadData = formData;
+        if (this.formSettings.compactRepeaterArrays && this.repeaterManager) {
+            payloadData = this.repeaterManager.compactArrays(formData);
+        }
+
+        // Log payload if configured
+        if (this.formSettings.logPayload || this.formSettings.devMode) {
+            console.log('========== FORMIQUE SUBMISSION PAYLOAD ==========');
+            console.log('Raw form data:', formData);
+            if (this.formSettings.compactRepeaterArrays) {
+                console.log('Compacted data:', JSON.stringify(payloadData, null, 2));
+            }
+            console.log('Form settings:', {
+                submitOnPage: this.formSettings.submitOnPage,
+                submitMode: this.formSettings.submitMode,
+                compactRepeaterArrays: this.formSettings.compactRepeaterArrays,
+                logPayload: this.formSettings.logPayload,
+                devMode: this.formSettings.devMode
+            });
+            console.log('=================================================');
+        }
+
+        // If no submission mode is configured, just log and show success
+        if (!this.formSettings.submitOnPage && 
+            this.formSettings.submitMode !== 'email' && 
+            this.formSettings.submitMode !== 'rsvp') {
+            
+            document.getElementById("formiqueSpinner").style.display = "none";
+            
+            if (this.formSettings.logPayload || this.formSettings.devMode) {
+                console.log('No submission endpoint configured. Payload logged above.');
+            }
+            
+            this.showSuccessMessage(
+                this.formSettings.successMessage || 'Form data logged to console.'
+            );
+            return;
+        }
+
         // If reCAPTCHA is not required or is validated, proceed with submission logic
         document.getElementById("formiqueSpinner").style.display = "block";
 
@@ -230,6 +287,8 @@ if (formElement) {
 this.initDependencyGraph();
 this.registerObservers();
 this.attachDynamicSelectListeners(); 
+
+
 
 
 // NEW — gated by setting
@@ -285,10 +344,163 @@ if (this.formSettings.disableStyles !== true) {
 
         
        // DISABLE DOM LISTENER
-     }); // DOM LISTENER WRAPPER
+       }); // DOM LISTENER WRAPPER
+
+
+// CALLED AFTER FORM IS IN DOM
+
+ this._setupRepeaterDelegation();
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
+
+
+
+
+/* ================
+// HANDLE REPEATER LOGICS 
+ ======================= */
+
+
+/**
+ * Setup event delegation for all repeater interactions
+ * Single listener at form level - no per-element binding needed
+ * Called once after form is rendered in DOM
+ */
+_setupRepeaterDelegation() {
+    // This is called from constructor after renderFormHTML puts form in DOM
+    const formElement = document.getElementById(this.formId);
+    if (!formElement) return;
+    
+    // Use existing form submit listener or add a new click delegation
+    formElement.addEventListener('click', (e) => {
+        // Handle add row button
+        const addBtn = e.target.closest('.formique-repeater-add');
+        if (addBtn) {
+            e.preventDefault();
+            const repeaterName = addBtn.dataset.repeater;
+            this.repeaterManager.addRow(repeaterName);
+            return;
+        }
+        
+        // Handle remove row button
+        const removeBtn = e.target.closest('[data-action="remove-row"]');
+        if (removeBtn) {
+            e.preventDefault();
+            const row = removeBtn.closest('.formique-repeater-row');
+            if (row) {
+                this.repeaterManager.removeRow(row);
+            }
+            return;
+        }
+    });
+}
+
+
+
+/**
+ * Setup event delegation for all repeater interactions
+ * Single listener at form level - no per-element binding needed
+ * Called once after form is rendered in DOM
+ */
+_setupRepeaterDelegation() {
+    // This is called from constructor after renderFormHTML puts form in DOM
+    const formElement = document.getElementById(this.formId);
+    if (!formElement) return;
+    
+    // Use existing form submit listener or add a new click delegation
+    formElement.addEventListener('click', (e) => {
+        // Handle add row button
+        const addBtn = e.target.closest('.formique-repeater-add');
+        if (addBtn) {
+            e.preventDefault();
+            const repeaterName = addBtn.dataset.repeater;
+            this.repeaterManager.addRow(repeaterName);
+            return;
+        }
+        
+        // Handle remove row button
+        const removeBtn = e.target.closest('[data-action="remove-row"]');
+        if (removeBtn) {
+            e.preventDefault();
+            const row = removeBtn.closest('.formique-repeater-row');
+            if (row) {
+                this.repeaterManager.removeRow(row);
+            }
+            return;
+        }
+    });
+}
+
+
+/**
+ * Normalize repeater blueprint
+ * Auto-wraps single fields in array for consistent processing
+ * 
+ * @param {Array} blueprintData - Raw blueprint from schema
+ * @returns {Array} Normalized blueprint (always array of field arrays)
+ */
+_normalizeBlueprint(blueprintData) {
+    const FORMIQUE_TYPES = [
+        'text', 'number', 'email', 'password', 'textarea',
+        'tel', 'date', 'time', 'datetime-local', 'month', 'week',
+        'url', 'search', 'color', 'checkbox', 'radio', 'file',
+        'hidden', 'image', 'singleSelect', 'multipleSelect', 
+        'dynamicSingleSelect', 'range', 'recaptcha', 'html',
+        'repeater'  // Support nested repeaters
+    ];
+    
+    // If first element is a type keyword, wrap as single-field array
+    if (FORMIQUE_TYPES.includes(blueprintData[0])) {
+        return [blueprintData];
+    }
+    
+    // Already a multi-field array (first element should be an array)
+    if (Array.isArray(blueprintData[0])) {
+        return blueprintData;
+    }
+    
+    console.error('Invalid repeater blueprint:', blueprintData);
+    return [];
+}
+
+
+/**
+ * Render repeater field type
+ * 
+ * @param {string} type - Field type ('repeater')
+ * @param {string} name - Field name
+ * @param {string} label - Display label
+ * @param {Object} validate - Validation rules
+ * @param {Object} attributes - Repeater configuration
+ * @param {Array} blueprint - Inner field blueprint (6th slot)
+ * @param {string} pathContext - Optional path context for nested repeaters
+ * @returns {string} HTML string
+ */
+renderRepeaterField(type, name, label, validate, attributes, blueprint, pathContext = '') {
+    // Normalize the blueprint
+    const normalizedBlueprint = this._normalizeBlueprint(blueprint);
+    
+    // Register with repeater manager
+    this.repeaterManager.register(name, {
+        blueprint: normalizedBlueprint,
+        minRows: attributes.minRows || 0,
+        maxRows: attributes.maxRows || Infinity,
+        addLabel: attributes.addButtonText || '+ Add',
+        removeLabel: attributes.removeButtonText || '×'
+    });
+    
+    // Return initial HTML
+    return `
+        <div class="input-block" id="${name}-block">
+            <label>${label}</label>
+            ${this.repeaterManager.renderInitial(name)}
+        </div>
+    `;
+}
+
+
+
 
 
 
@@ -843,6 +1055,7 @@ renderForm() {
         'range': this.renderRangeField,
         'recaptcha': this.renderRecaptchaField,
         'html': this.renderHtmlField,
+        'repeater': this.renderRepeaterField,
         'submit': this.renderSubmitButton,
     };
 
@@ -943,6 +1156,12 @@ async handleEmailSubmission(formId) {
             timestamp: new Date().toISOString(),
         },
     };
+
+        // NEW: Compact repeater arrays before sending
+    if (this.formSettings.compactRepeaterArrays) {
+        payload.formData = this.repeaterManager.compactArrays(payload.formData);
+    }
+
 
     let senderName = '';
     let senderEmail = '';
@@ -1141,117 +1360,109 @@ attachSubmitListener() {
 
 
 
+
 // Method to handle on-page form submissions
 handleOnPageFormSubmission(formId) {
     const formElement = document.getElementById(formId);
+    if (!formElement) return;
 
-    if (formElement) {
-        // Intercept the form's native submit event
-        formElement.addEventListener('submit', (e) => {
-            // Find the reCAPTCHA field in the form schema.
-            const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
-
-            // If a reCAPTCHA field exists, perform client-side validation.
-            if (recaptchaField) {
-                const recaptchaToken = grecaptcha.getResponse();
-
-                // If the token is empty, the reCAPTCHA challenge has not been completed.
-                if (!recaptchaToken) {
-                    e.preventDefault(); // <-- The crucial line to stop default form submission
-                    
-                    // Hide the spinner to indicate the submission was halted.
-                    document.getElementById("formiqueSpinner").style.display = "none";
-                    
-                    // Display a user-friendly error message.
-                    alert('Please verify that you are not a robot.');
-                    
-                    // Stop the function's execution to prevent form submission.
-                    return;
-                }
-            }
-
-            // At this point, reCAPTCHA is validated (or not present), so we can proceed with the fetch request.
-            // Show the spinner as submission is now beginning.
-            document.getElementById("formiqueSpinner").style.display = "block";
-
-            // Gather form data.
-            const formData = {};
-            new FormData(formElement).forEach((value, key) => {
-                formData[key] = value;
-            });
-
-            console.log("Setting Object",this.formSettings);
-
-            // Create the full payload with formData and metadata, including the secret key.
-            const payload = {
-                formData: formData,
-                metadata: {
-                    ...this.formSettings, // Include all formSettings
-                    // Other metadata like recipients and sender will be included from this.formSettings
-                }
-            };
-
-            // Submit form data using fetch to the endpoint.
-            fetch(this.formAction, {
-                method: this.method,
-                headers: {
-                    'Content-Type': 'application/json' // Important: set the content type
-                },
-                body: JSON.stringify(payload) // Send the combined payload as JSON
-            })
-            .then(response => {
-                // Check if the response status is OK (200-299).
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-                
-                // Hide the spinner on success.
-                document.getElementById("formiqueSpinner").style.display = "none";
-
-                const formContainer = document.getElementById(this.formContainerId);
-                if (this.redirect && this.redirectURL) {
-                    window.location.href = this.redirectURL;
-                }
-                if (formContainer) {
-                    const successMessageDiv = document.createElement('div');
-                    successMessageDiv.classList.add('success-message', 'message-container');
-                    successMessageDiv.innerHTML = this.formSettings.successMessage || 'Your details have been successfully submitted!';
-                    formContainer.innerHTML = '';
-                    formContainer.appendChild(successMessageDiv);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-
-                // Hide the spinner on error.
-                document.getElementById("formiqueSpinner").style.display = "none";
-
-                const formContainer = document.getElementById(this.formContainerId);
-                if (formContainer) {
-                    let existingErrorDiv = formContainer.querySelector('.error-message');
-                    if (existingErrorDiv) {
-                        existingErrorDiv.remove();
-                    }
-                    const errorMessageDiv = document.createElement('div');
-                    errorMessageDiv.classList.add('error-message', 'message-container');
-                    let err = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
-                    err = `${err}<br/>Details: ${error.message}`;
-                    errorMessageDiv.innerHTML = err;
-                    formContainer.appendChild(errorMessageDiv);
-                }
-            });
-
-            // Return false to ensure no other default action is taken, especially for legacy browsers.
-            return false;
-        });
+    // Check reCAPTCHA if present
+    const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
+    if (recaptchaField) {
+        const recaptchaToken = grecaptcha.getResponse();
+        if (!recaptchaToken) {
+            document.getElementById("formiqueSpinner").style.display = "none";
+            alert('Please verify that you are not a robot.');
+            return;
+        }
     }
+
+    // Gather form data
+    const formData = {};
+    new FormData(formElement).forEach((value, key) => {
+        formData[key] = value;
+    });
+
+    // Compact repeater arrays if enabled
+    let payloadData = formData;
+    if (this.formSettings.compactRepeaterArrays && this.repeaterManager) {
+        payloadData = this.repeaterManager.compactArrays(formData);
+    }
+
+    // Log payload if configured
+    if (this.formSettings.logPayload || this.formSettings.devMode) {
+        console.log('========== FORMIQUE ON-PAGE SUBMISSION ==========');
+        console.log('Raw form data:', formData);
+        if (this.formSettings.compactRepeaterArrays) {
+            console.log('Compacted data:', JSON.stringify(payloadData, null, 2));
+        }
+        console.log('Submission URL:', this.formAction);
+        console.log('Request method:', this.method);
+        console.log('==================================================');
+    }
+
+    // Create the full payload
+    const payload = {
+        formData: payloadData,
+        metadata: {
+            ...this.formSettings,
+            timestamp: new Date().toISOString()
+        }
+    };
+
+    // Submit form data using fetch
+    fetch(this.formAction, {
+        method: this.method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+            }).catch(() => {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (this.formSettings.logPayload || this.formSettings.devMode) {
+            console.log('Submission success response:', data);
+        }
+
+        // Hide the spinner on success
+        document.getElementById("formiqueSpinner").style.display = "none";
+
+        // Handle redirect or success message
+        if (this.formSettings.redirect && this.formSettings.redirectURL) {
+            window.location.href = this.formSettings.redirectURL;
+        } else {
+            this.showSuccessMessage(
+                this.formSettings.successMessage || 'Your details have been successfully submitted!'
+            );
+        }
+    })
+    .catch(error => {
+        if (this.formSettings.logPayload || this.formSettings.devMode) {
+            console.error('Submission error:', error);
+        }
+
+        // Hide the spinner on error
+        document.getElementById("formiqueSpinner").style.display = "none";
+
+        // Show error message
+        let errorMsg = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+        if (this.formSettings.devMode) {
+            errorMsg = `${errorMsg}<br/>Details: ${error.message}`;
+        }
+        this.showErrorMessage(errorMsg);
+    });
 }
+
+
 
 // text field rendering
 renderTextField(type, name, label, validate, attributes) {
@@ -4822,14 +5033,14 @@ const FORMIQUE_INTERNAL_CSS = `
 }
 
 .formique-success::before {
-    content: "âœ“";
+    content: "\\2713";
     color: var(--formique-btn-bg); /* Using button background color for checkmark */
     font-weight: bold;
     font-size: 1.2rem;
 }
 
 .formique-error::before {
-    content: "âœ—";
+    content: "\\2717";
     color: var(--formique-btn-bg); /* Using button background color for checkmark */
     font-weight: bold;
     font-size: 1.2rem;
@@ -4883,6 +5094,116 @@ const FORMIQUE_INTERNAL_CSS = `
   color: var(--light-text);
 }
 
+
+
+   /* ============================================
+   REPEATER STYLES
+   ============================================ */
+
+.formique-repeater {
+    border: 1px solid var(--formique-input-border);
+    border-radius: 4px;
+    padding: 0.75rem;
+    background: var(--formique-base-bg);
+    min-height: 50px;
+}
+
+.formique-repeater:empty::after {
+    content: 'No items yet.';
+    display: block;
+    text-align: center;
+    color: var(--formique-base-label);
+    padding: 1rem;
+    font-style: italic;
+    font-size: 0.85rem;
+    opacity: 0.6;
+}
+
+.formique-repeater-nested {
+    border-style: dashed;
+    opacity: 0.85;
+}
+
+.formique-repeater-row {
+    background: var(--formique-base-bg);
+    border: 1px solid var(--formique-input-border);
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    animation: formique-repeater-slide-in 0.2s ease-out;
+}
+
+.formique-repeater-row:last-child {
+    margin-bottom: 0;
+}
+
+@keyframes formique-repeater-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.formique-repeater-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--formique-input-border);
+}
+
+.formique-repeater-row-header span {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--formique-base-label);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.formique-repeater-row-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.formique-repeater-add {
+    background: var(--formique-btn-bg);
+    color: var(--formique-btn-text);
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.formique-repeater-add:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.formique-repeater-remove {
+    background: transparent;
+    color: var(--formique-btn-bg);
+    border: 1px solid var(--formique-btn-bg);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: all 0.15s;
+}
+
+.formique-repeater-remove:hover {
+    background: var(--formique-btn-bg);
+    color: var(--formique-btn-text);
+}
 `;
 
 
