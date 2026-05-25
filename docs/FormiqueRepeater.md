@@ -110,6 +110,7 @@ When the blueprint contains two or more fields, an explicit outer array is requi
 ]
 ```
 
+
 ### Format C: Nested Repeater
 
 A repeater can contain another repeater in its blueprint for infinite nesting:
@@ -125,6 +126,23 @@ A repeater can contain another repeater in its blueprint for infinite nesting:
     ]
 ]
 ```
+
+**Nested Repeater Name Cleaning**
+
+Nested repeater field names include the full parent path during rendering:
+
+```
+variants[123_0][product_variants_123_0_images][456_1][image_url]
+```
+
+On submission, the compaction engine strips the parent prefix:
+
+```
+variants[0].images[0].image_url
+```
+
+This ensures clean, intuitive key names in the final payload while maintaining unique namespacing during form interaction.
+
 
 ## Tiered Usage Patterns
 
@@ -385,29 +403,65 @@ Examples:
 ## Configuration Reference Card
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ REPEATER SIGNATURE                                      │
-│                                                         │
-│ ['repeater', name, label, validate, config, blueprint]  │
-│                                                         │
-│ SLOTS:                                                  │
-│   [0] 'repeater'    ← Type identifier                   │
-│   [1] name          ← Data namespace                    │
-│   [2] label         ← Display label                     │
-│   [3] validate      ← { required, custom, ... }         │
-│   [4] config        ← { minRows, maxRows, ... }         │
-│   [5] blueprint     ← Field(s) to repeat                │
-│                                                         │
-│ CONFIG OPTIONS:                                         │
-│   minRows: 0        ← Minimum rows (default 0)          │
-│   maxRows: Infinity ← Maximum rows (default unlimited)  │
-│   addButtonText     ← Text for add button               │
-│   removeButtonText  ← Text for remove button            │
-│                                                         │
-│ BLUEPRINT FORMATS:                                      │
-│   Single:  ['text', 'name', 'Label']                    │
-│   Multi:   [['text', 'a', 'A'], ['text', 'b', 'B']]    │
-│   Nested:  [['text', 'a', 'A'], ['repeater', ...]]     │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ REPEATER SIGNATURE                                           │
+│                                                              │
+│ ['repeater', name, label, validate, config, blueprint]       │
+│                                                              │
+│ SLOTS:                                                       │
+│   [0] 'repeater'    ← Type identifier                        │
+│   [1] name          ← Data namespace                         │
+│   [2] label         ← Display label                          │
+│   [3] validate      ← { required, custom, ... }              │
+│   [4] config        ← { minRows, maxRows, ... }              │
+│   [5] blueprint     ← Field(s) to repeat                     │
+│                                                              │
+│ CONFIG OPTIONS (slot [4]):                                   │
+│   minRows: 0        ← Minimum rows (default 0)               │
+│   maxRows: Infinity ← Maximum rows (default unlimited)       │
+│   addButtonText     ← Text for add button (default '+ Add')  │
+│   removeButtonText  ← Text for remove button (default '×')   │
+│                                                              │
+│ FORM SETTINGS (formSettings object):                         │
+│   compactRepeaterArrays: true  ← Compact arrays on submit    │
+│   logPayload: true             ← Log payload to console      │
+│   devMode: true                ← Enable all debug logging    │
+│                                                              │
+│ BLUEPRINT FORMATS (slot [5]):                                │
+│   Single:  ['text', 'name', 'Label']                         │
+│   Multi:   [['text', 'a', 'A'], ['text', 'b', 'B']]          │
+│   Nested:  [['text', 'a', 'A'], ['repeater', ...]]           │
+│                                                              │
+│ SERIALIZATION:                                               │
+│   Names:    name[timestamp_counter][field]                   │
+│   Nested:   parent[index][child][nestedIndex][field]         │
+│   Compact:  Nested keys cleaned (prefixes stripped)          │
+│   Gaps:     Removed on submit, null values preserved         │
+│                                                              │
+│ DEBUGGING:                                                   │
+│   logPayload: true   → Logs raw + compacted payload          │
+│   devMode: true      → Logs all submission details           │
+└──────────────────────────────────────────────────────────────┘
 ```
+## Debugging & Payload Inspection
+
+Enable payload logging for development:
+
+```javascript
+const formSettings = {
+    logPayload: true,    // Logs raw and compacted payload to console on submit
+    // devMode: true,    // Enables all debug logging including errors
+};
+```
+
+When enabled, the console will show:
+```
+========== FORMIQUE SUBMISSION PAYLOAD ==========
+Raw form data: { ... flat key-value pairs ... }
+Compacted data: { ... nested arrays and objects ... }
+Form settings: { ... current configuration ... }
+=================================================
+```
+
+[Back to Formique](https://github.com/Gugulethu-Nyoni/formique)
 
