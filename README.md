@@ -20,17 +20,29 @@ If you want a quick guide for `@formique/semantq`, please visit:
 
 
 ## Table of Contents
+
 - [About Formique](#about-formique)
+- [Accessibility Compliance](#accessibility-compliance)
+- [Key Features](#key-features)
 - [Why Choose Formique?](#why-choose-formique)
 - [Form Input Types Covered](#form-input-types-covered)
 - [How to Write Form Schema](#how-to-write-form-schema)
 - [Installation](#installation)
+- [Full Vanilla JS Implementation](#full-vanilla-js-implementation)
 - [Form Schema Example](#form-schema-example)
+- [Invoking the Formique Class](#invoking-the-formique-class)
+- [Complete List of Form Parameters](#full-list-of-possible-form-parameters)
+- [Complete List of Form Settings](#complete-list-of-form-settings)
 - [Dynamic Drop-Down Schema](#dynamic-drop-down-schema)
 - [Nested Conditionality Logic - Schema Definition](#nested-conditionality-logic---schema-definition)
+- [Dynamic Fields with Repeater](#dynamic-fields-with-repeater)
 - [Styling the Form](#styling-the-form)
 - [Form Submission API](#form-submission-api)
+- [Google reCAPTCHA Integration](#google-recaptcha-integration)
+- [Other Implementation Guides](#other-implementation-guide)
 - [Contribute](#contribute)
+- [License](#license)
+- [Keywords](#keywords)
 
 ## About Formique
 
@@ -252,6 +264,52 @@ The above schema will generate the following HTML structure inside your form:
 - The `'html'` type is for **static content only**. It is not a reactive input and does not have a `name` or `value` that gets submitted with the form.
 - The third parameter (inner content) is injected as a raw HTML string, so be mindful of script injection risks if you are populating this with user-generated or untrusted data.
 - All attributes defined in the fifth parameter are applied directly to the wrapper element you specify in the second parameter.
+
+
+## Dynamic Fields with Repeater
+
+Formique supports dynamically repeatable field groups through the `repeater` field type. Users can add, remove, and nest groups of form fields at runtime—ideal for product variants, key-value metadata, or any variable-length form data.
+
+### Quick Example
+
+```javascript
+['repeater', 'variants', 'Product Variants', {}, { minRows: 1, maxRows: 10 },
+    [
+        ['text', 'sku', 'SKU Code', { required: true }],
+        ['number', 'price', 'Price', { required: true, min: 0 }],
+        ['repeater', 'images', 'Variant Images', {}, { maxRows: 5 },
+            ['text', 'image_url', 'Image URL']
+        ]
+    ]
+]
+```
+
+### Signature
+
+```javascript
+['repeater', name, label, validation, config, blueprint]
+//  [0]       [1]    [2]     [3]         [4]      [5]
+```
+
+| Slot | Purpose |
+|------|---------|
+| `[4]` | Repeater config: `minRows`, `maxRows`, `addButtonText` |
+| `[5]` | Inner blueprint: field(s) to repeat (single field or array of fields) |
+
+### Three Usage Patterns
+
+| Tier | Pattern | Use Case |
+|------|---------|----------|
+| **1. Simple List** | Single field per row | Tags, emails, URLs |
+| **2. Key-Value** | 2–4 fields per row | Specifications, metadata |
+| **3. Complex Blocks** | Multi-field + nested repeaters | E-commerce variants, line items |
+
+### Key Behaviors
+- **No re-indexing on delete** — row removal doesn't shift surviving field names
+- **Array gaps compacted at submission** — clean, contiguous arrays for backend parsing
+- **Infinite nesting supported** — repeaters can contain repeaters
+
+**Full documentation:** [Formique Repeater Specification](/docs/FormiqueRepeater.md)
 
 
 ## Installation (Vanilla JS)
@@ -1404,7 +1462,7 @@ const formSettings = {
 
 ## Complete List of Formique CSS Classes
 
-Here's an alphabetically grouped list of all unique CSS class selectors used in Formique for comprehensive customization:
+Below is an alphabetically grouped list of all unique CSS class selectors used in Formique for comprehensive customization:
 
 ### Container & Layout
 

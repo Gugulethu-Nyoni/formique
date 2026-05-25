@@ -1,5 +1,3 @@
-Here's the updated README with the new HTML feature section and a navigable table of contents:
-
 # Formique-Semantq
 
 <div align="center">
@@ -377,7 +375,7 @@ Show/hide fields based on other field values:
 ]
 ```
 
-## ✨ 1. Styling the Form
+## 1. Styling the Form
 
 Formique comes with a set of built-in themes to help you quickly style your forms. These themes are **headless and minimal**, allowing easy blending with your site's design system. They apply styling **primarily to the submit button background** and **the bottom border of focused inputs**, while maintaining a **light background** for most themes.
 

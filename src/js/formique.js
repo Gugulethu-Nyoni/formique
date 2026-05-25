@@ -191,9 +191,9 @@ this.renderFormHTML(); // This puts the form element into the document!
 const formElement = document.getElementById(`${this.formId}`);
 if (formElement) {
     // Attach a single, unified submit event listener
-    formElement.addEventListener('submit', (event) => {
-        // Prevent default submission behavior immediately
-        event.preventDefault();
+   formElement.addEventListener('submit', (event) => {
+    event.preventDefault();
+
 
         // Check if reCAPTCHA is present in the form schema
         const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
@@ -230,6 +230,12 @@ if (formElement) {
 this.initDependencyGraph();
 this.registerObservers();
 this.attachDynamicSelectListeners(); 
+
+
+// NEW — gated by setting
+if (this.formSettings.validateBeforeSubmit) {
+    this.initSubmitValidation();
+}
 
 
 // In your constructor, after attachDynamicSelectListeners:
@@ -279,13 +285,42 @@ if (this.formSettings.disableStyles !== true) {
 
         
        // DISABLE DOM LISTENER
-       }); // DOM LISTENER WRAPPER
+     }); // DOM LISTENER WRAPPER
     
 // CONSTRUCTOR WRAPPER FOR FORMIQUE CLASS
   }
 
 
 
+
+initSubmitValidation() {
+    const form = document.getElementById(this.formId);
+    const submitBtn = form?.querySelector('[type="submit"]');
+    if (!form || !submitBtn) return;
+
+    submitBtn.disabled = false;
+
+    submitBtn.addEventListener('click', (event) => {
+        if (!this.isFormValid()) {
+            event.preventDefault();
+            alert("Fill all the required details before you submit.");
+        }
+    });
+}
+
+
+
+isFormValid() {
+    const form = document.getElementById(this.formId);
+    if (!form) return false;
+    
+    return Array.from(form.elements).every(control => {
+        if (!control.willValidate) return true;
+        const block = control.closest('[id$="-block"]');
+        if (block && block.style.display === 'none') return true;
+        return control.checkValidity();
+    });
+}
 
 
 
@@ -4835,6 +4870,17 @@ const FORMIQUE_INTERNAL_CSS = `
     border-color: var(--formique-focus-color); /* Apply theme focus color */
     border-bottom-color: var(--formique-focus-color); /* Ensure bottom border matches on focus */
     box-shadow: 0 0 0 2px rgba(var(--formique-focus-color-rgb, 106, 79, 191), 0.1); /* Optional: subtle shadow */
+}
+
+.formique-note {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  background-color: var(--light-bg);
+  border-left: 4px solid #FF884D; /* Vibrant orange that complements your purple/pink */
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--light-text);
 }
 
 `;
