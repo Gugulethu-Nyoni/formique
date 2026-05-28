@@ -79,12 +79,23 @@ class Formique extends FormBuilder {
 
         this.formSchema = formSchema;
         this.formParams = finalParams;
-        this.formSettings = {
+          this.formSettings = {
             requiredFieldIndicator: true,
             placeholders: true,
             asteriskHtml: '<span aria-hidden="true" style="color: red;">*</span>',
             ...finalSettings
         };
+
+        // --- Default Messages (overridable via formSettings) ---
+        const DEFAULT_SUCCESS_MESSAGE = 'Your details have been submitted successfully!';
+        const DEFAULT_ERROR_MESSAGE = 'An error occurred while submitting the form. Please try again.';
+        const DEFAULT_VALIDATION_MESSAGE = 'Fill all the required details before you submit.';
+        const DEFAULT_LOGGED_ONLY_MESSAGE = 'Form data logged to console.';
+
+        this.successMessage = this.formSettings.successMessage || DEFAULT_SUCCESS_MESSAGE;
+        this.errorMessage = this.formSettings.errorMessage || DEFAULT_ERROR_MESSAGE;
+        this.validationMessage = this.formSettings.validationMessage || DEFAULT_VALIDATION_MESSAGE;
+        this.loggedOnlyMessage = this.formSettings.loggedOnlyMessage || DEFAULT_LOGGED_ONLY_MESSAGE;
 
 
                 // NEW: Initialize repeater manager
@@ -261,9 +272,8 @@ if (formElement) {
                 console.log('No submission endpoint configured. Payload logged above.');
             }
             
-            this.showSuccessMessage(
-                this.formSettings.successMessage || 'Form data logged to console.'
-            );
+            this.showSuccessMessage(this.loggedOnlyMessage);
+
             return;
         }
 
@@ -1288,20 +1298,16 @@ async handleEmailSubmission(formId) {
       }
       // ------------------- END NEW RSVP LOGIC -------------------
 
-      const successMessage = this.formSettings.successMessage ||
-                              data.message ||
-                              'Your message has been sent successfully!';
+            const successMessage = data.message || this.successMessage;
       console.log(`Showing success message: ${successMessage}`);
 
       this.showSuccessMessage(successMessage);
 
     } catch (error) {
       console.error('Email submission failed:', error);
-      const errorMessage = this.formSettings.errorMessage ||
-                            error.message ||
-                            'Failed to send message. Please try again later.';
-      console.log(`Showing error message: ${errorMessage}`);
-      this.showErrorMessage(errorMessage);
+        console.log(`Showing error message: ${this.errorMessage}`);
+      this.showErrorMessage(this.errorMessage);
+
     } finally {
       document.getElementById("formiqueSpinner").style.display = "none";
     }
@@ -1440,9 +1446,7 @@ handleOnPageFormSubmission(formId) {
         if (this.formSettings.redirect && this.formSettings.redirectURL) {
             window.location.href = this.formSettings.redirectURL;
         } else {
-            this.showSuccessMessage(
-                this.formSettings.successMessage || 'Your details have been successfully submitted!'
-            );
+                        this.showSuccessMessage(this.successMessage);
         }
     })
     .catch(error => {
@@ -1454,7 +1458,7 @@ handleOnPageFormSubmission(formId) {
         document.getElementById("formiqueSpinner").style.display = "none";
 
         // Show error message
-        let errorMsg = this.formSettings.errorMessage || 'An error occurred while submitting the form. Please try again.';
+                let errorMsg = this.errorMessage;
         if (this.formSettings.devMode) {
             errorMsg = `${errorMsg}<br/>Details: ${error.message}`;
         }
