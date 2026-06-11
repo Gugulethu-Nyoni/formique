@@ -646,7 +646,7 @@ initDependencyGraph() {
 attachInputChangeListener(parentField) {
   // Use querySelectorAll to get all elements with the name attribute matching the fieldId.
   // This correctly targets all radio/checkbox inputs in a group.
-  const fieldElements = document.querySelectorAll(`[name="${parentField}"]`);
+  let fieldElements = document.querySelectorAll(`[name="${parentField}"]`);
   
   // If no elements found by name, fall back to getting the single element by ID
   if (fieldElements.length === 0) {
