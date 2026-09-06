@@ -1,6 +1,6 @@
 {
   "name": "@formique/semantq",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "description": "Formique is a native form builder for the Semantq JS Framework",
   "main": "formique-semantq.js",
   "type": "module",
