@@ -3888,69 +3888,105 @@ renderCheckboxField(type, name, label, validate, attributes, options) {
 /* DYNAMIC SINGLE SELECT BLOCK */
 
 // Function to render the dynamic select field and update based on user selection
-renderDynamicSingleSelectField(type, name, label, validate, attributes, options, subOptions) {
-    console.log('DEBUG: renderDynamicSingleSelectField called', { 
-        type, name, label, 
-        options: options ? options.length : 'none',
-        subOptions: subOptions ? subOptions.length : 'none'
+renderDynamicSingleSelectField(
+    type,
+    name,
+    label,
+    validate,
+    attributes,
+    options,
+    subOptions
+) {
+    console.log('DEBUG: renderDynamicSingleSelectField called', {
+        type,
+        name,
+        label,
+        options: Array.isArray(options) ? options.length : 0,
+        subOptions: Array.isArray(subOptions) ? subOptions.length : 0
     });
-    
-    // Check if options exist
-    if (!options || !Array.isArray(options)) {
-        console.warn('Dynamic single select field missing options:', name);
-        options = [];
-    }
-    
-    // Step 1: Extract main categories from options
-    // Options should already be in the correct format from the parser
-    const mainCategoryOptions = options.map(item => {
-        // Handle both string and object formats
-        if (typeof item === 'string') {
-            return {
-                value: item.toLowerCase().replace(/\s+/g, '-'),
-                label: item
-            };
-        } else {
-            // Already an object with value/label
-            return {
-                value: item.value || item.id || item,
-                label: item.label || item.value || item
-            };
-        }
-    });
-    
-    // Step 2: Handle subCategoriesOptions (scenario blocks)
+
+    let mainCategoryOptions = [];
     let subCategoriesOptions = [];
-    
-    if (subOptions && Array.isArray(subOptions)) {
-        // Use the subOptions exactly as provided by the parser
-        // They should already have the correct structure
-        subCategoriesOptions = subOptions.map(item => {
-            // Ensure each subCategory has the required structure
-            return {
+
+    // ----------------------------------------------------------
+    // Design B: Nested category structure (cleaner user API)
+    // options contains category definitions with nested options.
+    // Example: [{ id, label, options: [...] }, ...]
+    // ----------------------------------------------------------
+    const hasNestedCategories =
+        Array.isArray(options) &&
+        options.some(item => Array.isArray(item?.options));
+
+    if (hasNestedCategories) {
+        subCategoriesOptions = options.map(item => ({
+            id: item.id || item.value || '',
+            label: item.label || item.id || item.value || '',
+            options: Array.isArray(item.options) ? item.options : []
+        }));
+
+        mainCategoryOptions = subCategoriesOptions.map(item => ({
+            value: item.id,
+            label: item.label
+        }));
+
+        console.log(
+            'DEBUG: Dynamic select using nested category structure'
+        );
+    } else {
+        // ----------------------------------------------------------
+        // Design A: Explicit options + subOptions
+        // options = main categories [{ value, label }, ...]
+        // subOptions = category definitions [{ id, label, options }, ...]
+        // ----------------------------------------------------------
+        mainCategoryOptions = Array.isArray(options)
+            ? options.map(item => {
+                if (typeof item === 'string') {
+                    return {
+                        value: item.toLowerCase().replace(/\s+/g, '-'),
+                        label: item
+                    };
+                }
+
+                return {
+                    value: item.value || item.id || '',
+                    label: item.label || item.value || item.id || ''
+                };
+            })
+            : [];
+
+        subCategoriesOptions = Array.isArray(subOptions)
+            ? subOptions.map(item => ({
                 id: item.id || item.value || '',
-                label: item.label || item.id || '',
-                options: Array.isArray(item.options) ? item.options : []
-            };
-        });
+                label: item.label || item.id || item.value || '',
+                options: Array.isArray(item.options)
+                    ? item.options
+                    : []
+            }))
+            : [];
+
+        console.log(
+            'DEBUG: Dynamic select using explicit options/subOptions structure'
+        );
     }
-    
-    console.log('Main categories:', mainCategoryOptions);
-    console.log('Sub categories:', subCategoriesOptions);
-    
-    // Pass both to the renderer with the mode flag
+
+    console.log('DEBUG: Normalized dynamic select', {
+        mainCategoryOptions: mainCategoryOptions.length,
+        subCategoriesOptions: subCategoriesOptions.length
+    });
+
+    // IMPORTANT: Preserve existing rendering contract
+    // DO NOT change to 'return' unless the method previously returned
     this.renderSingleSelectField(
-        type, 
-        name, 
-        label, 
-        validate, 
-        attributes, 
-        mainCategoryOptions, 
-        subCategoriesOptions, 
+        type,
+        name,
+        label,
+        validate,
+        attributes,
+        mainCategoryOptions,
+        subCategoriesOptions,
         'dynamicSingleSelect'
     );
 }
-
 
 
 
