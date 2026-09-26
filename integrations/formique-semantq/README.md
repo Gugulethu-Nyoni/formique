@@ -26,6 +26,14 @@
   - [Dynamic Single Select](#dynamic-single-select)
   - [HTML Content Blocks ✨ New](#html-content-blocks)
   - [Conditional Logic](#conditional-logic)
+- [Submission & Lifecycle](#submission--lifecycle)
+  - [Formique-Managed Submission](#a-formique-managed-submission)
+  - [External Submission with @semantq/ql](#b-externally-managed-submission)
+  - [Using Formique with @semantq/ql Form](#using-formique-with-semantqql-form)
+  - [Loading, Success & Error States](#loading-success--error-states)
+  - [Lifecycle Events](#lifecycle-events)
+  - [Public Lifecycle UI Methods](#public-lifecycle-ui-methods)
+  - [Notifications](#notifications)
 - [Styling Guide](#-1-styling-the-form)
   - [Built-in Themes](#available-built-in-themes)
   - [Custom Theme Colors](#fine-grained-theme-control)
@@ -53,6 +61,10 @@ Formique Semantq is a native Semantq JS framework Schema Definition Language (SD
 - **JavaScript-Driven Themes**: Apply themes or theme colors dynamically using JavaScript for a customizable user interface.
 - **WAI-ARIA and WCAG-Compliant HTML**: Ensure all form elements are accessible and meet WCAG standards.
 - **Progressive Enhancement**: Forms function with or without JavaScript, ensuring accessibility and functionality across all environments.
+- **Configurable Loading, Success & Error States**: Customize the spinner text and on-page result messages shown during and after submission.
+- **Submission Lifecycle UI**: Formique renders loading, success, and error states as part of its managed submission lifecycle.
+- **Integration with `@semantq/ql` Form**: When configured without an explicit endpoint, Formique listens to `form:processing`, `form:success`, and `form:error` events and drives its own UI.
+- **Externally Managed Submissions**: Applications can own the API request entirely — Formique will not issue a second HTTP request when no explicit `formParams.action` is configured.
 
 ## How to Install Formique in Semantq
 
@@ -375,6 +387,252 @@ Show/hide fields based on other field values:
 ]
 ```
 
+## Submission & Lifecycle
+
+Formique separates **form rendering and submission UI** from **network transport**. Depending on how you configure it, Formique can either own the HTTP request or defer to another submission controller (such as `Form` from `@semantq/ql`).
+
+### A. Formique-Managed Submission
+
+When `formParams.action` is explicitly configured and `submitOnPage: true`, Formique owns the submission lifecycle: it shows the spinner, issues the request, awaits the response, and renders the success or error state.
+
+```js
+const formParams = {
+  id: 'contact-form',
+  method: 'POST',
+  action: '/contact'
+};
+
+const formSettings = {
+  submitOnPage: true
+};
+```
+
+**Formique owns**: preventDefault → spinner → fetch → success/error UI.
+
+### B. Externally Managed Submission
+
+When `formParams.action` is **omitted**, Formique does **not** invent a fallback endpoint and does **not** issue an HTTP request. The request may instead be performed by another submission controller such as `Form` from `@semantq/ql`.
+
+```js
+const formParams = {
+  id: 'resident-form',
+  method: 'POST',
+  enctype: 'multipart/form-data'
+  // no action
+};
+```
+
+Architecture in this mode:
+
+```text
+Formique
+→ renders the form
+→ renders loading/success/error UI
+→ listens for Form lifecycle events
+
+Form (@semantq/ql)
+→ captures the payload
+→ owns the async submission lifecycle
+
+smQL
+→ performs HTTP transport
+```
+
+> **Important:** When no explicit `action` is configured, Formique will not issue a second HTTP request. This is intentional — it prevents accidental duplicate submissions and premature success states.
+
+### Using Formique with `@semantq/ql` Form
+
+Formique listens to three lifecycle events dispatched by the `Form` utility on the `<form>` element:
+
+| Event | Formique UI effect |
+|-------|---------------------|
+| `form:processing` | Show loading indicator (`#formiqueSpinner`) with the configured `loadingMessage` |
+| `form:success` | Hide loading indicator, show `successMessage` |
+| `form:error` | Hide loading indicator, show `errorMessage` |
+
+Note: `form:captured` belongs to the `Form` capture lifecycle and does not itself represent success or failure.
+
+### Loading, Success & Error States
+
+All three on-page states are configurable through `formSettings`:
+
+```js
+const formSettings = {
+  submitOnPage: true,
+
+  loadingMessage: 'Uploading assessment...',
+
+  successMessage: 'Assessment uploaded successfully.',
+
+  errorMessage: 'Assessment upload failed. Please try again.'
+};
+```
+
+| Setting | Controls | Default |
+|---------|----------|---------|
+| `loadingMessage` | Text shown beside the Formique spinner during submission | `'Submitting...'` |
+| `successMessage` | On-page success state shown after a successful submission | `'Your details have been submitted successfully.'` |
+| `errorMessage` | On-page error state shown after a failed submission | `'An error occurred while submitting the form. Please try again.'` |
+
+### Lifecycle Events
+
+For advanced use, Formique exposes the underlying lifecycle events so that applications can attach their own listeners:
+
+```js
+const formEl = document.getElementById('resident-form');
+
+formEl.addEventListener('form:processing', () => {
+  // fires before the request begins
+});
+
+formEl.addEventListener('form:success', (event) => {
+  // fires after a successful response
+  console.log('Result:', event.detail?.result);
+});
+
+formEl.addEventListener('form:error', (event) => {
+  // fires after a failed response or rejection
+  console.error('Error:', event.detail?.error || event.detail?.result);
+});
+```
+
+**Note:** `Form` from `@semantq/ql` yields to the browser after dispatching `form:processing`, giving Formique (or any other lifecycle consumer) an opportunity to paint its loading state before expensive asynchronous work begins.
+
+### Public Lifecycle UI Methods
+
+Formique exposes three public methods that drive the loading/success/error presentation. These are useful when the application is coordinating an externally managed submission and wants to control Formique's UI directly:
+
+```js
+form.showLoading();
+form.showSuccess();
+form.showError();
+```
+
+Optional message overrides:
+
+```js
+form.showLoading('Processing...');
+form.showSuccess('Completed successfully.');
+form.showError('Something went wrong.');
+```
+
+When no argument is given, the methods use `loadingMessage`, `successMessage`, and `errorMessage` from `formSettings`.
+
+For most workflows using `Form` from `@semantq/ql`, **you do not need to call these methods manually** — Formique invokes them automatically when it receives the lifecycle events.
+
+### Notifications
+
+Formique's lifecycle UI and `Notification.show()` from `@semantq/ql` are **independent presentation mechanisms** and may be used together.
+
+For example, a successful submission may simultaneously produce:
+
+```text
+Notification.show()
+→ temporary application-level toast
+
+Formique
+→ persistent in-form success state
+```
+
+Formique does **not** require `Notification` to function. `Notification` is not part of Formique's internal lifecycle.
+
+### Complete External API Submission Example
+
+The following example shows Formique + `Form` + `smQL` working together with an externally managed file upload:
+
+```js
+import Formique from '@formique/semantq';
+import {
+  smQL,
+  Form,
+  Notification
+} from '@semantq/ql';
+
+const api = new smQL(baseOrigin);
+
+const formSchema = [
+  [
+    'file',
+    'assessment',
+    'Resident Assessment',
+    { required: true }
+  ],
+  [
+    'submit',
+    'submit',
+    'Upload Assessment'
+  ]
+];
+
+const formParams = {
+  id: 'resident-form',
+  method: 'POST',
+  enctype: 'multipart/form-data'
+};
+
+const formSettings = {
+  submitOnPage: true,
+  loadingMessage: 'Uploading assessment...',
+  successMessage: 'Assessment uploaded successfully.',
+  errorMessage: 'Assessment upload failed.'
+};
+
+$onMount(() => {
+  new Formique(
+    formSchema,
+    formParams,
+    formSettings
+  );
+
+  new Form(
+    'resident-form',
+    'submit',
+    {
+      onCaptured: async ({ formData }) => {
+        try {
+          const response = await api.post(
+            '/resident-assessments',
+            formData
+          );
+
+          Notification.show({
+            type: response?._ok
+              ? 'success'
+              : 'error',
+            message: response?._ok
+              ? 'Assessment uploaded successfully.'
+              : response?.message ||
+                'Assessment upload failed.'
+          });
+
+          return response;
+
+        } catch (error) {
+          Notification.show({
+            type: 'error',
+            message:
+              error?.message ||
+              'Assessment upload failed.'
+          });
+
+          throw error;
+        }
+      }
+    }
+  );
+});
+```
+
+**What's happening:**
+
+1. Formique has no `action`, so it does not issue the API request.
+2. `Form` captures the native `FormData` (including the uploaded file).
+3. `smQL` performs the HTTP request via `api.post(...)`.
+4. When `onCaptured` starts, `Form` dispatches `form:processing` → Formique shows its loading state.
+5. Returning `response` allows `Form` to determine whether to emit `form:success` or `form:error`.
+6. Throwing caught exceptions preserves `form:error` propagation.
+7. Formique displays its on-page status independently of the optional toast notification.
+
 ## 1. Styling the Form
 
 Formique comes with a set of built-in themes to help you quickly style your forms. These themes are **headless and minimal**, allowing easy blending with your site's design system. They apply styling **primarily to the submit button background** and **the bottom border of focused inputs**, while maintaining a **light background** for most themes.
@@ -420,7 +678,7 @@ const formSettings = {
 
 ### Custom Styling
 
-Formique’s form classes are exposed for complete customization. You can target the form using `.formique`, and inputs with classes like `.form-input`, `.form-label`, `.form-submit-btn`. See section below.
+Formique's form classes are exposed for complete customization. You can target the form using `.formique`, and inputs with classes like `.form-input`, `.form-label`, `.form-submit-btn`. See section below.
 
 Example:
 
@@ -533,14 +791,42 @@ const formSettings = {
 ### Button
 * `.form-submit-btn`
 
-### Loading
-* `#formiqueSpinner`
-* `.formique-spinner`
-* `.formique-spinner .message`
+### Loading State
+
+Formique's loading indicator is composed of three parts:
+
+```text
+#formiqueSpinner
+→ loading-state container
+
+.formique-spinner
+→ animated spinner graphic
+
+#formiqueSpinner .message
+→ loading text (uses `loadingMessage` from formSettings)
+```
+
+> ⚠️ **CSS ownership:** Formique controls spinner visibility as part of its submission lifecycle. Application CSS should **not** permanently force `#formiqueSpinner` or `.formique-spinner` to `display: none !important`, because doing so prevents Formique from displaying the processing state.
+>
+> Example of what **not** to do:
+>
+> ```css
+> #formiqueSpinner {
+>   display: none !important;
+> }
+>
+> .formique-spinner {
+>   display: none !important;
+> }
+> ```
+>
+> Custom CSS may style the spinner (colors, size, spacing), but should not override Formique's runtime visibility state.
 
 ### Status Messages
 * `.formique-success`
 * `.formique-error`
+
+These classes are applied to the on-page success and error states rendered by Formique after a submission completes.
 
 ## 3. Contact Form Quick Setup
 
