@@ -87,12 +87,14 @@ class Formique extends FormBuilder {
         };
 
         // --- Default Messages (overridable via formSettings) ---
-        const DEFAULT_SUCCESS_MESSAGE = 'Your details have been submitted successfully!';
+        const DEFAULT_LOADING_MESSAGE = 'Submitting...';
+const DEFAULT_SUCCESS_MESSAGE = 'Your details have been submitted successfully!';
         const DEFAULT_ERROR_MESSAGE = 'An error occurred while submitting the form. Please try again.';
         const DEFAULT_VALIDATION_MESSAGE = 'Fill all the required details before you submit.';
         const DEFAULT_LOGGED_ONLY_MESSAGE = 'Form data logged to console.';
 
-        this.successMessage = this.formSettings.successMessage || DEFAULT_SUCCESS_MESSAGE;
+        this.loadingMessage = this.formSettings.loadingMessage || DEFAULT_LOADING_MESSAGE;
+this.successMessage = this.formSettings.successMessage || DEFAULT_SUCCESS_MESSAGE;
         this.errorMessage = this.formSettings.errorMessage || DEFAULT_ERROR_MESSAGE;
         this.validationMessage = this.formSettings.validationMessage || DEFAULT_VALIDATION_MESSAGE;
         this.loggedOnlyMessage = this.formSettings.loggedOnlyMessage || DEFAULT_LOGGED_ONLY_MESSAGE;
@@ -140,7 +142,7 @@ class Formique extends FormBuilder {
         this.formContainerId = formSettings?.formContainerId || 'formique';
         // Ensure formParams.id is used if provided, otherwise generate a new ID
         this.formId = this.formParams?.id || this.generateFormId(); 
-        this.formAction = formParams?.action || 'https://httpbin.org/post';
+        this.formAction = formParams?.action || null;
         this.method = 'POST';
         this.formMarkUp = '';
         this.dependencyGraph = {};
@@ -198,7 +200,7 @@ class Formique extends FormBuilder {
                 this.formMarkUp += `
                     <div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
                         <div class="formique-spinner"></div>
-                        <p class="message">Hang in tight, we are submitting your details…</p>
+                        <p class="message">${this.loadingMessage}</p>
                     </div>
                     <input type="submit" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>
                 `;
@@ -212,6 +214,28 @@ this.renderFormHTML(); // This puts the form element into the document!
 // 3. Now that the form is in the DOM, get the element and attach a single event listener
 const formElement = document.getElementById(`${this.formId}`);
 if (formElement) {
+
+    // Form lifecycle events.
+    // Form owns submission state; Formique owns its presentation.
+    formElement.addEventListener('form:processing', async () => {
+        this.showLoading();
+
+        // Allow the browser to paint the spinner immediately.
+        await new Promise(resolve => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+            });
+        });
+    });
+
+    formElement.addEventListener('form:success', () => {
+        this.showSuccess();
+    });
+
+    formElement.addEventListener('form:error', () => {
+        this.showError();
+    });
+
     // Attach a single, unified submit event listener
    formElement.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -278,14 +302,34 @@ if (formElement) {
         }
 
         // If reCAPTCHA is not required or is validated, proceed with submission logic
-        document.getElementById("formiqueSpinner").style.display = "block";
-
         if (this.formSettings.submitMode === 'email' || this.formSettings.submitMode === 'rsvp') {
+            // Email/RSVP: show spinner before dispatch.
+            // handleEmailSubmission owns hiding it after its own response.
+            document.getElementById("formiqueSpinner").style.display = "block";
             this.handleEmailSubmission(this.formId);
         }
 
-        if (this.formSettings.submitOnPage) {
+        if (
+            this.formSettings.submitOnPage &&
+            typeof this.formAction === 'string' &&
+            this.formAction.trim().length > 0
+        ) {
+            // Formique-managed submission:
+            // an explicit action exists, so Formique owns the request lifecycle.
             this.handleOnPageFormSubmission(this.formId);
+        } else if (
+            this.formSettings.submitOnPage &&
+            (typeof this.formAction !== 'string' ||
+             this.formAction.trim().length === 0)
+        ) {
+            // Externally managed submission:
+            // Formique does not issue a competing request.
+            // It waits for Form's form:processing / form:success / form:error events.
+            if (this.formSettings.logPayload || this.formSettings.devMode) {
+                console.log(
+                    '[Formique] No explicit form action. Waiting for external Form lifecycle.'
+                );
+            }
         }
     });
 
@@ -370,42 +414,6 @@ if (this.formSettings.disableStyles !== true) {
 /* ================
 // HANDLE REPEATER LOGICS 
  ======================= */
-
-
-/**
- * Setup event delegation for all repeater interactions
- * Single listener at form level - no per-element binding needed
- * Called once after form is rendered in DOM
- */
-_setupRepeaterDelegation() {
-    // This is called from constructor after renderFormHTML puts form in DOM
-    const formElement = document.getElementById(this.formId);
-    if (!formElement) return;
-    
-    // Use existing form submit listener or add a new click delegation
-    formElement.addEventListener('click', (e) => {
-        // Handle add row button
-        const addBtn = e.target.closest('.formique-repeater-add');
-        if (addBtn) {
-            e.preventDefault();
-            const repeaterName = addBtn.dataset.repeater;
-            this.repeaterManager.addRow(repeaterName);
-            return;
-        }
-        
-        // Handle remove row button
-        const removeBtn = e.target.closest('[data-action="remove-row"]');
-        if (removeBtn) {
-            e.preventDefault();
-            const row = removeBtn.closest('.formique-repeater-row');
-            if (row) {
-                this.repeaterManager.removeRow(row);
-            }
-            return;
-        }
-    });
-}
-
 
 
 /**
@@ -554,20 +562,6 @@ injectInternalStyles() {
         style.textContent = FORMIQUE_INTERNAL_CSS;
         document.head.appendChild(style);
     }
-
-
-
-applyCustomTheme(color, formContainerId) {
-    const container = document.getElementById(formContainerId);
-    if (!container) return;
-
-    // Set variables directly on the element (highest specificity)
-    container.style.setProperty('--formique-focus-color', color);
-    container.style.setProperty('--formique-btn-bg', color);
-    
-    // Add a transparent shadow using the hex color
-    container.style.setProperty('--formique-btn-shadow', `0 4px 14px ${color}66`);
-}
 
 
 
@@ -997,44 +991,7 @@ renderForm() {
 
 
 // New method to render the submit button specifically
-    renderSubmitButtonElement() {
-        const submitField = this.formSchema.find(field => field[0] === 'submit');
-        if (submitField) {
-            const [type, name, label, validate, attributes = {}] = submitField;
-            const id = attributes.id || name;
-            let buttonClass = this.submitButtonClass;
-            if ('class' in attributes) {
-                buttonClass = attributes.class;
-            }
-            let additionalAttrs = '';
-            for (const [key, value] of Object.entries(attributes)) {
-                if (key !== 'id' && key !== 'class' && key !== 'dependsOn' && key !== 'dependents' && value !== undefined) {
-                    if (key.startsWith('on')) {
-                        const eventValue = value.endsWith('()') ? value : `${value}()`;
-                        additionalAttrs += ` ${key}="${eventValue}"`;
-                    } else {
-                        if (value === true) {
-                            additionalAttrs += ` ${key.replace(/_/g, '-')}`;
-                        } else if (value !== false) {
-                            additionalAttrs += ` ${key.replace(/_/g, '-')}="${value}"`;
-                        }
-                    }
-                }
-            }
-
-            // Include the spinner div before the submit button
-            return `
-<div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
-    <div class="formique-spinner"></div>
-    <p class="message">Hang in tight, we are submitting your details…</p>
-</div>
-<input type="submit" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>
-            `.trim();
-        }
-        return ''; // Return empty string if no submit button is found in schema
-    }
-
-
+    
 
 
  // renderField method - No change needed here for this issue, but ensure it handles 'submit' type correctly if called directly
@@ -1110,13 +1067,38 @@ renderSubmitButton(type, name, label, validate, attributes) {
                 }
             }
         }
-        // No spinner div here, as that's added once by renderSubmitButtonElement
+        // No spinner div here; the constructor renders the spinner inline
         return `<input type="${type}" id="${id}" class="${buttonClass}" value="${label}"${additionalAttrs}>`;
     }
 
 
 // Show success/error messages (externalizable)
+// Public lifecycle API for externally managed submissions.
+// Formique owns submission UI while the consumer owns the network request.
+showLoading(message) {
+  const spinner = document.getElementById("formiqueSpinner");
+  if (!spinner) return;
+
+  const messageElement = spinner.querySelector(".message");
+  if (messageElement) {
+    messageElement.textContent = message || this.loadingMessage;
+  }
+
+  spinner.style.display = "flex";
+}
+
+showSuccess(message) {
+  this.showSuccessMessage(message || this.successMessage);
+}
+
+showError(message) {
+  this.showErrorMessage(message || this.errorMessage);
+}
+
 showSuccessMessage(message) {
+  const spinner = document.getElementById("formiqueSpinner");
+  if (spinner) spinner.style.display = "none";
+
   const container = document.getElementById(this.formContainerId);
   container.innerHTML = `
     <div class="formique-success"> ${message}</div>
@@ -1127,6 +1109,9 @@ showSuccessMessage(message) {
 }
 
 showErrorMessage(message) {
+  const spinner = document.getElementById("formiqueSpinner");
+  if (spinner) spinner.style.display = "none";
+
   const container = document.getElementById(this.formContainerId);
   const errorDiv = document.createElement("div");
   errorDiv.className = "formique-error";
@@ -1339,36 +1324,26 @@ validateEmail(email) {
 }
 
 
-attachSubmitListener() {
-    this.formElement.addEventListener('submit', (e) => {
-      // Find the reCAPTCHA field in the form schema.
-      const recaptchaField = this.formSchema.find(field => field[0] === 'recaptcha');
-      
-      // If a reCAPTCHA field is present, check its state.
-      if (recaptchaField) {
-        const recaptchaToken = grecaptcha.getResponse();
-
-        if (!recaptchaToken) {
-          // Prevent the default form submission.
-          e.preventDefault(); 
-          
-          // Display the alert and handle UI.
-          alert('Please verify that you are not a robot.');
-          document.getElementById("formiqueSpinner").style.display = "none";
-          return;
-        }
-      }
-
-      // If reCAPTCHA is valid or not present, proceed with submission logic.
-      this.handleOnPageFormSubmission(e); 
-    });
-  }
-
-
-
-
 // Method to handle on-page form submissions
-handleOnPageFormSubmission(formId) {
+async handleOnPageFormSubmission(formId) {
+    // No explicit endpoint means Formique does not own network submission.
+    // This prevents development/test fallbacks from becoming runtime requests.
+    if (
+        typeof this.formAction !== 'string' ||
+        this.formAction.trim().length === 0
+    ) {
+        if (this.formSettings.logPayload || this.formSettings.devMode) {
+            console.log(
+                '[Formique] No explicit form action configured. On-page network submission skipped.'
+            );
+        }
+
+        const spinner = document.getElementById("formiqueSpinner");
+        if (spinner) spinner.style.display = "none";
+
+        return;
+    }
+
     const formElement = document.getElementById(formId);
     if (!formElement) return;
 
@@ -1377,11 +1352,26 @@ handleOnPageFormSubmission(formId) {
     if (recaptchaField) {
         const recaptchaToken = grecaptcha.getResponse();
         if (!recaptchaToken) {
-            document.getElementById("formiqueSpinner").style.display = "none";
+            const spinner = document.getElementById("formiqueSpinner");
+            if (spinner) spinner.style.display = "none";
             alert('Please verify that you are not a robot.');
             return;
         }
     }
+
+    // Own the spinner lifecycle from here on
+    const spinner = document.getElementById("formiqueSpinner");
+    if (spinner) {
+        spinner.style.display = "flex";
+    }
+
+    // Allow the browser to paint the loading state before continuing.
+    // Double rAF guarantees at least one full frame has rendered.
+    await new Promise(resolve => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+        });
+    });
 
     // Gather form data
     const formData = {};
@@ -1417,53 +1407,51 @@ handleOnPageFormSubmission(formId) {
     };
 
     // Submit form data using fetch
-    fetch(this.formAction, {
-        method: this.method,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => {
+    try {
+        const response = await fetch(this.formAction, {
+            method: this.method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
         if (!response.ok) {
-            return response.json().then(errorData => {
-                throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
-            }).catch(() => {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            });
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
         }
-        return response.json();
-    })
-    .then(data => {
+
+        const data = await response.json();
+
         if (this.formSettings.logPayload || this.formSettings.devMode) {
             console.log('Submission success response:', data);
         }
 
-        // Hide the spinner on success
-        document.getElementById("formiqueSpinner").style.display = "none";
+        // Hide the spinner after a successful response
+        if (spinner) spinner.style.display = "none";
 
         // Handle redirect or success message
         if (this.formSettings.redirect && this.formSettings.redirectURL) {
             window.location.href = this.formSettings.redirectURL;
         } else {
-                        this.showSuccessMessage(this.successMessage);
+            this.showSuccessMessage(this.successMessage);
         }
-    })
-    .catch(error => {
+
+    } catch (error) {
         if (this.formSettings.logPayload || this.formSettings.devMode) {
             console.error('Submission error:', error);
         }
 
-        // Hide the spinner on error
-        document.getElementById("formiqueSpinner").style.display = "none";
+        // Hide the spinner after the request fails
+        if (spinner) spinner.style.display = "none";
 
         // Show error message
-                let errorMsg = this.errorMessage;
+        let errorMsg = this.errorMessage;
         if (this.formSettings.devMode) {
             errorMsg = `${errorMsg}<br/>Details: ${error.message}`;
         }
         this.showErrorMessage(errorMsg);
-    });
+    }
 }
 
 
@@ -4527,7 +4515,7 @@ renderSubmitButton(type, name, label, validate, attributes) {
 
 const spinner = `<div id="formiqueSpinner" style="display: flex; align-items: center; gap: 1rem; font-family: sans-serif; display:none;">
   <div class="formique-spinner"></div>
-  <p class="message">Hang in tight, we are submitting your details…</p>
+  <p class="message">${this.loadingMessage}</p>
 </div>
 `;
   // Construct the final HTML string
